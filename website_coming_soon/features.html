@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hardware Specs & Integrations — Shotimer</title>
+  <meta name="description" content="Technical specifications and hardware workflows for Shotimer: Stage confidence monitors, teleprompter glass, Elgato Stream Deck, OBS Studio, and offline LAN mode.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F59E0B' stroke-width='2.2'><circle cx='12' cy='13' r='8'></circle><line x1='12' y1='9' x2='12' y2='13'></line><path d='M5 3L2 6'></path><path d='M22 6L19 3'></path></svg>">
+  <link rel="stylesheet" href="css/website.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-nav">
+    <div class="container">
+      <a href="index.html" class="nav-brand">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--amber-tally);">
+          <circle cx="12" cy="13" r="8"></circle>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <path d="M5 3L2 6"></path>
+          <path d="M22 6L19 3"></path>
+          <line x1="10" y1="2" x2="14" y2="2"></line>
+        </svg>
+        <span>Sho<span style="color: var(--amber-tally);">timer</span></span>
+        <span class="brand-badge"><span>Hardware Specs</span></span>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html#features" class="nav-link">Features</a></li>
+          <li><a href="features.html" class="nav-link active">Hardware Specs</a></li>
+          <li><a href="index.html#use-cases" class="nav-link">Use Cases</a></li>
+          <li><a href="pricing.html" class="nav-link">Pricing</a></li>
+          <li><a href="index.html#faq" class="nav-link">FAQ</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="btn btn-ghost open-auth-modal">Log In</button>
+        <a href="/?view=controller" class="btn btn-primary btn-sm">Launch Console</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hardware Hero -->
+    <section style="padding: 4.5rem 0 3rem; background-color: var(--bg-canvas-subtle); border-bottom: 1px solid var(--border-light);">
+      <div class="container" style="max-width: 860px; text-align: center;">
+        <div class="badge badge-amber" style="margin-bottom: 1rem;">AV Engineering Specs</div>
+        <h1 style="font-size: 2.85rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 1rem;">
+          Designed for live production rigs and broadcast racks.
+        </h1>
+        <p style="font-size: 1.15rem; color: var(--text-secondary); line-height: 1.6;">
+          Shotimer integrates into existing venue audio-visual infrastructure with zero proprietary dongles or driver installations.
+        </p>
+      </div>
+    </section>
+
+    <!-- Specs Breakdown Grid -->
+    <section style="padding: 4.5rem 0;">
+      <div class="container">
+        
+        <div class="feature-row">
+          <div class="feature-content">
+            <h2 class="feature-title">Stage Monitors & Floor Wedges</h2>
+            <p class="feature-text">
+              Output directly from any laptop or Mac Mini to HDMI distribution amps, SDI converters, or NDI encoders.
+            </p>
+            <ul class="feature-bullets">
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><b>Auto-fitting viewport:</b> Text scales dynamically up to 24vw, remaining legible across 40ft distances.</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><b>Screen Wake Lock API:</b> Prevents confidence displays from falling asleep during long opening remarks.</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><b>OLED Pitch Black (#000000):</b> Matches LED video wall letterbox boundaries without glowing light spill.</span>
+              </li>
+            </ul>
+          </div>
+          <div class="feature-visual">
+            <img src="assets/hero_stage_mockup.jpg" alt="Confidence monitor display hardware" style="width: 100%; border-radius: var(--radius-lg); display: block;">
+          </div>
+        </div>
+
+        <div class="feature-row reverse" style="margin-top: 4rem;">
+          <div class="feature-content">
+            <h2 class="feature-title">Stream Deck & Companion Integration</h2>
+            <p class="feature-text">
+              Give your show director tactile physical push buttons on an Elgato Stream Deck via local REST API hooks.
+            </p>
+            <ul class="feature-bullets">
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><b>Play / Pause toggle button:</b> Instant trigger mapped to hardware key with live color feedback.</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><b>+1m / -1m Bumpers:</b> Adjust presenter remaining time on the fly without looking away from cameras.</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><b>Emergency Blackout Key:</b> Instantly clear screen to black during sensitive breaks.</span>
+              </li>
+            </ul>
+          </div>
+          <div class="feature-visual" style="background-color: var(--bg-dark); color: #FFFFFF; padding: 2.5rem; border-radius: var(--radius-xl);">
+            <div style="font-size: 0.8125rem; font-weight: 700; color: #A1A1AA; text-transform: uppercase; margin-bottom: 1.5rem;">Stream Deck Button Layout Mapping</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
+              <div style="background-color: #27272A; border: 1px solid #3F3F46; border-radius: var(--radius-md); padding: 1.25rem 0.5rem; text-align: center;">
+                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">▶/⏸</div>
+                <div style="font-size: 0.7rem; font-weight: 700; color: #10B981;">START / PAUSE</div>
+              </div>
+              <div style="background-color: #27272A; border: 1px solid #3F3F46; border-radius: var(--radius-md); padding: 1.25rem 0.5rem; text-align: center;">
+                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">+1m</div>
+                <div style="font-size: 0.7rem; font-weight: 700; color: #F59E0B;">TIME BUMP</div>
+              </div>
+              <div style="background-color: #27272A; border: 1px solid #3F3F46; border-radius: var(--radius-md); padding: 1.25rem 0.5rem; text-align: center;">
+                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">⏭</div>
+                <div style="font-size: 0.7rem; font-weight: 700; color: #E4E4E7;">NEXT TIMER</div>
+              </div>
+              <div style="background-color: #27272A; border: 1px solid #3F3F46; border-radius: var(--radius-md); padding: 1.25rem 0.5rem; text-align: center;">
+                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">📢</div>
+                <div style="font-size: 0.7rem; font-weight: 700; color: #F87171;">FLASH CUE</div>
+              </div>
+              <div style="background-color: #27272A; border: 1px solid #3F3F46; border-radius: var(--radius-md); padding: 1.25rem 0.5rem; text-align: center;">
+                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">🔔</div>
+                <div style="font-size: 0.7rem; font-weight: 700; color: #60A5FA;">CHIME BELL</div>
+              </div>
+              <div style="background-color: #27272A; border: 1px solid #3F3F46; border-radius: var(--radius-md); padding: 1.25rem 0.5rem; text-align: center;">
+                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">⬛</div>
+                <div style="font-size: 0.7rem; font-weight: 700; color: #71717A;">BLACKOUT</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Bottom Launch Callout -->
+    <section class="bottom-cta-section">
+      <div class="container">
+        <h2 class="bottom-cta-title">Test Shotimer with your venue rig today.</h2>
+        <p class="bottom-cta-subtitle">Free forever for basic use. No credit card required.</p>
+        <a href="/?view=controller" class="btn btn-tally btn-lg">Launch Free Controller Console →</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <div>&copy; 2026 Shotimer Technologies. All rights reserved.</div>
+        <div><a href="index.html" style="color: var(--amber-tally);">← Back to Homepage</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+@theme {
+  --color-stage-bg: #07090E;
+  --color-stage-oled: #000000;
+  --color-stage-panel: #0E131F;
+  --color-stage-card: #151A29;
+  --color-stage-border: rgba(255, 255, 255, 0.08);
+  --color-stage-border-light: rgba(255, 255, 255, 0.15);
+  
+  --color-stage-green: #10B981;
+  --color-stage-green-glow: rgba(16, 185, 129, 0.25);
+  --color-stage-amber: #F59E0B;
+  --color-stage-amber-glow: rgba(245, 158, 11, 0.25);
+  --color-stage-red: #EF4444;
+  --color-stage-red-glow: rgba(239, 68, 68, 0.35);
+  --color-stage-cyan: #06B6D4;
+  --color-stage-cyan-glow: rgba(6, 182, 212, 0.25);
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+    background-color: #07090E;
+    color: #F8FAFC;
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Prevent selection during live clicks */
+  input, textarea {
+    user-select: text;
+  }
+}
+
+/* Tabular Numerics for Drift-Free Zero Jitter Clock */
+.tabular-numbers {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  letter-spacing: -0.02em;
+}
+
+/* Ambient Stage Glow Utilities */
+.glow-green {
+  text-shadow: 0 0 35px rgba(16, 185, 129, 0.45);
+}
+
+.glow-amber {
+  text-shadow: 0 0 35px rgba(245, 158, 11, 0.5);
+}
+
+.glow-red {
+  text-shadow: 0 0 45px rgba(239, 68, 68, 0.65);
+}
+
+.glow-cyan {
+  text-shadow: 0 0 30px rgba(6, 182, 212, 0.4);
+}
+
+/* Stage Box Glows */
+.box-glow-green {
+  box-shadow: 0 0 30px -5px rgba(16, 185, 129, 0.3);
+}
+
+.box-glow-amber {
+  box-shadow: 0 0 30px -5px rgba(245, 158, 11, 0.35);
+}
+
+.box-glow-red {
+  box-shadow: 0 0 40px -5px rgba(239, 68, 68, 0.45);
+}
+
+/* Custom Stage Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(14, 19, 31, 0.6);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Urgent Pulse Animation for Overtime */
+@keyframes stage-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.015);
+  }
+}
+
+.animate-stage-pulse {
+  animation: stage-pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes flash-strobe {
+  0%, 49% {
+    background-color: rgba(239, 68, 68, 0.95);
+    color: #FFFFFF;
+  }
+  50%, 100% {
+    background-color: #000000;
+    color: #EF4444;
+  }
+}
+
+.animate-flash-strobe {
+  animation: flash-strobe 0.7s steps(1) infinite;
+}

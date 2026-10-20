@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In & License Activation — Shotimer</title>
+  <meta name="description" content="Sign in to your Shotimer account or activate your Pro License Key for broadcast stage timing.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F59E0B' stroke-width='2.2'><circle cx='12' cy='13' r='8'></circle><line x1='12' y1='9' x2='12' y2='13'></line><path d='M5 3L2 6'></path><path d='M22 6L19 3'></path></svg>">
+  <link rel="stylesheet" href="css/website.css">
+  <style>
+    .auth-page-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1.5rem;
+      background-color: var(--bg-canvas-subtle);
+    }
+    .auth-box {
+      width: 100%;
+      max-width: 440px;
+      background-color: #FFFFFF;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      padding: 2.5rem 2rem;
+      box-shadow: var(--shadow-md);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-page-container">
+    <div style="margin-bottom: 2rem; text-align: center;">
+      <a href="index.html" class="nav-brand" style="justify-content: center;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--amber-tally);">
+          <circle cx="12" cy="13" r="8"></circle>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <path d="M5 3L2 6"></path>
+          <path d="M22 6L19 3"></path>
+          <line x1="10" y1="2" x2="14" y2="2"></line>
+        </svg>
+        <span>Sho<span style="color: var(--amber-tally);">timer</span></span>
+      </a>
+    </div>
+
+    <div class="auth-box">
+      <!-- Tabs -->
+      <div style="display: flex; border-bottom: 1px solid var(--border-light); margin-bottom: 1.5rem;">
+        <button id="tab-login" class="auth-tab-btn active" data-target="login" style="flex: 1; padding: 0.6rem; background: transparent; border: none; font-weight: 700; border-bottom: 2px solid var(--amber-tally); cursor: pointer; color: var(--text-primary);">
+          Sign In
+        </button>
+        <button id="tab-license" class="auth-tab-btn" data-target="license" style="flex: 1; padding: 0.6rem; background: transparent; border: none; font-weight: 600; cursor: pointer; color: var(--text-secondary);">
+          Activate Key
+        </button>
+      </div>
+
+      <!-- Sign In Form -->
+      <form id="auth-login-form" onsubmit="event.preventDefault(); window.location.href='/?view=controller';">
+        <h2 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 0.35rem;">Sign In</h2>
+        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Access your saved rooms, rundowns, and presets.</p>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.4rem;">Work Email</label>
+          <input type="email" required placeholder="director@production.com" style="width: 100%; padding: 0.75rem 0.875rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-size: 0.9375rem; outline: none;">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem; padding: 0.75rem;">
+          Send Magic Sign-In Link →
+        </button>
+
+        <div style="text-align: center; font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+          No account needed to run timers. <a href="/?view=controller" style="color: var(--amber-tally-hover); font-weight: 600;">Launch Free Console</a>
+        </div>
+      </form>
+
+      <!-- Pro Key Activation Form -->
+      <form id="auth-license-form" style="display: none;">
+        <h2 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 0.35rem;">Enter License Key</h2>
+        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Enter your Pro or Event Pass license key to unlock features on this device.</p>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.4rem;">License Key</label>
+          <input type="text" id="auth-license-key" required placeholder="PRO-STAGE-2026" style="width: 100%; padding: 0.75rem 0.875rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.9375rem; text-transform: uppercase; outline: none;">
+        </div>
+
+        <div id="auth-license-feedback" style="font-size: 0.8125rem; margin-bottom: 0.75rem; min-height: 20px;"></div>
+
+        <button type="submit" class="btn btn-tally" style="width: 100%; margin-bottom: 1rem; padding: 0.75rem;">
+          Verify & Unlock
+        </button>
+
+        <div style="text-align: center; font-size: 0.75rem; color: var(--text-muted);">
+          Evaluation Key: <code style="background-color: var(--bg-canvas-subtle); padding: 2px 6px; border-radius: 4px;">PRO-STAGE-2026</code>
+        </div>
+      </form>
+    </div>
+
+    <div style="margin-top: 1.5rem; font-size: 0.8125rem;">
+      <a href="index.html" style="color: var(--text-muted); text-decoration: none;">← Back to Shotimer Home</a>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

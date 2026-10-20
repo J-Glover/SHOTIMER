@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing & Plans — Shotimer</title>
+  <meta name="description" content="Compare Shotimer pricing: Free Starter, 14-Day Single-Event Pass, and Pro Production. Transparent pricing with no hidden hardware fees.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F59E0B' stroke-width='2.2'><circle cx='12' cy='13' r='8'></circle><line x1='12' y1='9' x2='12' y2='13'></line><path d='M5 3L2 6'></path><path d='M22 6L19 3'></path></svg>">
+  <link rel="stylesheet" href="css/website.css">
+  <style>
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2rem;
+      background-color: #FFFFFF;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .comparison-table th, .comparison-table td {
+      padding: 1rem 1.25rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.9375rem;
+    }
+    .comparison-table th {
+      background-color: var(--bg-canvas-subtle);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .comparison-table td:first-child {
+      font-weight: 600;
+      color: var(--text-primary);
+      width: 40%;
+    }
+    .comparison-table td:not(:first-child) {
+      text-align: center;
+      width: 20%;
+    }
+    .comparison-table th:not(:first-child) {
+      text-align: center;
+    }
+    .check-yes {
+      color: var(--emerald-live);
+      font-weight: 700;
+    }
+    .check-no {
+      color: #D4D4D8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-nav">
+    <div class="container">
+      <a href="index.html" class="nav-brand">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--amber-tally);">
+          <circle cx="12" cy="13" r="8"></circle>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <path d="M5 3L2 6"></path>
+          <path d="M22 6L19 3"></path>
+          <line x1="10" y1="2" x2="14" y2="2"></line>
+        </svg>
+        <span>Sho<span style="color: var(--amber-tally);">timer</span></span>
+        <span class="brand-badge"><span>Pricing</span></span>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html#features" class="nav-link">Features</a></li>
+          <li><a href="features.html" class="nav-link">Hardware Specs</a></li>
+          <li><a href="index.html#use-cases" class="nav-link">Use Cases</a></li>
+          <li><a href="pricing.html" class="nav-link active">Pricing</a></li>
+          <li><a href="index.html#faq" class="nav-link">FAQ</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="btn btn-ghost open-auth-modal">Log In</button>
+        <a href="/?view=controller" class="btn btn-primary btn-sm">Launch Console</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Pricing Hero Header -->
+    <section style="padding: 4.5rem 0 3rem; text-align: center; background-color: var(--bg-canvas-subtle); border-bottom: 1px solid var(--border-light);">
+      <div class="container">
+        <div class="badge badge-amber" style="margin-bottom: 1rem;">Simple & Predictable</div>
+        <h1 style="font-size: 3rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 1rem;">
+          Event software that doesn't hold you hostage.
+        </h1>
+        <p style="font-size: 1.15rem; color: var(--text-secondary); max-width: 620px; margin: 0 auto 2rem;">
+          Whether you need a free basic timer for rehearsal, a 14-day pass for a single conference, or unlimited yearly access for your studio.
+        </p>
+
+        <!-- Billing Switcher -->
+        <div class="billing-toggle-wrap" style="margin-bottom: 1rem;">
+          <div class="toggle-pill">
+            <button id="billing-monthly-btn" class="toggle-pill-btn">Monthly Billing</button>
+            <button id="billing-annual-btn" class="toggle-pill-btn active">
+              <span>Annual Billing</span>
+              <span class="badge badge-amber" style="font-size: 0.65rem; padding: 0.1rem 0.4rem; margin-left: 0.25rem;">Save 45%</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Cards Grid -->
+    <section style="padding: 4rem 0;">
+      <div class="container">
+        
+        <div class="pricing-grid">
+          
+          <!-- Starter -->
+          <div class="pricing-card">
+            <div class="pricing-plan-name">Starter</div>
+            <div class="pricing-plan-tagline">Essential countdown clock for rehearsals and small meetups.</div>
+            <div class="pricing-price-wrap">
+              <span class="pricing-amount">$0</span>
+              <span class="pricing-period">forever free</span>
+            </div>
+            <ul class="pricing-features-list">
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Up to 3 timers per rundown</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Unlimited viewer screens</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Unthrottled Web Worker engine</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Procedural sound chimes</span>
+              </li>
+            </ul>
+            <a href="/?view=controller" class="btn btn-secondary" style="width: 100%;">Use Starter Free</a>
+          </div>
+
+          <!-- Single-Event Pass -->
+          <div class="pricing-card">
+            <div class="pricing-plan-name">Single-Event Pass</div>
+            <div class="pricing-plan-tagline">14 days of unrestricted Pro access for a one-off summit.</div>
+            <div class="pricing-price-wrap">
+              <span class="pricing-amount">$14</span>
+              <span class="pricing-period">one-time payment</span>
+            </div>
+            <ul class="pricing-features-list">
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><b>Unlimited timers & rundown rows</b></span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>14 days of uninterrupted access</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>CSV & Excel spreadsheet import/export</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Custom client / sponsor logo on monitor</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>No recurring subscription charge</span>
+              </li>
+            </ul>
+            <button class="btn btn-secondary open-auth-modal" style="width: 100%;">Get Event Pass ($14)</button>
+          </div>
+
+          <!-- Pro Production (Featured) -->
+          <div class="pricing-card featured">
+            <div class="pricing-featured-badge">Production Standard</div>
+            <div class="pricing-plan-name">Pro Production</div>
+            <div class="pricing-plan-tagline">Unlimited power for venues, broadcast studios, and AV crews.</div>
+            <div class="pricing-price-wrap">
+              <span id="pricing-pro-amount" class="pricing-amount">$8.25</span>
+              <span id="pricing-pro-period" class="pricing-period">/ mo (billed $99/yr)</span>
+            </div>
+            <ul class="pricing-features-list">
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><b>Unlimited rooms & events</b></span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>True OLED Pitch Black theme (#000000)</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Bitfocus Companion & Stream Deck REST API</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Offline venue LAN server package</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Priority showtime phone & email support</span>
+              </li>
+            </ul>
+            <button class="btn btn-tally open-auth-modal" style="width: 100%;">Activate Pro Membership</button>
+          </div>
+
+        </div>
+
+        <!-- Full Feature Comparison Table -->
+        <div style="margin-top: 5rem;">
+          <h2 style="font-size: 1.85rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.5rem; text-align: center;">
+            Detailed Feature Breakdown
+          </h2>
+          <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem;">
+            Compare capabilities across every plan tier.
+          </p>
+
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Capability / Feature</th>
+                <th>Starter</th>
+                <th>Event Pass</th>
+                <th>Pro Production</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Timers per Event Rundown</td>
+                <td>3 Timers</td>
+                <td>Unlimited</td>
+                <td>Unlimited</td>
+              </tr>
+              <tr>
+                <td>Active Rooms / Stages</td>
+                <td>1 Room</td>
+                <td>1 Room</td>
+                <td>Unlimited</td>
+              </tr>
+              <tr>
+                <td>Connected Viewer Screens</td>
+                <td>Unlimited</td>
+                <td>Unlimited</td>
+                <td>Unlimited</td>
+              </tr>
+              <tr>
+                <td>Unthrottled Web Worker (No Sleep Lag)</td>
+                <td class="check-yes">&check;</td>
+                <td class="check-yes">&check;</td>
+                <td class="check-yes">&check;</td>
+              </tr>
+              <tr>
+                <td>Silent Producer Flash Talkback</td>
+                <td class="check-yes">&check;</td>
+                <td class="check-yes">&check;</td>
+                <td class="check-yes">&check;</td>
+              </tr>
+              <tr>
+                <td>Procedural Web Audio Chimes</td>
+                <td class="check-yes">&check;</td>
+                <td class="check-yes">&check;</td>
+                <td class="check-yes">&check;</td>
+              </tr>
+              <tr>
+                <td>Spreadsheet CSV / Excel Sync</td>
+                <td class="check-no">&ndash;</td>
+                <td class="check-yes">&check;</td>
+                <td class="check-yes">&check;</td>
+              </tr>
+              <tr>
+                <td>Custom Sponsor / Client Logo</td>
+                <td class="check-no">&ndash;</td>
+                <td class="check-yes">&check;</td>
+                <td class="check-yes">&check;</td>
+              </tr>
+              <tr>
+                <td>True OLED Pitch Black Mode (#000000)</td>
+                <td class="check-no">&ndash;</td>
+                <td class="check-no">&ndash;</td>
+                <td class="check-yes">&check;</td>
+              </tr>
+              <tr>
+                <td>Stream Deck & Companion REST API</td>
+                <td class="check-no">&ndash;</td>
+                <td class="check-no">&ndash;</td>
+                <td class="check-yes">&check;</td>
+              </tr>
+              <tr>
+                <td>Offline Venue LAN Server (Zero Wi-Fi internet)</td>
+                <td class="check-no">&ndash;</td>
+                <td class="check-no">&ndash;</td>
+                <td class="check-yes">&check;</td>
+              </tr>
+              <tr>
+                <td>Duration / Billing</td>
+                <td>Free Forever</td>
+                <td>14 Days (One-Time)</td>
+                <td>Annual or Monthly</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Invoicing & FAQ Callout -->
+        <div style="margin-top: 4rem; background-color: var(--bg-canvas-subtle); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem;">
+          <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.25rem;">Need an invoice or VAT refund?</h3>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); max-width: 540px;">
+              All paid plans generate immediate PDF business receipts with tax exemption fields and company address support.
+            </p>
+          </div>
+          <a href="mailto:billing@shotimer.com" class="btn btn-secondary">Request Corporate Invoice →</a>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <div>&copy; 2026 Shotimer Technologies. All rights reserved.</div>
+        <div><a href="index.html" style="color: var(--amber-tally);">← Back to Homepage</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Auth Modal -->
+  <div id="auth-modal" class="modal-overlay">
+    <div class="modal-dialog">
+      <button id="close-auth-modal" class="modal-close-btn">&times;</button>
+      <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;">Activate License</h3>
+      <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.25rem;">Enter your demo license key <code>PRO-STAGE-2026</code> to test.</p>
+      <form id="auth-license-form">
+        <input type="text" id="auth-license-key" required placeholder="PRO-STAGE-2026" style="width: 100%; padding: 0.625rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); margin-bottom: 0.75rem; font-family: var(--font-mono);">
+        <div id="auth-license-feedback" style="font-size: 0.8125rem; margin-bottom: 0.75rem;"></div>
+        <button type="submit" class="btn btn-tally" style="width: 100%;">Unlock Console</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
