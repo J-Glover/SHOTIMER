@@ -106,4 +106,34 @@
    - Verified clean build (`npm run build` in 792ms, 0 errors) and 0 lint errors.
    - **Google OAuth Deferred:** User deferred Google OAuth Client ID & Secret configuration in Supabase to a future session; Email/Password is currently the primary live authentication method. Recorded in `AGENTS.md` roadmap.
 
+---
 
+### Session Date: October 21, 2026 (Evening)
+**Conversation ID:** `03e4cc71-a033-46bf-a884-7697d1f6cb5d`  
+**Model:** Gemini 3.8 Flash (High)  
+**Task:** Stagetimer.io In-Depth Competitor Analysis & Bit 1 Implementation
+
+1. **Live Browser Exploration of Stagetimer.io:**
+   - Launched a free room on `https://stagetimer.io/` via browser subagent.
+   - Captured screenshots and analyzed:
+     - The 3-pane director console (Left: Dashboard with mini monitor & transport; Middle: Timers rundown playlist; Right: Stage messages).
+     - The granular timer settings modal (custom Yellow/Red wrap-up alert times, flash counters, chime options).
+     - The Outputs hub (live previews, mirror flip for teleprompters, broadcast SDI delay slider, QR codes).
+     - Real-time telemetry (WebSocket ping latency, connected client counter).
+
+2. **Actioned "Bit 1" (Live Monitor Preview & Precision Timeline Bar):**
+   - Created `src/components/controller/LiveMonitorPreview.tsx`:
+     - **16:9 Confidence Monitor Screen:** High-contrast stage replica with live tabular digits, stage amber tally, active segment and speaker metadata, dynamic color thresholds (green → amber → red → overtime pulse), flash message banner overlay, and true stage blackout simulation.
+     - **Precision Minute Tick Timeline Bar:** Dynamic minute interval markers (`0m`, `5m`, `10m`...), filled progress bar, `ON AIR` pulsing badge, and broadcast status.
+     - **Integrated Director Transport Controls:** Previous timer, `-1m`, primary large `START` / `PAUSE` button, `+1m`, `+5m`, next timer, and reset.
+     - **Live Local Timezone Wall Clock:** Displays local timezone and ticking director clock.
+   - Re-architected `src/views/ControllerView.tsx` into a 3-pane layout (`xl:grid-cols-12`):
+     - Column 1: Live Monitor Preview & Transport Dashboard (`xl:col-span-4`)
+     - Column 2: Event Rundown Playlist (`xl:col-span-5`)
+     - Column 3: Stage Flash Messages & Cues (`xl:col-span-3`)
+   - Tested and visually verified via Playwright subagent on `http://localhost:3000/app/?view=controller`. Both static state and live running playback verified.
+
+3. **Next Steps (Scheduled for Tomorrow):**
+   - **Bit 2:** Production Schedule Math (Over/Under drift vs scheduled times & End-of-Show calculations).
+   - **Bit 3:** Dedicated Timer Wrap-Up & Alert Thresholds modal.
+   - **Bit 4:** Outputs Suite with Teleprompter Mirroring (`scaleX(-1)`) and SDI Delay.

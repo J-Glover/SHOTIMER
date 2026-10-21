@@ -48,7 +48,10 @@
   - Sub-pages: `/pricing.html`, `/features.html`, `/login.html`.
   - Automatic query forwarding: requests with `?view=` or `?room=` automatically redirect to `/app/?...`.
 - **Application Console & Stage Monitors (`/app/`):**
-  - **Controller Dashboard (`/app/` or `/app/?view=controller`):** AV director console with active timer card, time adjusters (`+1m`, `+5m`, `-1m`), rundown playlist table with row play buttons, mode dropdowns, scheduled time inputs, auto-advance link toggles, stage flash message dock, audio test, blackout toggle, share modal with QR codes, account settings modal, and cloud sign in.
+  - **3-Pane AV Director Console (`/app/` or `/app/?view=controller`):**
+    - **Left Pane (Dashboard):** Live Confidence Monitor Preview (16:9 stage display replica with amber/emerald tallies, real-time message banner overlay, blackout simulation, and fullscreen stage launch), Precision Timeline Bar with dynamic minute tick intervals (e.g., `0m`, `5m`, `10m`...) and progress fill, ergonomic transport controls (`|<`, `-1m`, `► START` / `❚❚ PAUSE`, `+1m`, `+5m`, `>|`, `Reset`), and live timezone wall clock status (`Europe/London`).
+    - **Middle Pane (Event Rundown):** Segment playlist table with row play/pause buttons, inline title/speaker edits, mode dropdowns (`countdown`, `countup`, `clock`), scheduled start time inputs (`HH:MM`), auto-advance link toggles (`↳ Linked`), duration inputs, and Free Plan 3-timer limit counter.
+    - **Right Pane (Stage Messages & Cues):** Quick preset alert triggers (`5 MIN LEFT`, `2 MIN - WRAP UP`, etc.), custom speaker note textarea, severity pills (`info`, `warning`, `danger`), strobe flash toggle, and direct role links.
   - **Stage Monitor (`/app/?view=viewer`):** Giant edge-to-edge tabular numbers (up to `24vw`), segment title, speaker name, dynamic progress bar (green $\to$ amber at 2m $\to$ red at 30s $\to$ overtime pulse), flash message banner, auto-advance badge, scheduled start timestamp, time of day, and "Up Next" preview.
   - **Agenda View (`/app/?view=agenda`):** Public/crew event timeline with real-time countdown, timer mode badges, and scheduled timestamps.
   - **Moderator View (`/app/?view=moderator`):** Lightweight stage cueing and notes portal with live remaining/elapsed time and linked timer cues.

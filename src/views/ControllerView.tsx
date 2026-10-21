@@ -3,9 +3,6 @@ import { useTimerStore } from '../store/useTimerStore';
 import { 
   Play, 
   Pause, 
-  RotateCcw, 
-  SkipForward, 
-  SkipBack, 
   Plus, 
   Trash2, 
   EyeOff, 
@@ -38,8 +35,7 @@ import SettingsModal from '../components/common/SettingsModal';
 import ProPaywallModal from '../components/common/ProPaywallModal';
 import AuthModal from '../components/auth/AuthModal';
 import AccountSettingsModal from '../components/account/AccountSettingsModal';
-
-
+import LiveMonitorPreview from '../components/controller/LiveMonitorPreview';
 
 interface ControllerViewProps {
   onNavigateView: (view: 'viewer' | 'agenda' | 'moderator') => void;
@@ -56,6 +52,9 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
     activeTimerId,
     status,
     timeRemaining,
+    elapsedTime,
+    targetDuration,
+    overtimeSeconds,
     blackout,
     toggleBlackout,
     isAudioMuted,
@@ -356,111 +355,32 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
         </div>
       </header>
 
-      {/* Main Studio Body Grid */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Main Studio Body Grid - 3-Pane AV Director Console */}
+      <div className="flex-1 max-w-[1700px] w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left & Center: Active Card & Rundown Table (2 Columns) */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
-          
-          {/* Active Timer Console Card */}
-          <div className="bg-[#1C1C1C] rounded-xl border border-neutral-800 p-6 flex flex-col gap-5 shadow-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs uppercase font-semibold tracking-wider text-emerald-400">Current Live Timer</span>
-                <h2 className="text-xl sm:text-2xl font-bold text-white mt-0.5">{activeTimer?.title}</h2>
-                {activeTimer?.speaker && (
-                  <p className="text-xs sm:text-sm text-neutral-400 font-normal">{activeTimer.speaker}</p>
-                )}
-              </div>
+        {/* Left Column: Live Monitor Preview & Transport Dashboard */}
+        <div className="lg:col-span-5 xl:col-span-4 flex flex-col gap-6">
+          <LiveMonitorPreview
+            activeTimer={activeTimer}
+            timeRemaining={timeRemaining}
+            elapsedTime={elapsedTime}
+            targetDuration={targetDuration}
+            overtimeSeconds={overtimeSeconds}
+            status={status}
+            blackout={blackout}
+            activeMessage={activeMessage}
+            start={start}
+            pause={pause}
+            reset={reset}
+            adjustTime={adjustTime}
+            previousTimer={previousTimer}
+            nextTimer={nextTimer}
+            onLaunchStage={() => window.open('/?view=viewer', '_blank')}
+          />
+        </div>
 
-              {/* Status Badge */}
-              <div className="flex items-center gap-2">
-                <span className={`px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wider ${
-                  isRunning 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                    : status === 'paused'
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    : 'bg-neutral-800 text-neutral-400'
-                }`}>
-                  {status}
-                </span>
-              </div>
-            </div>
-
-            {/* Massive Tabular Timer Display */}
-            <div className="py-2 flex items-baseline justify-center">
-              <span className={`tabular-numbers font-bold text-6xl sm:text-7xl md:text-8xl tracking-tight text-white drop-shadow-md ${
-                timeRemaining < 0 ? 'text-red-500' : ''
-              }`}>
-                {formatTime(timeRemaining)}
-              </span>
-            </div>
-
-            {/* Primary Transport Controls */}
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-              <button
-                onClick={previousTimer}
-                className="p-3 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-colors"
-                title="Previous Segment (Left Arrow)"
-              >
-                <SkipBack className="w-5 h-5" />
-              </button>
-
-              <button
-                onClick={reset}
-                className="px-4 py-3 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 text-xs font-semibold flex items-center gap-2 transition-colors"
-                title="Reset Timer (R key)"
-              >
-                <RotateCcw className="w-4 h-4" />
-                <span>Reset</span>
-              </button>
-
-              <button
-                onClick={isRunning ? pause : start}
-                className={`px-8 py-3.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg transition-transform active:scale-95 ${
-                  isRunning
-                    ? 'bg-amber-500 hover:bg-amber-400 text-neutral-950 shadow-amber-900/30'
-                    : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/40'
-                }`}
-                title="Play/Pause (Spacebar)"
-              >
-                {isRunning ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
-                <span>{isRunning ? 'PAUSE' : 'START'}</span>
-              </button>
-
-              <button
-                onClick={nextTimer}
-                className="p-3 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-colors"
-                title="Next Segment (Right Arrow)"
-              >
-                <SkipForward className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Quick Adjustment Pills */}
-            <div className="flex items-center justify-center gap-2 pt-2 border-t border-neutral-800/80">
-              <span className="text-xs text-neutral-500 mr-2">Adjust:</span>
-              <button
-                onClick={() => adjustTime(-60)}
-                className="px-2.5 py-1 rounded bg-neutral-800/80 hover:bg-neutral-700 text-xs text-neutral-300 transition-colors border border-neutral-700/60"
-              >
-                -1m
-              </button>
-              <button
-                onClick={() => adjustTime(60)}
-                className="px-2.5 py-1 rounded bg-neutral-800/80 hover:bg-neutral-700 text-xs text-neutral-300 transition-colors border border-neutral-700/60"
-              >
-                +1m
-              </button>
-              <button
-                onClick={() => adjustTime(300)}
-                className="px-2.5 py-1 rounded bg-neutral-800/80 hover:bg-neutral-700 text-xs text-neutral-300 transition-colors border border-neutral-700/60"
-              >
-                +5m
-              </button>
-            </div>
-          </div>
-
+        {/* Center Column: Event Rundown Playlist */}
+        <div className="lg:col-span-7 xl:col-span-5 flex flex-col gap-6">
           {/* Rundown Playlist Section */}
           <div className="bg-[#1C1C1C] rounded-xl border border-neutral-800 p-5 flex flex-col gap-4 shadow-xl">
             <div className="flex items-center justify-between">
@@ -728,7 +648,7 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
         </div>
 
         {/* Right Column: Stage Flash Messages & Presenter Cues */}
-        <div className="flex flex-col gap-6">
+        <div className="lg:col-span-12 xl:col-span-3 flex flex-col gap-6">
           <div className="bg-[#1C1C1C] rounded-xl border border-neutral-800 p-5 flex flex-col gap-4 shadow-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
