@@ -112,14 +112,29 @@ const server = http.createServer((req, res) => {
     reqPath = '/app/index.html';
   }
 
+  // File resolution: check dist first, then root / public / website fallbacks
   let filePath = path.join(DIST_DIR, reqPath);
 
-  // If file doesn't exist, check whether it's an app subroute or root fallback
   if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
     if (reqPath.startsWith('/app')) {
       filePath = path.join(DIST_DIR, 'app', 'index.html');
+      if (!fs.existsSync(filePath)) {
+        filePath = path.join(__dirname, 'app', 'index.html');
+      }
     } else {
-      filePath = path.join(DIST_DIR, 'index.html');
+      // Find file across possible locations (dist -> root -> website -> public)
+      const candidates = [
+        path.join(DIST_DIR, 'index.html'),
+        path.join(__dirname, reqPath),
+        path.join(__dirname, 'index.html'),
+        path.join(__dirname, 'website', reqPath),
+        path.join(__dirname, 'website', 'index.html'),
+        path.join(__dirname, 'public', reqPath),
+      ];
+      const match = candidates.find((c) => fs.existsSync(c) && !fs.statSync(c).isDirectory());
+      if (match) {
+        filePath = match;
+      }
     }
   }
 
@@ -128,8 +143,16 @@ const server = http.createServer((req, res) => {
 
   fs.readFile(filePath, (err, content) => {
     if (err) {
+      console.error(`[Shotimer Server] Failed to read ${filePath}:`, err);
+      // Emergency fallback to root index.html
+      const emergency = path.join(__dirname, 'index.html');
+      if (fs.existsSync(emergency)) {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(fs.readFileSync(emergency));
+        return;
+      }
       res.writeHead(500, { 'Content-Type': 'text/plain' });
-      res.end('500 Server Error');
+      res.end(`500 Server Error: ${err.message}`);
       return;
     }
     res.writeHead(200, { 'Content-Type': contentType });
