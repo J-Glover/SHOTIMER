@@ -94,55 +94,33 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (reqPath === '/') reqPath = '/index.html';
-
-  // Serve isolated Coming Soon Website under /website_coming_soon
-  if (reqPath.startsWith('/website_coming_soon')) {
-    let subPath = reqPath.replace(/^\/website_coming_soon/, '') || '/index.html';
-    if (subPath === '/' || subPath === '') subPath = '/index.html';
-    const webFilePath = path.join(__dirname, 'website_coming_soon', subPath);
-    if (fs.existsSync(webFilePath) && !fs.statSync(webFilePath).isDirectory()) {
-      const ext = path.extname(webFilePath).toLowerCase();
-      const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-      fs.readFile(webFilePath, (err, content) => {
-        if (err) {
-          res.writeHead(500, { 'Content-Type': 'text/plain' });
-          res.end('500 Server Error');
-          return;
-        }
-        res.writeHead(200, { 'Content-Type': contentType });
-        res.end(content);
-      });
-      return;
-    }
+  // Clean route mappings
+  if (reqPath === '/' || reqPath === '') {
+    reqPath = '/index.html';
+  } else if (reqPath === '/pricing') {
+    reqPath = '/pricing.html';
+  } else if (reqPath === '/features') {
+    reqPath = '/features.html';
+  } else if (reqPath === '/login') {
+    reqPath = '/login.html';
+  } else if (reqPath === '/app' || reqPath === '/app/') {
+    reqPath = '/app/index.html';
   }
 
-  // Serve isolated Public Marketing Website under /website
-  if (reqPath.startsWith('/website')) {
-    let subPath = reqPath.replace(/^\/website/, '') || '/index.html';
-    if (subPath === '/' || subPath === '') subPath = '/index.html';
-    const webFilePath = path.join(__dirname, 'website', subPath);
-    if (fs.existsSync(webFilePath) && !fs.statSync(webFilePath).isDirectory()) {
-      const ext = path.extname(webFilePath).toLowerCase();
-      const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-      fs.readFile(webFilePath, (err, content) => {
-        if (err) {
-          res.writeHead(500, { 'Content-Type': 'text/plain' });
-          res.end('500 Server Error');
-          return;
-        }
-        res.writeHead(200, { 'Content-Type': contentType });
-        res.end(content);
-      });
-      return;
-    }
+  // If path starts with /app/ and isn't an explicit file with extension, serve app/index.html
+  if (reqPath.startsWith('/app/') && !path.extname(reqPath)) {
+    reqPath = '/app/index.html';
   }
 
   let filePath = path.join(DIST_DIR, reqPath);
 
-  // If path doesn't exist or is an SPA route, serve index.html
+  // If file doesn't exist, check whether it's an app subroute or root fallback
   if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-    filePath = path.join(DIST_DIR, 'index.html');
+    if (reqPath.startsWith('/app')) {
+      filePath = path.join(DIST_DIR, 'app', 'index.html');
+    } else {
+      filePath = path.join(DIST_DIR, 'index.html');
+    }
   }
 
   const ext = path.extname(filePath).toLowerCase();

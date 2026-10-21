@@ -10,7 +10,7 @@
   <!-- Open Graph / Social Sharing -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="Shotimer — Broadcast-Grade Stage Timer & Event Rundown">
-  <meta property="og:description" content="Show a giant fullscreen timer to your presenter while you control it from another device. Drift-free Web Worker engine, silent producer talkback, and local venue LAN mode.">
+  <meta property="og:description" content="Show a giant fullscreen timer to your presenter while you control it from another device. Drift-free Web Worker engine, silent producer talkback, and real-time cloud synchronization.">
   <meta property="og:image" content="assets/hero_stage_mockup.jpg">
 
   <!-- Favicon (SVG stopwatch with pulse dot) -->
@@ -18,6 +18,16 @@
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="css/website.css">
+
+  <!-- Instant query router: redirect view/room params to /app/ -->
+  <script>
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('view') || params.has('room')) {
+        window.location.replace('/app/' + window.location.search);
+      }
+    })();
+  </script>
 </head>
 <body>
 
@@ -56,7 +66,7 @@
       <!-- Action Buttons -->
       <div class="nav-actions">
         <button class="btn btn-ghost open-auth-modal" style="font-weight: 600;">Log In</button>
-        <a href="/?view=controller" class="btn btn-primary btn-sm" style="display: none; sm:inline-flex;">
+        <a href="/app/" class="btn btn-primary btn-sm" style="display: none; sm:inline-flex;">
           <span>Launch Console</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -84,7 +94,7 @@
     <a href="#faq" class="nav-link" style="font-size: 1.25rem;">FAQ</a>
     <hr style="border: none; border-top: 1px solid var(--border-light); margin: 0.5rem 0;">
     <button class="btn btn-secondary open-auth-modal" style="width: 100%;">Account Log In</button>
-    <a href="/?view=controller" class="btn btn-tally" style="width: 100%;">Launch Free Console →</a>
+    <a href="/app/" class="btn btn-tally" style="width: 100%;">Launch Free Console →</a>
   </div>
 
   <main>
@@ -112,7 +122,7 @@
             </p>
 
             <div class="hero-cta-group">
-              <a href="/?view=controller" class="btn btn-primary btn-lg">
+              <a href="/app/" class="btn btn-primary btn-lg">
                 <span>Try Free in Browser</span>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -400,11 +410,11 @@
           <div class="persona-card">
             <div class="persona-badge">Houses of Worship & Summits</div>
             <h3 class="persona-role-title">Volunteer-friendly reliability.</h3>
-            <p class="persona-quote">"Keep worship service runtimes and sermon countdowns strictly in sync. Works on air-gapped church Wi-Fi with zero internet."</p>
+            <p class="persona-quote">"Keep worship service runtimes and sermon countdowns strictly in sync. Share a link and every screen, phone, and confidence monitor syncs in real time."</p>
             <ul class="persona-features-mini">
               <li>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Offline venue LAN server mode</span>
+                <span>Real-time multi-screen cloud sync</span>
               </li>
               <li>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -525,7 +535,7 @@
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Offline Venue LAN Server:</b> Run fully air-gapped on your private venue Wi-Fi router with zero internet required.</span>
+                <span><b>Real-Time Cloud Synchronization:</b> Connect unlimited stage monitors, laptops, and crew phones across any internet connection with sub-millisecond responsiveness.</span>
               </li>
             </ul>
           </div>
@@ -543,29 +553,29 @@
           </div>
         </div>
 
-        <!-- Feature 4: Air-Gapped Venue LAN Server Banner -->
+        <!-- Feature 4: Real-Time Cloud Sync & Global Device Pairing Banner -->
         <div class="venue-lan-banner">
           <div>
-            <div class="badge badge-amber" style="margin-bottom: 0.75rem;">100% Offline Resilience</div>
+            <div class="badge badge-amber" style="margin-bottom: 0.75rem;">Instant Global Sync</div>
             <h3 style="font-size: 1.85rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.25; margin-bottom: 1rem;">
-              Air-Gapped Venue LAN Mode.<br>Zero internet dependency.
+              Real-Time Cloud Sync.<br>Instant multi-screen control.
             </h3>
             <p style="font-size: 1rem; line-height: 1.6; color: #D6D3D1; margin-bottom: 1.5rem;">
-              In convention centers, underground ballrooms, and remote festival stages where cellular signals are jammed and venue Wi-Fi is overpriced, Shotimer runs locally via our built-in Node server.
+              Whether your director is in the master control room, your speakers are on stage, or remote producers are monitoring from anywhere, Shotimer keeps every confidence monitor, teleprompter, and crew phone synchronized with ultra-low latency over the internet.
             </p>
             <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-              <span class="badge badge-neutral" style="background-color: #292524; color: #E7E5E4; border-color: #44403C;">Binds to 0.0.0.0:3000</span>
+              <span class="badge badge-neutral" style="background-color: #292524; color: #E7E5E4; border-color: #44403C;">Instant Cloud Sync</span>
               <span class="badge badge-neutral" style="background-color: #292524; color: #E7E5E4; border-color: #44403C;">QR Code Mobile Pairing</span>
-              <span class="badge badge-neutral" style="background-color: #292524; color: #E7E5E4; border-color: #44403C;">&lt; 1ms LAN Latency</span>
+              <span class="badge badge-neutral" style="background-color: #292524; color: #E7E5E4; border-color: #44403C;">Unlimited Screen Connections</span>
             </div>
           </div>
           <div class="venue-lan-code-box">
-            <div style="color: #10B981; font-weight: 700; margin-bottom: 0.5rem;">$ npm run serve</div>
-            <div style="color: #D6D3D1;">🚀 SHOTIMER LOCAL VENUE SERVER RUNNING</div>
-            <div>Local Computer: http://localhost:3000/</div>
-            <div style="color: #F59E0B; font-weight: 600;">Venue Wi-Fi:    http://192.168.1.140:3000/</div>
-            <div>Confidence Mon: http://192.168.1.140:3000/?view=viewer</div>
-            <div style="margin-top: 0.65rem; color: #78716C; font-size: 0.75rem;">// Ready for unlimited stage displays & crew phones</div>
+            <div style="color: #10B981; font-weight: 700; margin-bottom: 0.5rem;">// Real-Time Cloud Sync Stream</div>
+            <div style="color: #D6D3D1;">🚀 SHOTIMER CLOUD PIPELINE ACTIVE</div>
+            <div>Controller:   https://shotimer.com/app/</div>
+            <div style="color: #F59E0B; font-weight: 600;">Stage Monitor: https://shotimer.com/app/?view=viewer</div>
+            <div>Overlay Link:  https://shotimer.com/app/?view=overlay</div>
+            <div style="margin-top: 0.65rem; color: #78716C; font-size: 0.75rem;">// Sub-millisecond sync across unlimited production screens</div>
           </div>
         </div>
 
@@ -681,7 +691,7 @@
                 <span>Screen Wake Lock API</span>
               </li>
             </ul>
-            <a href="/?view=controller" class="btn btn-secondary" style="width: 100%;">Get Started Free</a>
+            <a href="/app/" class="btn btn-secondary" style="width: 100%;">Get Started Free</a>
           </div>
 
           <!-- Single-Event Pass -->
@@ -745,7 +755,7 @@
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Standalone offline venue LAN server package</span>
+                <span>Cloud Account Sync & Multi-Room Management</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -785,11 +795,11 @@
 
           <div class="faq-item">
             <button class="faq-question">
-              <span>Can I run Shotimer completely offline without venue internet?</span>
+              <span>How does real-time cloud synchronization work across multiple devices?</span>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </button>
             <div class="faq-answer">
-              Yes! Shotimer includes a lightweight standalone venue LAN server (`npm run serve`) that binds to 0.0.0.0 on your local Wi-Fi router. Every laptop, stage TV, and iPad connects directly across your venue's local network with zero cloud or internet dependency.
+              Shotimer uses ultra-fast cloud pipelines to synchronize state instantly over the internet. When a director presses Play, adds time (+1m), or triggers a talkback flash message on the controller, all connected stage monitors, confidence displays, and crew mobile phones update in real time with sub-100ms latency.
             </div>
           </div>
 
@@ -838,7 +848,7 @@
           Join thousands of event directors, producers, and AV crews who trust Shotimer for broadcast-grade accuracy.
         </p>
         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-          <a href="/?view=controller" class="btn btn-tally btn-lg">Launch Free Timer Now →</a>
+          <a href="/app/" class="btn btn-tally btn-lg">Launch Free Timer Now →</a>
           <button class="btn btn-secondary btn-lg open-auth-modal">Sign In / Activate License</button>
         </div>
       </div>
@@ -868,10 +878,10 @@
         <div>
           <div class="footer-col-title">Product</div>
           <ul class="footer-links">
-            <li><a href="/?view=controller">Director Console</a></li>
-            <li><a href="/?view=viewer">Confidence Monitor</a></li>
-            <li><a href="/?view=agenda">Agenda Timeline</a></li>
-            <li><a href="/?view=overlay">OBS Lower-Third</a></li>
+            <li><a href="/app/">Director Console</a></li>
+            <li><a href="/app/?view=viewer">Confidence Monitor</a></li>
+            <li><a href="/app/?view=agenda">Agenda Timeline</a></li>
+            <li><a href="/app/?view=overlay">OBS Lower-Third</a></li>
             <li><a href="features.html">Hardware Specs</a></li>
           </ul>
         </div>
@@ -882,7 +892,7 @@
             <li><a href="pricing.html">Pricing Plans</a></li>
             <li><a href="#faq">Frequently Asked Questions</a></li>
             <li><a href="#features">Web Worker Engine</a></li>
-            <li><a href="/?view=controller">Demo Room</a></li>
+            <li><a href="/app/">Demo Room</a></li>
           </ul>
         </div>
 
@@ -928,7 +938,7 @@
       </div>
 
       <!-- Sign In Form -->
-      <form id="auth-login-form" onsubmit="event.preventDefault(); window.location.href='/?view=controller';">
+      <form id="auth-login-form" onsubmit="event.preventDefault(); window.location.href='/app/';">
         <h3 id="auth-modal-title" style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.35rem;">Access your Shotimer account</h3>
         <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.25rem;">Enter your email to receive an instant magic sign-in link.</p>
 
@@ -942,7 +952,7 @@
         </button>
 
         <div style="text-align: center; font-size: 0.75rem; color: var(--text-muted);">
-          Or <a href="/?view=controller" style="color: var(--amber-tally-hover); font-weight: 600;">launch free controller immediately</a> without an account.
+          Or <a href="/app/" style="color: var(--amber-tally-hover); font-weight: 600;">launch free controller immediately</a> without an account.
         </div>
       </form>
 

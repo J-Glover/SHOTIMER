@@ -17,10 +17,13 @@
    - Bypasses browser tab throttling when minimized using an inline Web Worker that ticks every 50ms via `performance.now()`.
 2. **Procedural Web Audio API (`src/audio/soundSynthesizer.ts`):**
    - Zero external `.mp3` or `.wav` downloads. Synthesizes Soft Bell, Marimba, Deep Gong, and 3-2-1 Alert Beeps directly on the sound card using math oscillators.
-3. **Cross-Window Real-Time Sync (`src/store/useTimerStore.ts`):**
-   - Uses `BroadcastChannel('shotimer-sync-bus')` with epoch timestamps (`Date.now()`). When Controller triggers Play/Pause or Time Adjust, the Stage Monitor syncs with $< 1\text{ms}$ latency.
-4. **Offline Venue LAN Server (`server.js`):**
-   - Standalone Node.js server (`npm run serve`) that binds to `0.0.0.0:3000` for venue Wi-Fi control without internet. Displays local IP for mobile pairing.
+3. **Hybrid Real-Time Sync Engine (`src/store/useTimerStore.ts`):**
+   - **Local Tab/Window Sync:** Uses `BroadcastChannel('shotimer-sync-bus')` with epoch timestamps (`Date.now()`) for $< 1\text{ms}$ latency across tabs on the same device.
+   - **Internet Cloud Broadcast (`src/services/dbService.ts`):** Uses Supabase Realtime WebSockets (`room:${roomId}`) with sub-10ms broadcast latency, backed by debounced PostgreSQL storage in `live_sessions` table.
+4. **Supabase Cloud Backend (`src/lib/supabase.ts`, `src/services/`):**
+   - Pure cloud SaaS architecture using `@supabase/supabase-js`.
+   - **Authentication (`authService.ts`):** Supabase GoTrue Auth with Email/Password registration & sign-in, Google OAuth popup sign-in, and password reset.
+   - **Database (`dbService.ts`):** PostgreSQL database with Row Level Security (RLS) policies for user profiles (`user_profiles`), saved custom rooms/rundowns (`rooms`), and live sessions (`live_sessions`). Schema saved in `supabase_schema.sql`.
 5. **Screen Wake Lock API (`src/hooks/useWakeLock.ts`):**
    - Uses `navigator.wakeLock` to prevent confidence monitors and stage laptops from going to sleep.
 6. **Rundown Export / Import (`src/utils/exportImport.ts`):**
@@ -33,22 +36,24 @@
    - **Multi-Mode Engine:** Native support for `countdown` (target to 0), `countup` (0 to target), and `clock` (real-time wall clock mode).
    - **Auto-Advance (Timer Linking):** Auto-starts timer $N+1$ immediately when timer $N$ finishes, with visual chain connector tags in Controller and Stage Monitor.
    - **Scheduled Start Triggers:** Scheduled wall-clock auto-triggers (`HH:MM`) checked every 1000ms.
-   - **3-Room Management:** Supports 3 independent rooms (`Main Auditorium`, `Breakout Hall`, `Workshop Studio`) with separate rundowns stored in `localStorage` and BroadcastChannel room filtering.
+   - **3-Room Starter Management:** Supports 3 default rooms (`Main Auditorium`, `Breakout Hall`, `Workshop Studio`) plus authenticated custom room creation.
    - **Free Plan Enforcement:** Capped at 3 timers per room with clean counter badge (`Free Tier: 3/3 Timers`).
 
 ---
 
 ## 3. Implemented Views & URL Routing
-- **Controller Dashboard (`/` or `/?view=controller`):** AV director console with active timer card, time adjusters (`+1m`, `+5m`, `-1m`), rundown playlist table with row play buttons, mode dropdowns, scheduled time inputs, auto-advance link toggles, stage flash message dock, audio test, blackout toggle, share modal with QR codes, and settings modal.
-- **Stage Monitor (`/?view=viewer`):** Giant edge-to-edge tabular numbers (up to `24vw`), segment title, speaker name, dynamic progress bar (green $\to$ amber at 2m $\to$ red at 30s $\to$ overtime pulse), flash message banner, auto-advance badge, scheduled start timestamp, time of day, and "Up Next" preview.
-- **Agenda View (`/?view=agenda`):** Public/crew event timeline with real-time countdown, timer mode badges, and scheduled timestamps.
-- **Moderator View (`/?view=moderator`):** Lightweight stage cueing and notes portal with live remaining/elapsed time and linked timer cues.
-- **OBS Broadcast Lower-Third (`/?view=overlay`):** Transparent background overlay for OBS Studio and vMix.
-- **Isolated Public Marketing Website (`website/` or `http://localhost:3000/website/`):**
-  - Standalone decoupled folder containing `index.html`, `pricing.html`, `features.html`, `login.html`, `css/website.css`, and `js/interactive-demo.js`.
-  - Anti-AI warm neutral design system (Warm Linen `#FAF8F5`, Obsidian Slate `#18181B`, Stage Amber Tally `#F59E0B`, Broadcast Emerald `#10B981`).
+- **Public Marketing Website (`/`):**
+  - Warm neutral design system (Warm Linen `#FAF8F5`, Obsidian Slate `#18181B`, Stage Amber Tally `#F59E0B`, Broadcast Emerald `#10B981`).
   - Interactive live hero mini-demo with multi-mode screen preview (Confidence Monitor, Agenda Rundown, OBS Overlay), procedural Web Audio chime auditions (Soft Bell, Marimba, Gong), full pricing comparison, FAQ accordion, and license activator modal (`PRO-STAGE-2026`).
-- **Coming Soon Landing Page (`website_coming_soon/` or `http://localhost:3000/website_coming_soon/`):**
+  - Sub-pages: `/pricing.html`, `/features.html`, `/login.html`.
+  - Automatic query forwarding: requests with `?view=` or `?room=` automatically redirect to `/app/?...`.
+- **Application Console & Stage Monitors (`/app/`):**
+  - **Controller Dashboard (`/app/` or `/app/?view=controller`):** AV director console with active timer card, time adjusters (`+1m`, `+5m`, `-1m`), rundown playlist table with row play buttons, mode dropdowns, scheduled time inputs, auto-advance link toggles, stage flash message dock, audio test, blackout toggle, share modal with QR codes, account settings modal, and cloud sign in.
+  - **Stage Monitor (`/app/?view=viewer`):** Giant edge-to-edge tabular numbers (up to `24vw`), segment title, speaker name, dynamic progress bar (green $\to$ amber at 2m $\to$ red at 30s $\to$ overtime pulse), flash message banner, auto-advance badge, scheduled start timestamp, time of day, and "Up Next" preview.
+  - **Agenda View (`/app/?view=agenda`):** Public/crew event timeline with real-time countdown, timer mode badges, and scheduled timestamps.
+  - **Moderator View (`/app/?view=moderator`):** Lightweight stage cueing and notes portal with live remaining/elapsed time and linked timer cues.
+  - **OBS Broadcast Lower-Third (`/app/?view=overlay`):** Transparent background overlay for OBS Studio and vMix.
+- **Coming Soon Landing Page (`website_coming_soon/`):**
   - Standalone pre-launch waitlist page with clean email capture, visual interface mockup, 6-pillar feature showcase, and pre-launch FAQ.
   - Strict compliance with user preferences: zero countdown timer, zero promotional discount claims.
 
@@ -60,6 +65,7 @@
 ---
 
 ## 5. Upcoming Feature Roadmap
-1. **Audience Q&A Submission Portal (`/?view=ask`):** Mobile audience question form routing into the Moderator approval queue.
-2. **Stream Deck & Bitfocus Companion Local REST API:** Local HTTP endpoints in `server.js` for physical button control.
-3. **Custom Sponsor / Client Logo Upload:** Render custom logos on confidence monitors.
+1. **Google OAuth Client Credentials in Supabase (User Reminder):** Enter Google Cloud Web Client ID & Client Secret in Supabase Auth Providers (`https://yodcnmzgmjcjgxizcowm.supabase.co/auth/v1/callback`) to enable one-click Google Sign-In alongside active Email/Password auth.
+2. **Audience Q&A Submission Portal (`/?view=ask`):** Mobile audience question form routing into the Moderator approval queue.
+3. **Stream Deck & Bitfocus Companion Local REST API:** Local HTTP endpoints in `server.js` for physical button control.
+4. **Custom Sponsor / Client Logo Upload:** Render custom logos on confidence monitors.

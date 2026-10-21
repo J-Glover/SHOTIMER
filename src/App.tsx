@@ -6,7 +6,7 @@ import AgendaView from './views/AgendaView';
 import ModeratorView from './views/ModeratorView';
 import OverlayView from './views/OverlayView';
 import { useTimerStore } from './store/useTimerStore';
-import { Sliders, Tv, Calendar, MessageSquare, Layers } from 'lucide-react';
+import { Sliders, Tv, Calendar, MessageSquare, Layers, ArrowLeft } from 'lucide-react';
 
 export default function App() {
   const { start, pause, reset, nextTimer, previousTimer, toggleBlackout, status } = useTimerStore();
@@ -70,6 +70,14 @@ export default function App() {
       {currentView !== 'viewer' && currentView !== 'overlay' && (
         <div className="bg-[#181818] border-b border-neutral-800 px-4 py-2 flex items-center justify-between text-xs">
           <div className="flex items-center gap-1">
+            <a
+              href="/"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-neutral-400 hover:text-amber-400 hover:bg-neutral-800 transition-colors mr-2 border-r border-neutral-800 pr-3"
+              title="Return to Shotimer Homepage"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span className="font-medium hidden sm:inline">Shotimer Home</span>
+            </a>
             {[
               { id: 'controller', label: 'Controller', icon: Sliders },
               { id: 'viewer', label: 'Stage Monitor', icon: Tv },

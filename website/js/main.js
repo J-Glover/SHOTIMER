@@ -138,9 +138,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const key = licenseKeyInput.value.trim().toUpperCase();
 
       if (key === 'PRO-STAGE-2026') {
+        localStorage.setItem('shotimer_is_pro', 'true');
+        localStorage.setItem('shotimer_license_key', key);
         licenseFeedback.innerHTML = `<span style="color: var(--emerald-live); font-weight: 600;">✓ License verified! Redirecting to Pro Controller...</span>`;
         setTimeout(() => {
-          window.location.href = '/?view=controller';
+          window.location.href = '/app/';
         }, 1200);
       } else {
         licenseFeedback.innerHTML = `<span style="color: var(--signal-red); font-weight: 600;">✕ Invalid license key. Demo key is: PRO-STAGE-2026</span>`;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { X, Copy, Check, Tv, Calendar, Sliders, MessageSquare } from 'lucide-react';
+import { useTimerStore } from '../../store/useTimerStore';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -12,12 +13,12 @@ export default function ShareModal({ isOpen, onClose, roomName }: ShareModalProp
   const [selectedRole, setSelectedRole] = useState<'viewer' | 'controller' | 'agenda' | 'moderator'>('viewer');
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const roomId = useTimerStore((s) => s.roomId);
 
   const getRoleUrl = (role: string) => {
     if (typeof window === 'undefined') return '';
     const base = window.location.origin;
-    if (role === 'controller') return `${base}/?view=controller`;
-    return `${base}/?view=${role}`;
+    return `${base}/app/?room=${roomId}&view=${role}`;
   };
 
   const currentUrl = getRoleUrl(selectedRole);

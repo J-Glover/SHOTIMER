@@ -39,3 +39,71 @@
 ## How to Resume Next Time
 1. **In Antigravity IDE UI:** Click the **History** icon (clock/calendar icon at top of the chat panel) and select this conversation thread to restore the entire conversation.
 2. **In New Chat Sessions:** The newly created [AGENTS.md](file:///c:/Users/aero1/Desktop/AI%20PROJECTS/SHOTIMER/AGENTS.md) file is automatically read by the AI assistant at the start of any new session.
+
+---
+
+### Session Date: October 21, 2026
+**Conversation ID:** `ae75061a-8de8-4420-b9a3-0f69417ef4eb`  
+**Model:** Gemini 3.8 Flash (High)  
+**Task:** Website Rework & Cloud-First Architecture (Phase 1 Completed)
+
+1. **Architecture Pivot:**
+   - Removed air-gapped / offline LAN server requirement to focus exclusively on an internet-based, cloud-synchronized SaaS platform using Firebase.
+2. **Website Front Door (`/`):**
+   - Configured Vite and `server.js` multi-page routing so that `/` serves the reworked front-facing marketing website.
+   - The React stage timer console and views (`viewer`, `agenda`, `moderator`, `overlay`) live cleanly under `/app/` (`app/index.html`).
+   - Added instant client-side query redirect (`?view=` or `?room=`) on `/index.html` to automatically forward shared links to `/app/?...`.
+   - Updated all navigation and CTA buttons (`Launch Console`, `Try Free`, auth forms) across `index.html`, `pricing.html`, `features.html`, and `login.html` to route to `/app/`.
+   - Added `← Shotimer Home` navigation link in the Controller top header dock.
+   - Verified both `/` and `/app/` compile cleanly (`npm run build`, `npm run lint`) and return HTTP 200 on the live Vite server.
+3. **Phase 2 Completed (Website Reworked to Cloud-First Messaging):**
+   - Scrubbed all "air-gapped venue Wi-Fi", "offline LAN server", and "zero internet needed" claims across `index.html`, `pricing.html`, `features.html`, and `login.html`.
+   - Replaced Feature 4 with **"Real-Time Cloud Sync: Instant Multi-Screen Control"**, demonstrating global cloud stream pipelines and sub-100ms multi-device updates.
+   - Updated house-of-worship and broadcast persona cards to highlight instant link sharing and real-time multi-screen sync.
+   - Updated `pricing.html` comparison table and Pro tier cards to feature **"Cloud Account Sync & Multi-Room Management"**.
+   - Replaced FAQ item with an explanation of real-time cloud multi-device sync pipelines.
+   - Build validated (`npm run build` in 473ms, 0 errors, 0 warnings on page files).
+
+4. **Phase 3 Completed (Firebase SDK & Cloud Data Layer):**
+   - Installed `firebase` (^13.1.0) SDK.
+   - Configured project `shotimer-af089` credentials in `.env.local` (`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID`, `VITE_FIREBASE_MEASUREMENT_ID`).
+   - Built `src/lib/firebase.ts` with safe environment detection and conditional Firebase Analytics initialization (`isSupported()`).
+   - Implemented `src/services/authService.ts`:
+     - Email & password registration with profile names.
+     - Email & password authentication.
+     - Google OAuth popup sign-in.
+     - Password reset triggers.
+     - Real-time `onAuthStateChanged` session listener.
+   - Implemented `src/services/dbService.ts`:
+     - User cloud profiles under `users/{uid}`.
+     - Per-user custom rooms and rundowns under `users/{uid}/rooms/{roomId}`.
+     - Live stage broadcast sessions under `live_sessions/{roomId}`.
+     - Real-time Firestore `onSnapshot` subscription for cross-device telemetry.
+     - 120ms debounced Firestore write buffering to protect Spark tier limits.
+
+5. **Phase 4 Completed (Accounts UI & Cloud Synchronization):**
+   - Built `src/components/auth/AuthModal.tsx`:
+     - Clean dark-mode dialog with tabs for Sign In, Sign Up, and Forgot Password.
+     - Google OAuth one-click sign in.
+     - Immediate feedback toasts and error handling.
+   - Built `src/components/account/AccountSettingsModal.tsx`:
+     - Profile tab displaying subscription plan (`Free Starter` vs `Shotimer Pro`), license key status, and sign-out.
+     - Rooms tab allowing creation of named custom rooms, switching active stage, and room deletion.
+     - Chimes & Display tab with interactive procedural audio preview (Soft Bell, Marimba, Gong), volume slider, and true OLED black toggles.
+   - Integrated into `src/views/ControllerView.tsx`:
+     - Header account dock displaying active user avatar/email and quick Cloud Sign In trigger.
+     - Query parameter listener (`?auth=login` or `?auth=signup`) automatically opens the authentication modal from external marketing links or redirects.
+   - Browser subagent verified live on `http://localhost:5173/` and `http://localhost:5173/app/?auth=login`.
+
+6. **Migration to Supabase (User Directed):**
+   - Completely uninstalled `firebase` SDK and purged all Firebase dependencies.
+   - Installed `@supabase/supabase-js`. Production bundle dropped from 947 kB down to 368 kB (>60% reduction).
+   - Replaced `firebase.ts` with `src/lib/supabase.ts`.
+   - Reimplemented `src/services/authService.ts` with Supabase Auth (Email/Pass signup, login, Google OAuth, password reset, session listeners).
+   - Reimplemented `src/services/dbService.ts` with Supabase Realtime WebSocket Broadcast channels (`room:${roomId}`) and debounced PostgreSQL persistence.
+   - Created PostgreSQL schema with RLS policies in `supabase_schema.sql`.
+   - Updated `.env.local` and `.env.example` with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+   - Verified clean build (`npm run build` in 792ms, 0 errors) and 0 lint errors.
+   - **Google OAuth Deferred:** User deferred Google OAuth Client ID & Secret configuration in Supabase to a future session; Email/Password is currently the primary live authentication method. Recorded in `AGENTS.md` roadmap.
+
+

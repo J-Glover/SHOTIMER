@@ -28,13 +28,16 @@ import {
   Zap,
   Link2,
   Unlink,
-  Clock
+  Clock,
+  Cloud
 } from 'lucide-react';
 import { soundSynth } from '../audio/soundSynthesizer';
 import type { ChimeStyle, TimerType } from '../types/timer';
 import ShareModal from '../components/common/ShareModal';
 import SettingsModal from '../components/common/SettingsModal';
 import ProPaywallModal from '../components/common/ProPaywallModal';
+import AuthModal from '../components/auth/AuthModal';
+import AccountSettingsModal from '../components/account/AccountSettingsModal';
 
 
 
@@ -73,6 +76,7 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
     reorderRundown,
     toggleAutoStartNext,
     isProUser,
+    currentUser
   } = useTimerStore();
 
   const [customMsg, setCustomMsg] = useState('');
@@ -90,6 +94,14 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search).get('auth');
+      return p === 'login' || p === 'signup' || p === 'signin';
+    }
+    return false;
+  });
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [paywallFeature, setPaywallFeature] = useState('Shotimer Pro');
 
 
@@ -273,6 +285,29 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>PRO ACTIVE</span>
+            </button>
+          )}
+
+          {/* User Account / Cloud Dock */}
+          {currentUser ? (
+            <button
+              onClick={() => setIsAccountOpen(true)}
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-xs font-semibold text-neutral-200 transition-colors shadow-sm"
+              title="Manage Account, Rooms & Cloud Sync"
+            >
+              <div className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-[10px] font-bold">
+                {currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <span className="hidden lg:inline max-w-[110px] truncate">{currentUser.displayName || currentUser.email}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsAuthOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-bold transition-all shadow-sm active:scale-95"
+              title="Sign in to save custom rooms & sync to cloud"
+            >
+              <Cloud className="w-3.5 h-3.5" />
+              <span>Cloud Sign In</span>
             </button>
           )}
 
@@ -874,6 +909,22 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
         isOpen={isPaywallOpen}
         onClose={() => setIsPaywallOpen(false)}
         featureName={paywallFeature}
+      />
+
+      {/* Cloud Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+      />
+
+      {/* Account Settings & Custom Rooms Modal */}
+      <AccountSettingsModal
+        isOpen={isAccountOpen}
+        onClose={() => setIsAccountOpen(false)}
+        onOpenPaywall={() => {
+          setPaywallFeature('Shotimer Pro');
+          setIsPaywallOpen(true);
+        }}
       />
     </div>
   );

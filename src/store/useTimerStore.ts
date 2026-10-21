@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { CloudUser } from '../services/authService';
 import type { 
   TimerItem, 
   RoomState, 
@@ -11,6 +12,16 @@ import type {
 } from '../types/timer';
 import { FREE_ROOMS } from '../types/timer';
 import { soundSynth } from '../audio/soundSynthesizer';
+import { subscribeToAuthState } from '../services/authService';
+import {
+  fetchUserProfile,
+  saveUserRoom,
+  fetchUserRooms,
+  deleteUserRoom,
+  broadcastLiveRoomState,
+  subscribeToLiveRoomState,
+  type UserCloudProfile,
+} from '../services/dbService';
 
 export const FREE_TIMER_LIMIT = 3;
 export const FREE_ROOM_LIMIT = 3;
@@ -174,11 +185,33 @@ const getInitialRoomId = (): string => {
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search);
     const r = params.get('room');
-    if (r && ['room-1', 'room-2', 'room-3'].includes(r)) return r;
+    if (r) return r;
     const saved = localStorage.getItem('shotimer_active_room_id');
-    if (saved && ['room-1', 'room-2', 'room-3'].includes(saved)) return saved;
+    if (saved) return saved;
   }
   return 'room-1';
+};
+
+const getInitialRooms = (): RoomInfo[] => {
+  const rooms = [...FREE_ROOMS];
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('shotimer_custom_rooms');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          for (const item of parsed) {
+            if (!rooms.some((r) => r.id === item.id)) {
+              rooms.push(item);
+            }
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return rooms;
 };
 
 const loadRoomData = (roomId: string) => {
@@ -201,6 +234,13 @@ export interface TimerStore extends RoomState {
   // Rooms
   availableRooms: RoomInfo[];
   switchRoom: (roomId: string) => void;
+
+  // User Accounts & Cloud
+  currentUser: CloudUser | null;
+  userProfile: UserCloudProfile | null;
+  isAuthLoading: boolean;
+  createCustomRoom: (name: string) => Promise<string>;
+  deleteCustomRoom: (roomId: string) => Promise<void>;
 
   // Actions
   start: () => void;
@@ -255,7 +295,10 @@ export const useTimerStore = create<TimerStore>((set, get) => {
   return {
     roomId: initialRoomId,
     roomName: initialRoomName,
-    availableRooms: FREE_ROOMS,
+    availableRooms: getInitialRooms(),
+    currentUser: null,
+    userProfile: null,
+    isAuthLoading: true,
     activeTimerId: initialTimer.id,
     status: 'stopped',
     targetDuration: initialTimer.durationSeconds,
@@ -278,6 +321,50 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       showProgressBar: true,
       showTimeOfDay: true,
       showUpNext: true,
+    },
+
+    createCustomRoom: async (name: string) => {
+      const newId = `room-${Date.now().toString(36)}`;
+      const newRoom: RoomInfo = { id: newId, name };
+      const currentRooms = get().availableRooms;
+      const updated = [...currentRooms, newRoom];
+
+      if (typeof window !== 'undefined') {
+        const customOnly = updated.filter((r) => !['room-1', 'room-2', 'room-3'].includes(r.id));
+        localStorage.setItem('shotimer_custom_rooms', JSON.stringify(customOnly));
+      }
+
+      const user = get().currentUser;
+      if (user) {
+        await saveUserRoom(user.uid, newId, name, get().rundown, get().theme);
+      }
+
+      set({ availableRooms: updated });
+      get().switchRoom(newId);
+      return newId;
+    },
+
+    deleteCustomRoom: async (deleteId: string) => {
+      if (['room-1', 'room-2', 'room-3'].includes(deleteId)) return;
+      const currentRooms = get().availableRooms;
+      const updated = currentRooms.filter((r) => r.id !== deleteId);
+
+      if (typeof window !== 'undefined') {
+        const customOnly = updated.filter((r) => !['room-1', 'room-2', 'room-3'].includes(r.id));
+        localStorage.setItem('shotimer_custom_rooms', JSON.stringify(customOnly));
+        localStorage.removeItem(`shotimer_rundown_${deleteId}`);
+        localStorage.removeItem(`shotimer_room_name_${deleteId}`);
+      }
+
+      const user = get().currentUser;
+      if (user) {
+        await deleteUserRoom(user.uid, deleteId);
+      }
+
+      set({ availableRooms: updated });
+      if (get().roomId === deleteId) {
+        get().switchRoom('room-1');
+      }
     },
 
     switchRoom: (newRoomId: string) => {
@@ -744,6 +831,9 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       } catch (err) {
         console.warn('Sync broadcast error:', err);
       }
+
+      // Broadcast live telemetry to Cloud Firestore for remote stage monitors across the internet
+      broadcastLiveRoomState(state.roomId, syncMsg.payload);
     },
 
     _applyExternalState: (extState) => {
@@ -817,3 +907,63 @@ if (syncChannel) {
     timestamp: Date.now(),
   });
 }
+
+// Setup Supabase Auth State Listener & Profile Loader
+if (typeof window !== 'undefined') {
+  subscribeToAuthState(async (user) => {
+    useTimerStore.setState({ currentUser: user, isAuthLoading: false });
+    if (user) {
+      try {
+        const profile = await fetchUserProfile(user.uid, user.email || '');
+        if (profile) {
+          useTimerStore.setState({
+            userProfile: profile,
+            isProUser: profile.isProUser || useTimerStore.getState().isProUser,
+            licenseKey: profile.licenseKey || useTimerStore.getState().licenseKey,
+          });
+        }
+
+        const cloudRooms = await fetchUserRooms(user.uid);
+        if (cloudRooms.length > 0) {
+          const currentRooms = useTimerStore.getState().availableRooms;
+          const merged = [...currentRooms];
+          for (const cr of cloudRooms) {
+            if (!merged.some((r) => r.id === cr.id)) {
+              merged.push({ id: cr.id, name: cr.name });
+            }
+          }
+          useTimerStore.setState({ availableRooms: merged });
+        }
+      } catch (err) {
+        console.warn('[Shotimer Auth] Error loading user profile:', err);
+      }
+    } else {
+      useTimerStore.setState({ userProfile: null });
+    }
+  });
+
+  // Setup Supabase Realtime Live Session Listener (subscribes to the active room)
+  let unsubLive: (() => void) | null = null;
+  const attachLiveListener = (roomId: string) => {
+    if (unsubLive) {
+      unsubLive();
+      unsubLive = null;
+    }
+    unsubLive = subscribeToLiveRoomState(roomId, (remoteState) => {
+      const local = useTimerStore.getState();
+      if (remoteState && remoteState.roomId === local.roomId) {
+        local._applyExternalState(remoteState);
+      }
+    });
+  };
+
+  attachLiveListener(useTimerStore.getState().roomId);
+
+  // When room changes, re-attach cloud live listener
+  useTimerStore.subscribe((state, prev) => {
+    if (state.roomId !== prev.roomId) {
+      attachLiveListener(state.roomId);
+    }
+  });
+}
+
