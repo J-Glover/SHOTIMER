@@ -63,6 +63,11 @@ export default function ModeratorView({ onBackToController }: ModeratorViewProps
           </div>
           <h2 className="text-lg font-bold text-white mt-0.5">{activeTimer?.title}</h2>
           {activeTimer?.speaker && <p className="text-xs text-neutral-400">{activeTimer.speaker}</p>}
+          {activeTimer?.notes && (
+            <div className="mt-2 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded p-2 leading-relaxed">
+              <strong className="text-amber-400">Speaker Cues:</strong> {activeTimer.notes}
+            </div>
+          )}
         </div>
 
         <div className="text-right">

@@ -1,12 +1,43 @@
+import { useState, useEffect, useMemo } from 'react';
 import { useTimerStore } from '../store/useTimerStore';
 import { CheckCircle2, Clock, Play } from 'lucide-react';
+import { calculateScheduleMetrics } from '../utils/scheduleMath';
+import ScheduleDriftBadge from '../components/controller/ScheduleDriftBadge';
 
 interface AgendaViewProps {
   onBackToController?: () => void;
 }
 
 export default function AgendaView({ onBackToController }: AgendaViewProps) {
-  const { roomName, rundown, activeTimerId, timeRemaining, status } = useTimerStore();
+  const { 
+    roomName, 
+    rundown, 
+    activeTimerId, 
+    timeRemaining, 
+    elapsedTime, 
+    targetDuration, 
+    status,
+    startedAt 
+  } = useTimerStore();
+
+  const [clockTick, setClockTick] = useState(() => Date.now());
+  useEffect(() => {
+    const interval = setInterval(() => setClockTick(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const scheduleMetrics = useMemo(() => {
+    return calculateScheduleMetrics({
+      rundown,
+      activeTimerId,
+      timeRemaining,
+      elapsedTime,
+      targetDuration,
+      status,
+      startedAt,
+      referenceTime: new Date(clockTick),
+    });
+  }, [rundown, activeTimerId, timeRemaining, elapsedTime, targetDuration, status, startedAt, clockTick]);
 
   const formatDuration = (sec: number) => {
     const mins = Math.floor(sec / 60);
@@ -18,21 +49,25 @@ export default function AgendaView({ onBackToController }: AgendaViewProps) {
 
   return (
     <div className="min-h-screen bg-[#141414] text-neutral-200 p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-8 font-sans">
-      <header className="flex items-center justify-between border-b border-neutral-800 pb-6">
+      <header className="flex flex-wrap items-center justify-between border-b border-neutral-800 pb-6 gap-4">
         <div>
           <span className="text-xs uppercase font-semibold tracking-wider text-emerald-400">Live Schedule & Rundown</span>
           <h1 className="text-2xl sm:text-3xl font-bold text-white mt-1">{roomName}</h1>
           <p className="text-xs sm:text-sm text-neutral-400 mt-1">Real-time schedule for presenters and crew</p>
         </div>
 
-        {onBackToController && (
-          <button
-            onClick={onBackToController}
-            className="px-3.5 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-medium border border-neutral-700 transition-colors"
-          >
-            Back to Console
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          <ScheduleDriftBadge metrics={scheduleMetrics} compact />
+
+          {onBackToController && (
+            <button
+              onClick={onBackToController}
+              className="px-3.5 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-medium border border-neutral-700 transition-colors"
+            >
+              Back to Console
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Agenda Timeline List */}
@@ -40,6 +75,7 @@ export default function AgendaView({ onBackToController }: AgendaViewProps) {
         {rundown.map((item, idx) => {
           const isActive = item.id === activeTimerId;
           const isCompleted = activeIndex > idx;
+          const itemSched = scheduleMetrics.itemSchedules.get(item.id);
 
           return (
             <div
@@ -86,6 +122,17 @@ export default function AgendaView({ onBackToController }: AgendaViewProps) {
                       {item.scheduledStartTime && (
                         <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-neutral-800 text-amber-400 border border-neutral-700">
                           ⏰ {item.scheduledStartTime}
+                        </span>
+                      )}
+                      {itemSched && (
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-medium border ${
+                          itemSched.isDelayed
+                            ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 font-bold'
+                            : itemSched.status === 'past'
+                            ? 'bg-neutral-800/40 text-neutral-500 border-transparent line-through'
+                            : 'bg-neutral-800 text-neutral-300 border-neutral-700'
+                        }`}>
+                          {itemSched.status === 'past' ? '✓ Completed' : itemSched.status === 'current' ? '▶ Active' : `Est ${itemSched.projectedStartTime}`}
                         </span>
                       )}
                       {item.autoStartNext && (

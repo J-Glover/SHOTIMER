@@ -256,6 +256,7 @@ export interface TimerStore extends RoomState {
   toggleMute: () => void;
   setChimeStyle: (style: ChimeStyle) => void;
   addTimer: (item: Omit<TimerItem, 'id' | 'order'>) => boolean;
+  duplicateTimer: (id: string) => boolean;
   updateTimer: (id: string, updates: Partial<TimerItem>) => void;
   deleteTimer: (id: string) => void;
   reorderRundown: (startIndex: number, endIndex: number) => void;
@@ -587,6 +588,30 @@ export const useTimerStore = create<TimerStore>((set, get) => {
         id: `timer-${Date.now()}`,
         order: state.rundown.length,
       };
+      const updated = [...state.rundown, newTimer];
+      set({ rundown: updated });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`shotimer_rundown_${state.roomId}`, JSON.stringify(updated));
+      }
+      get()._broadcastState();
+      return true;
+    },
+
+    duplicateTimer: (id: string) => {
+      const state = get();
+      if (!state.isProUser && state.rundown.length >= FREE_TIMER_LIMIT) {
+        return false;
+      }
+      const timerToDup = state.rundown.find((t) => t.id === id);
+      if (!timerToDup) return false;
+
+      const newTimer: TimerItem = {
+        ...timerToDup,
+        id: `timer-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+        title: `${timerToDup.title} (Copy)`,
+        order: state.rundown.length,
+      };
+
       const updated = [...state.rundown, newTimer];
       set({ rundown: updated });
       if (typeof window !== 'undefined') {

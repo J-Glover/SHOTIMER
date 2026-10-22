@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTimerStore } from '../store/useTimerStore';
 import { 
   Play, 
@@ -26,7 +26,10 @@ import {
   Link2,
   Unlink,
   Clock,
-  Cloud
+  Cloud,
+  Sliders,
+  FileText,
+  Layers
 } from 'lucide-react';
 import { soundSynth } from '../audio/soundSynthesizer';
 import type { ChimeStyle, TimerType } from '../types/timer';
@@ -36,12 +39,11 @@ import ProPaywallModal from '../components/common/ProPaywallModal';
 import AuthModal from '../components/auth/AuthModal';
 import AccountSettingsModal from '../components/account/AccountSettingsModal';
 import LiveMonitorPreview from '../components/controller/LiveMonitorPreview';
+import ScheduleDriftBadge from '../components/controller/ScheduleDriftBadge';
+import TimerSettingsModal from '../components/controller/TimerSettingsModal';
+import { calculateScheduleMetrics } from '../utils/scheduleMath';
 
-interface ControllerViewProps {
-  onNavigateView: (view: 'viewer' | 'agenda' | 'moderator') => void;
-}
-
-export default function ControllerView({ onNavigateView }: ControllerViewProps) {
+export default function ControllerView() {
   const {
     roomId,
     roomName,
@@ -70,6 +72,7 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
     nextTimer,
     previousTimer,
     addTimer,
+    duplicateTimer,
     updateTimer,
     deleteTimer,
     reorderRundown,
@@ -78,6 +81,7 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
     currentUser
   } = useTimerStore();
 
+  const [editingTimerId, setEditingTimerId] = useState<string | null>(null);
   const [customMsg, setCustomMsg] = useState('');
   const [msgSeverity, setMsgSeverity] = useState<'info' | 'warning' | 'danger'>('info');
   const [msgFlashing, setMsgFlashing] = useState(false);
@@ -103,6 +107,23 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [paywallFeature, setPaywallFeature] = useState('Shotimer Pro');
 
+  // Adaptive Monitor Rundown Layout: 'auto' | 'single' | 'two-tier'
+  const [layoutPreference, setLayoutPreference] = useState<'auto' | 'single' | 'two-tier'>('auto');
+  const [isWideMonitor, setIsWideMonitor] = useState(() => 
+    typeof window !== 'undefined' ? window.innerWidth >= 2100 : false
+  );
+
+  useEffect(() => {
+    const checkWidth = () => {
+      setIsWideMonitor(window.innerWidth >= 2100);
+    };
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
+
+  const activeRundownLayout = layoutPreference === 'auto' 
+    ? (isWideMonitor ? 'single' : 'two-tier')
+    : layoutPreference;
 
   const activeTimer = rundown.find((t) => t.id === activeTimerId) || rundown[0];
   const isRunning = status === 'running';
@@ -174,8 +195,25 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
     soundSynth.play(selectedChime);
   };
 
-  // Total rundown duration
-  const totalRundownSec = rundown.reduce((acc, t) => acc + t.durationSeconds, 0);
+  // 1-second interval to keep wall-clock-anchored calculations freshly ticking
+  const [clockTick, setClockTick] = useState(() => Date.now());
+  useEffect(() => {
+    const interval = setInterval(() => setClockTick(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const scheduleMetrics = useMemo(() => {
+    return calculateScheduleMetrics({
+      rundown,
+      activeTimerId,
+      timeRemaining,
+      elapsedTime,
+      targetDuration,
+      status,
+      startedAt: useTimerStore.getState().startedAt,
+      referenceTime: new Date(clockTick),
+    });
+  }, [rundown, activeTimerId, timeRemaining, elapsedTime, targetDuration, status, clockTick]);
 
   return (
     <div className="min-h-screen bg-[#141414] text-neutral-200 flex flex-col font-sans select-none">
@@ -211,6 +249,11 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
               className="bg-transparent text-sm font-medium text-neutral-300 hover:text-white focus:text-white focus:bg-neutral-800 px-2 py-1 rounded transition-colors border border-transparent focus:border-neutral-600 outline-none w-36 sm:w-48 hidden md:block"
               title="Click to rename active room"
             />
+          </div>
+
+          {/* Production Schedule Math & Over/Under Drift Badge (Director Live Tracker) */}
+          <div className="hidden xl:flex items-center ml-2">
+            <ScheduleDriftBadge metrics={scheduleMetrics} compact />
           </div>
         </div>
 
@@ -355,11 +398,11 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
         </div>
       </header>
 
-      {/* Main Studio Body Grid - 3-Pane AV Director Console */}
-      <div className="flex-1 max-w-[1700px] w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* Main Studio Body Grid - 3-Pane AV Director Console (Symmetrical Flanks) */}
+      <div className="flex-1 w-full px-4 sm:px-6 py-4 grid grid-cols-1 xl:grid-cols-[minmax(380px,22%)_1fr_minmax(380px,22%)] 2xl:grid-cols-[minmax(480px,24%)_1fr_minmax(480px,24%)] gap-5">
         
-        {/* Left Column: Live Monitor Preview & Transport Dashboard */}
-        <div className="lg:col-span-5 xl:col-span-4 flex flex-col gap-6">
+        {/* Left Column: Live Monitor Preview & Transport Dashboard (Equal Flank) */}
+        <div className="flex flex-col gap-5 min-w-0">
           <LiveMonitorPreview
             activeTimer={activeTimer}
             timeRemaining={timeRemaining}
@@ -376,20 +419,62 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
             previousTimer={previousTimer}
             nextTimer={nextTimer}
             onLaunchStage={() => window.open('/?view=viewer', '_blank')}
+            scheduleMetrics={scheduleMetrics}
           />
         </div>
 
-        {/* Center Column: Event Rundown Playlist */}
-        <div className="lg:col-span-7 xl:col-span-5 flex flex-col gap-6">
+        {/* Center Column: Event Rundown Playlist (Expansive Workspace) */}
+        <div className="flex flex-col gap-5 min-w-0">
           {/* Rundown Playlist Section */}
           <div className="bg-[#1C1C1C] rounded-xl border border-neutral-800 p-5 flex flex-col gap-4 shadow-xl">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-semibold text-white">Event Rundown ({rundown.length})</h3>
-                <p className="text-xs text-neutral-400">Total duration: {formatTime(totalRundownSec)}</p>
+                <div className="flex items-center gap-2 text-xs text-neutral-400 mt-0.5">
+                  <span>Planned: <strong className="text-neutral-300 font-mono">{scheduleMetrics.formattedTotalPlanned}</strong></span>
+                  <span className="text-neutral-600">•</span>
+                  <span>ETA: <strong className="text-amber-400 font-mono">{scheduleMetrics.formattedProjectedEnd}</strong></span>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
+                {/* Adaptive Layout Switcher Pill */}
+                <div className="flex items-center bg-neutral-900 border border-neutral-800 rounded-lg p-0.5" title="Row Layout: Auto-adapts to monitor width (1080p Two-Tier vs 1440p Single-Line)">
+                  <button
+                    onClick={() => setLayoutPreference('auto')}
+                    className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                      layoutPreference === 'auto'
+                        ? 'bg-neutral-800 text-emerald-400 font-bold'
+                        : 'text-neutral-400 hover:text-white'
+                    }`}
+                    title={`Auto: currently ${isWideMonitor ? '1440p+ Single-Line' : '1080p Two-Tier'}`}
+                  >
+                    Auto
+                  </button>
+                  <button
+                    onClick={() => setLayoutPreference('single')}
+                    className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                      layoutPreference === 'single'
+                        ? 'bg-neutral-800 text-emerald-400 font-bold'
+                        : 'text-neutral-400 hover:text-white'
+                    }`}
+                    title="Force Single-Line Row"
+                  >
+                    1-Row
+                  </button>
+                  <button
+                    onClick={() => setLayoutPreference('two-tier')}
+                    className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                      layoutPreference === 'two-tier'
+                        ? 'bg-neutral-800 text-emerald-400 font-bold'
+                        : 'text-neutral-400 hover:text-white'
+                    }`}
+                    title="Force Two-Tier Comfort Row"
+                  >
+                    2-Tier
+                  </button>
+                </div>
+
                 <span className="px-2.5 py-1 rounded text-xs font-semibold bg-neutral-800 text-neutral-300 border border-neutral-700">
                   Free Tier: {rundown.length}/3 Timers
                 </span>
@@ -500,138 +585,418 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
             <div className="flex flex-col gap-2">
               {rundown.map((item, idx) => {
                 const isActive = item.id === activeTimerId;
+                const itemSched = scheduleMetrics.itemSchedules.get(item.id);
                 return (
                   <div key={item.id} className="flex flex-col gap-1">
-                    <div
-                      className={`flex flex-wrap sm:flex-nowrap items-center justify-between p-3 rounded-lg border gap-2 transition-all ${
-                        isActive
-                          ? 'bg-neutral-800/90 border-emerald-500/50 shadow-md'
-                          : 'bg-[#181818] border-neutral-800 hover:border-neutral-700'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 flex-1 min-w-0 mr-2">
-                        {/* Play Button for Row */}
-                        <button
-                          onClick={() => {
-                            if (isActive) {
-                              isRunning ? pause() : start();
-                            } else {
-                              selectTimer(item.id);
-                              start();
-                            }
-                          }}
-                          className={`p-2 rounded-md transition-colors ${
-                            isActive && isRunning
-                              ? 'bg-amber-500 text-neutral-950'
-                              : 'bg-neutral-800 hover:bg-emerald-600 text-neutral-300 hover:text-white'
-                          }`}
-                          title={isActive && isRunning ? 'Pause' : 'Start this timer'}
-                        >
-                          {isActive && isRunning ? (
-                            <Pause className="w-3.5 h-3.5 fill-current" />
-                          ) : (
-                            <Play className="w-3.5 h-3.5 fill-current" />
-                          )}
-                        </button>
+                    {activeRundownLayout === 'single' ? (
+                      /* SINGLE-LINE BROADCAST ROW (1440p+ / Forced 1-Row) */
+                      <div
+                        className={`flex items-center justify-between p-2.5 sm:p-3 rounded-xl border gap-2.5 sm:gap-3 transition-all ${
+                          isActive
+                            ? 'bg-neutral-800/90 border-emerald-500/60 shadow-lg shadow-emerald-950/20'
+                            : 'bg-[#181818] border-neutral-800 hover:border-neutral-700'
+                        }`}
+                      >
+                        {/* Left Group: Play/Pause, Index, Title, Speaker, Notes Pill */}
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          {/* Play Button for Row */}
+                          <button
+                            onClick={() => {
+                              if (isActive) {
+                                if (isRunning) pause();
+                                else start();
+                              } else {
+                                selectTimer(item.id);
+                                start();
+                              }
+                            }}
+                            className={`p-2 rounded-lg transition-colors shrink-0 ${
+                              isActive && isRunning
+                                ? 'bg-amber-500 text-neutral-950 shadow-md shadow-amber-900/30'
+                                : 'bg-neutral-800 hover:bg-emerald-600 text-neutral-300 hover:text-white'
+                            }`}
+                            title={isActive && isRunning ? 'Pause' : 'Start this timer'}
+                          >
+                            {isActive && isRunning ? (
+                              <Pause className="w-3.5 h-3.5 fill-current" />
+                            ) : (
+                              <Play className="w-3.5 h-3.5 fill-current" />
+                            )}
+                          </button>
 
-                        {/* Title & Speaker Inline Edit */}
-                        <div className="flex-1 min-w-0">
+                          {/* Segment Index */}
+                          <span className="text-[11px] font-mono text-neutral-500 font-bold shrink-0">
+                            #{idx + 1}
+                          </span>
+
+                          {/* Title input */}
                           <input
                             type="text"
                             value={item.title}
                             onChange={(e) => updateTimer(item.id, { title: e.target.value })}
-                            className="bg-transparent text-sm font-medium text-white hover:bg-neutral-800/60 focus:bg-neutral-800 px-1.5 py-0.5 rounded outline-none w-full truncate border border-transparent focus:border-neutral-600"
+                            className="bg-transparent text-sm font-semibold text-white hover:bg-neutral-800/60 focus:bg-neutral-800 px-2 py-1 rounded outline-none flex-1 min-w-[120px] border border-transparent focus:border-neutral-600 transition-colors"
+                            placeholder="Segment title..."
                           />
-                          <input
-                            type="text"
-                            value={item.speaker}
-                            placeholder="Add speaker name..."
-                            onChange={(e) => updateTimer(item.id, { speaker: e.target.value })}
-                            className="bg-transparent text-xs text-neutral-400 hover:bg-neutral-800/60 focus:bg-neutral-800 px-1.5 py-0.5 rounded outline-none w-full truncate border border-transparent focus:border-neutral-600"
-                          />
-                        </div>
-                      </div>
 
-                      {/* Mode, Schedule, Duration & Chain Controls */}
-                      <div className="flex items-center flex-wrap gap-2">
-                        {/* Mode selector */}
-                        <select
-                          value={item.type || 'countdown'}
-                          onChange={(e) => updateTimer(item.id, { type: e.target.value as TimerType })}
-                          className="bg-neutral-800/80 hover:bg-neutral-700 text-[11px] font-medium text-neutral-300 border border-neutral-700/80 rounded px-2 py-1 outline-none focus:border-emerald-500 cursor-pointer"
-                          title="Timer Mode"
-                        >
-                          <option value="countdown">⏳ Countdown</option>
-                          <option value="countup">⏱️ Count-up</option>
-                          <option value="clock">🕒 Clock</option>
-                        </select>
+                          {/* Speaker input */}
+                          <div className="w-28 sm:w-36 xl:w-44 shrink-0">
+                            <input
+                              type="text"
+                              value={item.speaker}
+                              placeholder="Speaker..."
+                              onChange={(e) => updateTimer(item.id, { speaker: e.target.value })}
+                              className="bg-transparent text-xs text-neutral-400 hover:bg-neutral-800/60 focus:bg-neutral-800 px-2 py-1 rounded outline-none w-full border border-transparent focus:border-neutral-600 transition-colors"
+                            />
+                          </div>
 
-                        {/* Scheduled time input */}
-                        <div className="flex items-center gap-1 bg-neutral-800/60 border border-neutral-700/60 rounded px-1.5 py-0.5" title="Scheduled Start (24h)">
-                          <Clock className="w-3 h-3 text-neutral-500" />
-                          <input
-                            type="time"
-                            value={item.scheduledStartTime || ''}
-                            onChange={(e) => updateTimer(item.id, { scheduledStartTime: e.target.value || undefined })}
-                            className="bg-transparent text-[11px] font-mono text-neutral-300 outline-none w-14 cursor-pointer"
-                            title="Set Scheduled Start (HH:MM)"
-                          />
+                          {/* Speaker Notes Indicator */}
+                          {item.notes && (
+                            <button
+                              type="button"
+                              onClick={() => setEditingTimerId(item.id)}
+                              className="flex items-center gap-1 text-[11px] text-amber-300 bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 rounded-md px-1.5 py-0.5 shrink-0 transition-colors"
+                              title={`Speaker Cue: "${item.notes}" (Click to view/edit)`}
+                            >
+                              <FileText className="w-3 h-3 text-amber-400" />
+                              <span className="hidden xl:inline text-[10px] font-medium max-w-[70px] truncate">Cue</span>
+                            </button>
+                          )}
                         </div>
 
-                        {/* Auto-Advance Chain Link Toggle */}
-                        <button
-                          onClick={() => toggleAutoStartNext(item.id)}
-                          className={`p-1.5 rounded transition-colors ${
-                            item.autoStartNext
-                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30'
-                              : 'text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800 border border-transparent'
-                          }`}
-                          title={item.autoStartNext ? 'Auto-Advance: ON (auto-starts next timer at 0:00)' : 'Auto-Advance: OFF (click to chain to next timer)'}
-                        >
-                          {item.autoStartNext ? <Link2 className="w-3.5 h-3.5" /> : <Unlink className="w-3.5 h-3.5" />}
-                        </button>
-
-                        {/* Duration input */}
-                        <input
-                          type="text"
-                          value={formatTime(item.durationSeconds).replace('+', '')}
-                          onChange={(e) => {
-                            const parsed = parseDurationString(e.target.value);
-                            if (parsed > 0) updateTimer(item.id, { durationSeconds: parsed });
-                          }}
-                          className="w-16 bg-neutral-900 border border-neutral-700/80 rounded px-1 py-1 tabular-numbers font-mono text-xs text-center font-semibold text-neutral-200 outline-none focus:border-emerald-500"
-                          title="Duration (MM:SS)"
-                        />
-
-                        {/* Reordering & Delete */}
-                        <div className="flex items-center gap-1">
-                          <button
-                            disabled={idx === 0}
-                            onClick={() => reorderRundown(idx, idx - 1)}
-                            className="p-1 rounded text-neutral-500 hover:text-neutral-200 disabled:opacity-30"
-                            title="Move Up"
+                        {/* Right Group: Mode, Scheduled/Projected Start, Auto-Advance, Duration, Settings, Reorder, Delete */}
+                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                          {/* Mode selector */}
+                          <select
+                            value={item.type || 'countdown'}
+                            onChange={(e) => updateTimer(item.id, { type: e.target.value as TimerType })}
+                            className="bg-neutral-900 hover:bg-neutral-800 text-[11px] font-medium text-neutral-300 border border-neutral-700/80 rounded-md px-2 py-1 outline-none focus:border-emerald-500 cursor-pointer"
+                            title="Timer Mode"
                           >
-                            <ArrowUp className="w-3.5 h-3.5" />
-                          </button>
+                            <option value="countdown">⏳ Countdown</option>
+                            <option value="countup">⏱️ Count-up</option>
+                            <option value="clock">🕒 Wall Clock</option>
+                          </select>
+
+                          {/* Scheduled time input & Projected Time */}
+                          <div className="flex items-center gap-1.5 bg-neutral-900 border border-neutral-700/80 rounded-md px-2 py-1" title="Planned vs Projected Start Time">
+                            <Clock className="w-3 h-3 text-neutral-400 shrink-0" />
+                            <input
+                              type="time"
+                              value={item.scheduledStartTime || ''}
+                              onChange={(e) => updateTimer(item.id, { scheduledStartTime: e.target.value || undefined })}
+                              className="bg-transparent text-[11px] font-mono text-neutral-300 outline-none w-14 cursor-pointer"
+                              title="Set Planned Start (HH:MM)"
+                            />
+                            {itemSched && (
+                              <span 
+                                className={`text-[10px] font-mono px-1.5 py-0.2 rounded border ${
+                                  itemSched.isDelayed 
+                                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 font-bold' 
+                                    : itemSched.status === 'past'
+                                    ? 'bg-neutral-800/60 text-neutral-500 border-transparent line-through'
+                                    : itemSched.status === 'current'
+                                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 font-bold'
+                                    : 'bg-neutral-800 text-neutral-300 border-neutral-700'
+                                }`}
+                                title={
+                                  itemSched.status === 'past'
+                                    ? 'Segment completed'
+                                    : itemSched.status === 'current'
+                                    ? 'Active segment on stage'
+                                    : `Projected Start: ${itemSched.projectedStartTime}${itemSched.isDelayed ? ` (+${Math.round(itemSched.delaySeconds / 60)}m behind schedule)` : ''}`
+                                }
+                              >
+                                {itemSched.status === 'past' ? '✓ Done' : itemSched.status === 'current' ? '▶ Active' : `Est ${itemSched.projectedStartTime}`}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Auto-Advance Chain Link Toggle */}
                           <button
-                            disabled={idx === rundown.length - 1}
-                            onClick={() => reorderRundown(idx, idx + 1)}
-                            className="p-1 rounded text-neutral-500 hover:text-neutral-200 disabled:opacity-30"
-                            title="Move Down"
+                            onClick={() => toggleAutoStartNext(item.id)}
+                            className={`px-2 py-1 rounded-md text-[11px] font-medium border flex items-center gap-1.5 transition-colors ${
+                              item.autoStartNext
+                                ? 'bg-amber-500/15 text-amber-300 border-amber-500/40 hover:bg-amber-500/25'
+                                : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-neutral-200'
+                            }`}
+                            title={item.autoStartNext ? 'Auto-Advance: ON (auto-starts next timer at 0:00)' : 'Auto-Advance: OFF (click to chain to next timer)'}
                           >
-                            <ArrowDown className="w-3.5 h-3.5" />
+                            {item.autoStartNext ? <Link2 className="w-3 h-3 text-amber-400" /> : <Unlink className="w-3 h-3" />}
+                            <span className="hidden xl:inline">{item.autoStartNext ? 'Auto' : 'Link'}</span>
                           </button>
+
+                          {/* Duration input */}
+                          <div className="flex items-center bg-neutral-900 border border-neutral-700/80 rounded-md p-0.5" title="Duration (MM:SS)">
+                            <input
+                              type="text"
+                              value={formatTime(item.durationSeconds).replace('+', '')}
+                              onChange={(e) => {
+                                const parsed = parseDurationString(e.target.value);
+                                if (parsed > 0) updateTimer(item.id, { durationSeconds: parsed });
+                              }}
+                              className="w-14 bg-transparent tabular-numbers font-mono text-xs text-center font-bold text-neutral-200 outline-none px-1 py-0.5 focus:text-white"
+                            />
+                          </div>
+
+                          {/* Edit Timer Settings Modal Trigger */}
+                          <button
+                            onClick={() => setEditingTimerId(item.id)}
+                            className="relative p-1.5 rounded-lg text-neutral-400 hover:text-emerald-400 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 transition-colors"
+                            title="Edit Timer Settings, Alerts & Cues"
+                          >
+                            <Sliders className="w-3.5 h-3.5" />
+                            {(item.thresholds || item.sounds) && (
+                              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400" title="Custom Settings Active" />
+                            )}
+                          </button>
+
+                          {/* Reordering */}
+                          <div className="flex items-center gap-0.5">
+                            <button
+                              disabled={idx === 0}
+                              onClick={() => reorderRundown(idx, idx - 1)}
+                              className="p-1 rounded text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800 disabled:opacity-20 transition-colors"
+                              title="Move Up"
+                            >
+                              <ArrowUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              disabled={idx === rundown.length - 1}
+                              onClick={() => reorderRundown(idx, idx + 1)}
+                              className="p-1 rounded text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800 disabled:opacity-20 transition-colors"
+                              title="Move Down"
+                            >
+                              <ArrowDown className="w-3 h-3" />
+                            </button>
+                          </div>
+
+                          {/* Delete */}
                           <button
                             onClick={() => deleteTimer(item.id)}
                             disabled={rundown.length <= 1}
-                            className="p-1 rounded text-neutral-500 hover:text-red-400 disabled:opacity-20 ml-0.5"
+                            className="p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-20 transition-colors"
                             title="Delete Timer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
-                    </div>
+                    ) : (
+                      /* TWO-TIER COMFORT CARD (1080p / Forced 2-Tier) */
+                      <div
+                        className={`flex flex-col p-3 rounded-xl border gap-2.5 transition-all ${
+                          isActive
+                            ? 'bg-neutral-800/90 border-emerald-500/60 shadow-lg shadow-emerald-950/20'
+                            : 'bg-[#181818] border-neutral-800 hover:border-neutral-700'
+                        }`}
+                      >
+                        {/* Top Tier: Play, Index, Full Title, Speaker, Cue, Duration & Quick Actions */}
+                        <div className="flex items-center justify-between gap-3">
+                          {/* Left Group: Play/Pause, Segment #, Title, Speaker, Cue Pill */}
+                          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                            {/* Play Button for Row */}
+                            <button
+                              onClick={() => {
+                                if (isActive) {
+                                  if (isRunning) pause();
+                                  else start();
+                                } else {
+                                  selectTimer(item.id);
+                                  start();
+                                }
+                              }}
+                              className={`p-2 rounded-lg transition-colors shrink-0 ${
+                                isActive && isRunning
+                                  ? 'bg-amber-500 text-neutral-950 shadow-md shadow-amber-900/30'
+                                  : 'bg-neutral-800 hover:bg-emerald-600 text-neutral-300 hover:text-white'
+                              }`}
+                              title={isActive && isRunning ? 'Pause' : 'Start this timer'}
+                            >
+                              {isActive && isRunning ? (
+                                <Pause className="w-3.5 h-3.5 fill-current" />
+                              ) : (
+                                <Play className="w-3.5 h-3.5 fill-current" />
+                              )}
+                            </button>
+
+                            {/* Segment Index */}
+                            <span className="text-[11px] font-mono text-neutral-500 font-bold shrink-0">
+                              #{idx + 1}
+                            </span>
+
+                            {/* Title with full width */}
+                            <input
+                              type="text"
+                              value={item.title}
+                              onChange={(e) => updateTimer(item.id, { title: e.target.value })}
+                              className="bg-transparent text-sm sm:text-base font-semibold text-white hover:bg-neutral-800/60 focus:bg-neutral-800 px-2 py-1 rounded outline-none flex-1 min-w-[140px] border border-transparent focus:border-neutral-600 transition-colors"
+                              placeholder="Segment title..."
+                            />
+
+                            {/* Speaker input */}
+                            <div className="w-36 sm:w-44 shrink-0">
+                              <input
+                                type="text"
+                                value={item.speaker}
+                                placeholder="Speaker name..."
+                                onChange={(e) => updateTimer(item.id, { speaker: e.target.value })}
+                                className="bg-transparent text-xs text-neutral-400 hover:bg-neutral-800/60 focus:bg-neutral-800 px-2 py-1 rounded outline-none w-full border border-transparent focus:border-neutral-600 transition-colors"
+                              />
+                            </div>
+
+                            {/* Speaker Cue Badge */}
+                            {item.notes && (
+                              <button
+                                type="button"
+                                onClick={() => setEditingTimerId(item.id)}
+                                className="flex items-center gap-1 text-[11px] text-amber-300 bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 rounded-md px-1.5 py-0.5 shrink-0 transition-colors"
+                                title={`Speaker Cue: "${item.notes}" (Click to view/edit)`}
+                              >
+                                <FileText className="w-3 h-3 text-amber-400" />
+                                <span className="text-[10px] font-medium max-w-[80px] truncate">Cue</span>
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Top Tier Right Group: Duration Input & Actions */}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {/* Duration input */}
+                            <div className="flex items-center bg-neutral-900 border border-neutral-700/80 rounded-lg p-0.5" title="Duration (MM:SS)">
+                              <input
+                                type="text"
+                                value={formatTime(item.durationSeconds).replace('+', '')}
+                                onChange={(e) => {
+                                  const parsed = parseDurationString(e.target.value);
+                                  if (parsed > 0) updateTimer(item.id, { durationSeconds: parsed });
+                                }}
+                                className="w-16 bg-transparent tabular-numbers font-mono text-xs text-center font-bold text-neutral-200 outline-none px-1 py-1 focus:text-white"
+                              />
+                            </div>
+
+                            {/* Edit Timer Settings Modal Trigger */}
+                            <button
+                              onClick={() => setEditingTimerId(item.id)}
+                              className="relative p-1.5 rounded-lg text-neutral-400 hover:text-emerald-400 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 transition-colors"
+                              title="Edit Timer Settings, Alerts & Cues"
+                            >
+                              <Sliders className="w-3.5 h-3.5" />
+                              {(item.thresholds || item.sounds) && (
+                                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400" title="Custom Settings Active" />
+                              )}
+                            </button>
+
+                            {/* Reordering */}
+                            <div className="flex items-center gap-0.5">
+                              <button
+                                disabled={idx === 0}
+                                onClick={() => reorderRundown(idx, idx - 1)}
+                                className="p-1 rounded text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800 disabled:opacity-20 transition-colors"
+                                title="Move Up"
+                              >
+                                <ArrowUp className="w-3 h-3" />
+                              </button>
+                              <button
+                                disabled={idx === rundown.length - 1}
+                                onClick={() => reorderRundown(idx, idx + 1)}
+                                className="p-1 rounded text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800 disabled:opacity-20 transition-colors"
+                                title="Move Down"
+                              >
+                                <ArrowDown className="w-3 h-3" />
+                              </button>
+                            </div>
+
+                            {/* Delete */}
+                            <button
+                              onClick={() => deleteTimer(item.id)}
+                              disabled={rundown.length <= 1}
+                              className="p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-20 transition-colors"
+                              title="Delete Timer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Bottom Tier: Mode, Scheduled & Projected Time, Auto-Advance Link & Sound Indicator */}
+                        <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-neutral-800/80 text-xs">
+                          <div className="flex items-center flex-wrap gap-2">
+                            {/* Mode selector */}
+                            <select
+                              value={item.type || 'countdown'}
+                              onChange={(e) => updateTimer(item.id, { type: e.target.value as TimerType })}
+                              className="bg-neutral-900 hover:bg-neutral-800 text-[11px] font-medium text-neutral-300 border border-neutral-700/80 rounded-md px-2 py-1 outline-none focus:border-emerald-500 cursor-pointer"
+                              title="Timer Mode"
+                            >
+                              <option value="countdown">⏳ Countdown</option>
+                              <option value="countup">⏱️ Count-up</option>
+                              <option value="clock">🕒 Wall Clock</option>
+                            </select>
+
+                            {/* Scheduled time input & Projected Time */}
+                            <div className="flex items-center gap-1.5 bg-neutral-900 border border-neutral-700/80 rounded-md px-2 py-1" title="Planned vs Projected Start Time">
+                              <Clock className="w-3 h-3 text-neutral-400" />
+                              <input
+                                type="time"
+                                value={item.scheduledStartTime || ''}
+                                onChange={(e) => updateTimer(item.id, { scheduledStartTime: e.target.value || undefined })}
+                                className="bg-transparent text-[11px] font-mono text-neutral-300 outline-none w-14 cursor-pointer"
+                                title="Set Planned Start (HH:MM)"
+                              />
+                              {itemSched && (
+                                <span 
+                                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded border ${
+                                    itemSched.isDelayed 
+                                      ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 font-bold' 
+                                      : itemSched.status === 'past'
+                                      ? 'bg-neutral-800/60 text-neutral-500 border-transparent line-through'
+                                      : itemSched.status === 'current'
+                                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 font-bold'
+                                      : 'bg-neutral-800 text-neutral-300 border-neutral-700'
+                                  }`}
+                                  title={
+                                    itemSched.status === 'past'
+                                      ? 'Segment completed'
+                                      : itemSched.status === 'current'
+                                      ? 'Active segment on stage'
+                                      : `Projected Start: ${itemSched.projectedStartTime}${itemSched.isDelayed ? ` (+${Math.round(itemSched.delaySeconds / 60)}m behind schedule)` : ''}`
+                                  }
+                                >
+                                  {itemSched.status === 'past' ? '✓ Done' : itemSched.status === 'current' ? '▶ Active' : `Est ${itemSched.projectedStartTime}`}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Auto-Advance Chain Link Toggle */}
+                            <button
+                              onClick={() => toggleAutoStartNext(item.id)}
+                              className={`px-2 py-1 rounded-md text-[11px] font-medium border flex items-center gap-1.5 transition-colors ${
+                                item.autoStartNext
+                                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/40 hover:bg-amber-500/25'
+                                  : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-neutral-200'
+                              }`}
+                              title={item.autoStartNext ? 'Auto-Advance: ON (auto-starts next timer at 0:00)' : 'Auto-Advance: OFF (click to chain to next timer)'}
+                            >
+                              {item.autoStartNext ? <Link2 className="w-3 h-3 text-amber-400" /> : <Unlink className="w-3 h-3" />}
+                              <span>{item.autoStartNext ? 'Auto-Advance ON' : 'Link Next'}</span>
+                            </button>
+                          </div>
+
+                          {/* Chime & Warning Summary Tag */}
+                          <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-500 ml-auto">
+                            {item.thresholds && (
+                              <span title={`Yellow: ${Math.round(item.thresholds.yellowTime/60)}m | Red: ${item.thresholds.redTime}s`}>
+                                ⚠️ {Math.round(item.thresholds.yellowTime / 60)}m / {item.thresholds.redTime}s
+                              </span>
+                            )}
+                            {item.sounds && (
+                              <span className="capitalize" title={`Chime Style: ${item.sounds.chimeStyle.replace('_', ' ')}`}>
+                                🔔 {item.sounds.chimeStyle.replace('_', ' ')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Visual Connector for Auto-Advance Chain */}
                     {item.autoStartNext && idx < rundown.length - 1 && (
@@ -644,11 +1009,32 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
                 );
               })}
             </div>
+
+            {/* Show Timing Summary Bar */}
+            <div className="mt-3 pt-3 border-t border-neutral-800/80 flex flex-wrap items-center justify-between text-xs text-neutral-400 gap-2 font-mono">
+              <div className="flex items-center gap-1.5">
+                <span className="text-neutral-500 font-sans">Total Show:</span>
+                <span className="text-neutral-200 font-semibold">{scheduleMetrics.formattedTotalPlanned}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-neutral-500 font-sans">Remaining:</span>
+                <span className="text-amber-400 font-semibold">{scheduleMetrics.formattedRemaining}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-neutral-500 font-sans">Projected Finish:</span>
+                <span className="text-emerald-400 font-bold">{scheduleMetrics.formattedProjectedEnd}</span>
+                {scheduleMetrics.hasScheduleAnchors && scheduleMetrics.formattedPlannedEnd !== '--:--' && (
+                  <span className="text-neutral-500 line-through text-[11px]" title={`Planned finish was ${scheduleMetrics.formattedPlannedEnd}`}>
+                    ({scheduleMetrics.formattedPlannedEnd})
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Right Column: Stage Flash Messages & Presenter Cues */}
-        <div className="lg:col-span-12 xl:col-span-3 flex flex-col gap-6">
+        {/* Right Column: Stage Flash Messages & Presenter Cues (Equal Flank) */}
+        <div className="flex flex-col gap-5 min-w-0">
           <div className="bg-[#1C1C1C] rounded-xl border border-neutral-800 p-5 flex flex-col gap-4 shadow-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -761,8 +1147,12 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
             <h4 className="text-xs uppercase font-semibold tracking-wider text-neutral-400">Direct Role Links</h4>
             <div className="flex flex-col gap-2">
               <button
-                onClick={() => onNavigateView('viewer')}
+                onClick={() => {
+                  const url = `/app/?view=viewer&room=${encodeURIComponent(roomId)}`;
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}
                 className="flex items-center justify-between p-2.5 rounded-lg bg-[#141414] hover:bg-neutral-800 text-neutral-300 text-xs border border-neutral-800 transition-colors text-left"
+                title="Launch Stage Monitor in new tab (keeps Controller open)"
               >
                 <div className="flex items-center gap-2.5">
                   <Tv className="w-4 h-4 text-emerald-400" />
@@ -775,8 +1165,12 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
               </button>
 
               <button
-                onClick={() => onNavigateView('agenda')}
+                onClick={() => {
+                  const url = `/app/?view=agenda&room=${encodeURIComponent(roomId)}`;
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}
                 className="flex items-center justify-between p-2.5 rounded-lg bg-[#141414] hover:bg-neutral-800 text-neutral-300 text-xs border border-neutral-800 transition-colors text-left"
+                title="Launch Agenda Rundown in new tab (keeps Controller open)"
               >
                 <div className="flex items-center gap-2.5">
                   <Calendar className="w-4 h-4 text-cyan-400" />
@@ -789,14 +1183,36 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
               </button>
 
               <button
-                onClick={() => onNavigateView('moderator')}
+                onClick={() => {
+                  const url = `/app/?view=moderator&room=${encodeURIComponent(roomId)}`;
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}
                 className="flex items-center justify-between p-2.5 rounded-lg bg-[#141414] hover:bg-neutral-800 text-neutral-300 text-xs border border-neutral-800 transition-colors text-left"
+                title="Launch Moderator View in new tab (keeps Controller open)"
               >
                 <div className="flex items-center gap-2.5">
                   <MessageSquare className="w-4 h-4 text-amber-400" />
                   <div>
                     <div className="font-semibold text-white">Moderator View</div>
                     <div className="text-[11px] text-neutral-500">Stage assistant cue notes & Q&A</div>
+                  </div>
+                </div>
+                <ExternalLink className="w-3.5 h-3.5 text-neutral-500" />
+              </button>
+
+              <button
+                onClick={() => {
+                  const url = `/app/?view=overlay&room=${encodeURIComponent(roomId)}`;
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}
+                className="flex items-center justify-between p-2.5 rounded-lg bg-[#141414] hover:bg-neutral-800 text-neutral-300 text-xs border border-neutral-800 transition-colors text-left"
+                title="Launch OBS Broadcast Overlay in new tab"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Layers className="w-4 h-4 text-purple-400" />
+                  <div>
+                    <div className="font-semibold text-white">OBS Broadcast Overlay</div>
+                    <div className="text-[11px] text-neutral-500">Transparent overlay for OBS & vMix</div>
                   </div>
                 </div>
                 <ExternalLink className="w-3.5 h-3.5 text-neutral-500" />
@@ -843,6 +1259,21 @@ export default function ControllerView({ onNavigateView }: ControllerViewProps) 
         onClose={() => setIsAccountOpen(false)}
         onOpenPaywall={() => {
           setPaywallFeature('Shotimer Pro');
+          setIsPaywallOpen(true);
+        }}
+      />
+
+      {/* Dedicated Timer Wrap-Up & Alert Thresholds Modal */}
+      <TimerSettingsModal
+        isOpen={!!editingTimerId}
+        timer={rundown.find((t) => t.id === editingTimerId) || null}
+        onClose={() => setEditingTimerId(null)}
+        onUpdate={updateTimer}
+        onDuplicate={duplicateTimer}
+        onDelete={deleteTimer}
+        canDelete={rundown.length > 1}
+        onOpenPaywall={(feat) => {
+          setPaywallFeature(feat);
           setIsPaywallOpen(true);
         }}
       />

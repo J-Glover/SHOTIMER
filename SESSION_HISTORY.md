@@ -133,7 +133,75 @@
      - Column 3: Stage Flash Messages & Cues (`xl:col-span-3`)
    - Tested and visually verified via Playwright subagent on `http://localhost:3000/app/?view=controller`. Both static state and live running playback verified.
 
-3. **Next Steps (Scheduled for Tomorrow):**
-   - **Bit 2:** Production Schedule Math (Over/Under drift vs scheduled times & End-of-Show calculations).
-   - **Bit 3:** Dedicated Timer Wrap-Up & Alert Thresholds modal.
-   - **Bit 4:** Outputs Suite with Teleprompter Mirroring (`scaleX(-1)`) and SDI Delay.
+3. **Bit 2 Completed (Production Schedule Math & Over/Under Drift Tracking):**
+   - Created `src/utils/scheduleMath.ts`:
+     - Calculates live event drift (`driftSeconds`) comparing cumulative running runtime vs planned durations.
+     - Classifies status as `over` (🔴 behind schedule), `under` (🟢 ahead of schedule), or `on_time` (⚪).
+     - Calculates Projected End Time (`formattedProjectedEnd` ETA) and Planned End Time (`formattedPlannedEnd`).
+     - Computes row-by-row projected start times with delay indicators (`isDelayed`, `delaySeconds`).
+   - Created `src/components/controller/ScheduleDriftBadge.tsx`:
+     - Compact pill for top header dock.
+     - Full card in dashboard with expandable "Show Timing Math" popover breakdown.
+   - Updated `ControllerView.tsx` and `LiveMonitorPreview.tsx`:
+     - Live Over/Under badge in top header and left preview dashboard.
+     - Rundown table rows display dynamic projected start badges (`Now`, `Est 20:23`, delayed indicator).
+     - Bottom Show Timing Summary Bar displaying Total Show, Remaining Time, and Projected Finish.
+   - Updated `AgendaView.tsx`:
+     - Displays live Over/Under badge and per-item estimated start times for public/crew viewers.
+   - Verified via Playwright browser subagent on `http://localhost:5173/app/?view=controller` (clean build, 0 errors, interactive popover and `+5m` drift adjustment verified).
+
+4. **Bit 3 Completed (Dedicated Timer Wrap-Up & Alert Thresholds Modal):**
+   - Created `src/components/controller/TimerSettingsModal.tsx`:
+     - **Timing & Mode Tab:** Segment title, speaker name, mode selection (Countdown, Count-up, Wall Clock), duration inputs with quick presets (`5m`, `10m`, `15m`, `20m`, `30m`, `45m`), "Finish At" specific wall-clock calculator, scheduled start time (`HH:MM`), and auto-advance chaining toggle.
+     - **Alert Thresholds Tab:** Yellow warning alert slider/presets (`Off`, `1m`, `2m`, `3m`, `5m`), Red critical danger alert presets (`Off`, `15s`, `30s`, `1m`, `2m`), and overtime pulse/blink toggle.
+     - **Chimes & Sounds Tab:** Segment sound style (Soft Bell, Marimba, Deep Gong, Alert Beep), sound triggers for Yellow, Red, and Finish, volume slider, and interactive "Audition Chime" Web Audio testing.
+     - **Speaker Cues Tab:** Rich prompt/notes textarea transmitted live to Stage Confidence Monitor and Moderator view.
+     - **Row & Modal Actions:** Duplicate Timer (with Free Tier limit enforcement), Delete Timer, and Save & Apply.
+   - Enhanced `src/store/useTimerStore.ts` with `duplicateTimer(id)`.
+   - Updated `ControllerView.tsx` with Sliders edit trigger on every rundown row, speaker cues indicator, and modal integration.
+   - Updated `ViewerView.tsx` and `ModeratorView.tsx` to display live speaker cue notes.
+   - Verified via Playwright browser subagent on `http://localhost:5173/app/?view=controller` (0 errors, 4 tabs tested, audition chime tested, notes applied).
+
+5. **UI Polish: Two-Tier Rundown Cue Card Layout:**
+   - Redesigned rundown table rows from a cramped 1-line layout (which squashed titles into `Openin...`) into a spacious, broadcast-grade **Two-Tier Cue Card**:
+     - **Top Tier:** Play/pause button, `#1` order badge, full-width title & speaker (zero truncation), full notes preview, duration input, and quick actions (`🎚️`, `↑`, `↓`, `🗑️`).
+     - **Bottom Tier:** Timer mode dropdown, scheduled start time input, projected start time badge, auto-advance link toggle, and live warning/chime indicators.
+   - Tested and verified in browser: all segment titles and notes are now completely legible with plenty of breathing room.
+
+6. **Full-Width Edge-to-Edge Console & Sleek Single-Line Rundown Rows:**
+   - **Full-Width Viewport:** Removed the `max-w-[1700px]` constraint from `ControllerView.tsx` so the console stretches 100% edge-to-edge across the screen (`w-full px-4 sm:px-6`).
+   - **Asymmetric 3-Column Layout:** Implemented `xl:grid-cols-[360px_1fr_290px] 2xl:grid-cols-[400px_1fr_310px]`:
+     - **Left Column (~20–22% / 360–400px):** 16:9 Stage Monitor Preview, Timeline Bar, Transport Controls, and Schedule Math Card.
+     - **Center Column (~60–68% / `1fr`):** Event Rundown Playlist expanding to over **1,200px** on 1080p and **1,800px+** on 2560px.
+     - **Right Column (~16–18% / 290–310px):** Stage message presets, custom note textarea, and quick role links.
+   - **Reverted Rundown to Sleek Single-Line Rows:**
+     - Every segment sits on a single, continuous horizontal row:
+       `[ ▶ ] [#1] [ Segment Title ] [ Speaker ] [ 📄 Cue ] [ ⏳ Countdown ▾ ] [ 🕒 --:-- (▶ Active) ] [ ↳ Auto ] [ 05:00 ] [ ⚙ ] [ ▲ ] [ ▼ ] [ 🗑 ]`
+     - Segment Title flexes with wide horizontal space (zero squashing).
+     - Speaker notes rendered as a compact amber `📄 Cue` icon badge with full tooltip and quick modal click.
+     - Settings Sliders button includes an emerald dot indicator when custom alert thresholds or sounds are configured.
+   - Verified via browser subagent across 2560x1305 and 1920x1080 viewports (clean build, 0 errors).
+
+7. **Resolution-Aware Adaptive Rundown Layout (1080p vs 1440p):**
+   - **Automatic Detection:** Integrated window resize listener detecting screens `< 2100px` (1080p Full HD laptops/booths) vs `≥ 2100px` (1440p 2K/4K stage desks).
+   - **1080p Full HD:** Automatically renders in **Two-Tier Comfort Mode**, giving the title ("Workshop Intro & Setup") and speaker ("Lead Instructor") 100% full width with zero cut-off.
+   - **1440p / 4K:** Automatically renders in **Single-Line Broadcast Mode**, placing all 12 controls on one sleek horizontal row.
+   - **Director Override Pill:** Added an interactive `[Auto] [1-Row] [2-Tier]` switcher in the Event Rundown header for 1-click user override.
+   - Verified via Playwright browser subagent on both 1904x985 (1080p) and 2560x1305 (1440p).
+
+8. **Role Links Multi-Window Launching in New Browser Tabs:**
+   - **Root Cause & Rationale:** Previously, clicking top navigation dock items swapped views in the active window, navigating away from the active Director Controller. In real live productions (and Stagetimer.io), confidence monitors, agenda displays, and OBS overlays are placed on secondary monitors, TVs, and iPads in separate windows while the Controller remains undisturbed in the main tab.
+   - **Top View Switcher Dock (`src/App.tsx`):**
+     - Updated `Stage Monitor`, `Agenda`, `Moderator`, and `OBS Overlay` buttons to launch in a new tab (`window.open('/app/?view=' + tab.id + '&room=' + encodeURIComponent(roomId), '_blank')`).
+     - Added external link indicator icon (`↗` / `ExternalLink`) next to each secondary view button.
+     - Controller tab remains active in the current tab.
+   - **Direct Role Links Card (`src/views/ControllerView.tsx`):**
+     - Updated all buttons (`Stage Monitor View`, `Agenda Rundown View`, `Moderator View`, `OBS Broadcast Overlay`) to open in new browser tabs with active room sync (`&room=${roomId}`).
+     - Cleaned up component props (`onNavigateView` removed from `ControllerView`).
+   - Verified via Playwright browser subagent on `http://localhost:5173/app/?view=controller` (clean build, 0 errors, visual external link indicators verified).
+
+9. **Next Steps (On Deck):**
+   - **Bit 4:** Outputs Suite with Live Role Previews, Teleprompter Horizontal Mirroring (`scaleX(-1)`), and SDI/Broadcast Delay Offset.
+
+
+

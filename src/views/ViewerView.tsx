@@ -177,6 +177,11 @@ export default function ViewerView() {
               {activeTimer.speaker}
             </p>
           )}
+          {activeTimer?.notes && (
+            <div className="mt-2 max-w-2xl bg-neutral-900/90 border border-neutral-700/60 rounded-xl px-3.5 py-1.5 text-xs sm:text-sm text-amber-300/90 font-medium drop-shadow-md">
+              💡 {activeTimer.notes}
+            </div>
+          )}
         </div>
 
         {/* Fullscreen & View controls (auto-hiding) */}

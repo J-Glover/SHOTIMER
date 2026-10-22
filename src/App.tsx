@@ -6,10 +6,10 @@ import AgendaView from './views/AgendaView';
 import ModeratorView from './views/ModeratorView';
 import OverlayView from './views/OverlayView';
 import { useTimerStore } from './store/useTimerStore';
-import { Sliders, Tv, Calendar, MessageSquare, Layers, ArrowLeft } from 'lucide-react';
+import { Sliders, Tv, Calendar, MessageSquare, Layers, ArrowLeft, ExternalLink } from 'lucide-react';
 
 export default function App() {
-  const { start, pause, reset, nextTimer, previousTimer, toggleBlackout, status } = useTimerStore();
+  const { start, pause, reset, nextTimer, previousTimer, toggleBlackout, status, roomId } = useTimerStore();
 
   // Read view from URL query param if present (e.g., /?view=viewer)
   const getInitialView = (): ActiveView => {
@@ -90,15 +90,26 @@ export default function App() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => handleViewChange(tab.id as ActiveView)}
+                  onClick={() => {
+                    if (tab.id === 'controller') {
+                      handleViewChange('controller');
+                    } else {
+                      const url = `/app/?view=${tab.id}&room=${encodeURIComponent(roomId)}`;
+                      window.open(url, '_blank', 'noopener,noreferrer');
+                    }
+                  }}
                   className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs transition-colors ${
                     isActive
                       ? 'bg-neutral-700 text-white font-semibold shadow-sm'
                       : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800'
                   }`}
+                  title={tab.id === 'controller' ? 'Active Controller' : `Launch ${tab.label} in new browser tab`}
                 >
                   <Icon className="w-3.5 h-3.5" />
                   <span>{tab.label}</span>
+                  {tab.id !== 'controller' && (
+                    <ExternalLink className="w-2.5 h-2.5 opacity-50 ml-0.5" />
+                  )}
                 </button>
               );
             })}
@@ -112,9 +123,7 @@ export default function App() {
 
       {/* Render Active View */}
       <div className="flex-1 flex flex-col">
-        {currentView === 'controller' && (
-          <ControllerView onNavigateView={(v) => handleViewChange(v)} />
-        )}
+        {currentView === 'controller' && <ControllerView />}
         {currentView === 'viewer' && <ViewerView />}
         {currentView === 'agenda' && (
           <AgendaView onBackToController={() => handleViewChange('controller')} />

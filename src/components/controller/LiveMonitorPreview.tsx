@@ -13,6 +13,8 @@ import {
   Radio
 } from 'lucide-react';
 import type { TimerItem, FlashMessage, TimerStatus } from '../../types/timer';
+import type { ScheduleMetrics } from '../../utils/scheduleMath';
+import ScheduleDriftBadge from './ScheduleDriftBadge';
 
 interface LiveMonitorPreviewProps {
   activeTimer: TimerItem | undefined;
@@ -30,6 +32,7 @@ interface LiveMonitorPreviewProps {
   previousTimer: () => void;
   nextTimer: () => void;
   onLaunchStage?: () => void;
+  scheduleMetrics?: ScheduleMetrics;
 }
 
 export default function LiveMonitorPreview({
@@ -48,6 +51,7 @@ export default function LiveMonitorPreview({
   previousTimer,
   nextTimer,
   onLaunchStage,
+  scheduleMetrics,
 }: LiveMonitorPreviewProps) {
   const isRunning = status === 'running';
   const timerType = activeTimer?.type || 'countdown';
@@ -56,15 +60,15 @@ export default function LiveMonitorPreview({
 
   // Live wall clock for director
   const [wallClockStr, setWallClockStr] = useState('');
-  const [timezoneName, setTimezoneName] = useState('');
+  const [timezoneName] = useState(() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local';
+    } catch {
+      return 'Local';
+    }
+  });
 
   useEffect(() => {
-    try {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local';
-      setTimezoneName(tz);
-    } catch {
-      setTimezoneName('Local');
-    }
 
     const tickClock = () => {
       const now = new Date();
@@ -430,6 +434,13 @@ export default function LiveMonitorPreview({
           </button>
         </div>
       </div>
+
+      {/* Production Schedule Math & Over/Under Drift Indicator */}
+      {scheduleMetrics && (
+        <div className="pt-1">
+          <ScheduleDriftBadge metrics={scheduleMetrics} />
+        </div>
+      )}
 
       {/* Bottom Info: Wall Clock & Timezone Status */}
       <div className="flex items-center justify-between text-xs text-neutral-400 border-t border-neutral-800/80 pt-2.5">
