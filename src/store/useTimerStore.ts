@@ -20,6 +20,7 @@ import {
   deleteUserRoom,
   broadcastLiveRoomState,
   subscribeToLiveRoomState,
+  requestLiveRoomSync,
   type UserCloudProfile,
   type CloudSyncStatus,
 } from '../services/dbService';
@@ -987,8 +988,15 @@ if (typeof window !== 'undefined') {
       },
       () => {
         // Ping sync requested by a newly connected stage monitor or viewer!
-        // Immediately broadcast current state so the new screen is 100% in sync.
-        useTimerStore.getState()._broadcastState();
+        // Only active Controller console should respond to prevent viewer overwrites
+        if (typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search);
+          const view = params.get('view');
+          const isController = !view || view === 'controller';
+          if (isController) {
+            useTimerStore.getState()._broadcastState();
+          }
+        }
       },
       (status) => {
         useTimerStore.setState({ cloudSyncStatus: status });
@@ -1004,5 +1012,34 @@ if (typeof window !== 'undefined') {
       attachLiveListener(state.roomId);
     }
   });
+
+  // Visibility change listener: when mobile screen wakes up or tab becomes active, re-sync immediately
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      const currentRoomId = useTimerStore.getState().roomId;
+      const params = new URLSearchParams(window.location.search);
+      const view = params.get('view');
+      const isController = !view || view === 'controller';
+      if (!isController) {
+        // Viewer wakes up: ask controller for latest state
+        requestLiveRoomSync(currentRoomId);
+      } else {
+        // Controller wakes up: broadcast latest state
+        useTimerStore.getState()._broadcastState();
+      }
+    }
+  });
+
+  // Periodic Controller Heartbeat (every 4 seconds while timer is running)
+  setInterval(() => {
+    const state = useTimerStore.getState();
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view');
+    const isController = !view || view === 'controller';
+
+    if (isController && state.status === 'running') {
+      state._broadcastState();
+    }
+  }, 4000);
 }
 
