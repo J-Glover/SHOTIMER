@@ -211,13 +211,103 @@ export async function deleteUserRoom(uid: string, roomId: string): Promise<boole
   }
 }
 
-// Active realtime channel registry
-const activeChannels = new Map<string, any>();
+// ==============================================================================
+// Managed Supabase Realtime Channels (Two-Way Handshake + Queueing Engine)
+// ==============================================================================
+
+export type CloudSyncStatus = 'connected' | 'connecting' | 'offline' | 'local_only';
+
+interface ManagedRoomChannel {
+  channel: any;
+  status: CloudSyncStatus;
+  pendingQueue: Array<{ event: string; payload: any }>;
+  stateListeners: Set<(state: Partial<RoomState>) => void>;
+  pingListeners: Set<() => void>;
+  statusListeners: Set<(status: CloudSyncStatus) => void>;
+}
+
+const managedChannels = new Map<string, ManagedRoomChannel>();
 const broadcastDebounceMap = new Map<string, any>();
+
+function getOrCreateManagedChannel(roomId: string): ManagedRoomChannel | null {
+  if (!isSupabaseConfigured || !supabase) return null;
+
+  let entry = managedChannels.get(roomId);
+  if (entry) return entry;
+
+  entry = {
+    channel: null,
+    status: 'connecting',
+    pendingQueue: [],
+    stateListeners: new Set(),
+    pingListeners: new Set(),
+    statusListeners: new Set(),
+  };
+
+  const notifyStatus = (st: CloudSyncStatus) => {
+    if (!entry) return;
+    entry.status = st;
+    entry.statusListeners.forEach((fn) => {
+      try { fn(st); } catch (e) { console.warn(e); }
+    });
+  };
+
+  try {
+    const ch = supabase.channel(`room:${roomId}`, {
+      config: { broadcast: { self: false } },
+    });
+
+    ch.on('broadcast', { event: 'state_update' }, (msg: any) => {
+      if (msg?.payload && entry) {
+        entry.stateListeners.forEach((fn) => {
+          try { fn(msg.payload); } catch (e) { console.warn(e); }
+        });
+      }
+    });
+
+    ch.on('broadcast', { event: 'ping_sync' }, () => {
+      if (entry) {
+        entry.pingListeners.forEach((fn) => {
+          try { fn(); } catch (e) { console.warn(e); }
+        });
+      }
+    });
+
+    ch.subscribe((status: string) => {
+      if (status === 'SUBSCRIBED') {
+        notifyStatus('connected');
+        // Flush pending queued messages
+        if (entry) {
+          while (entry.pendingQueue.length > 0) {
+            const item = entry.pendingQueue.shift();
+            if (item) {
+              ch.send({
+                type: 'broadcast',
+                event: item.event,
+                payload: item.payload,
+              }).catch((err: any) => console.warn('[Shotimer Realtime] Flush send error:', err));
+            }
+          }
+        }
+      } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
+        notifyStatus('offline');
+      } else if (status === 'CLOSED') {
+        notifyStatus('offline');
+      }
+    });
+
+    entry.channel = ch;
+    managedChannels.set(roomId, entry);
+    return entry;
+  } catch (err) {
+    console.warn('[Shotimer Realtime] Error creating Supabase channel:', err);
+    return null;
+  }
+}
 
 /**
  * Broadcast active room state to remote stage monitors & OBS overlays across the internet
- * Uses Supabase Realtime Broadcast (sub-10ms global WebSockets) + debounced persistence.
+ * Uses Supabase Realtime Broadcast (sub-10ms global WebSockets) with send queueing.
  */
 export async function broadcastLiveRoomState(
   roomId: string,
@@ -225,27 +315,24 @@ export async function broadcastLiveRoomState(
 ): Promise<void> {
   if (!isSupabaseConfigured || !supabase) return;
 
-  // 1. Instant WebSocket Realtime Broadcast (zero DB quota consumed, < 20ms latency)
-  try {
-    let channel = activeChannels.get(roomId);
-    if (!channel) {
-      channel = supabase.channel(`room:${roomId}`, {
-        config: { broadcast: { self: false } },
+  const entry = getOrCreateManagedChannel(roomId);
+  if (entry) {
+    if (entry.status === 'connected' && entry.channel) {
+      entry.channel.send({
+        type: 'broadcast',
+        event: 'state_update',
+        payload: state,
+      }).catch((err: any) => {
+        console.warn('[Shotimer Realtime] WebSocket broadcast send failed, queuing:', err);
+        entry.pendingQueue.push({ event: 'state_update', payload: state });
       });
-      channel.subscribe();
-      activeChannels.set(roomId, channel);
+    } else {
+      // Channel still subscribing; keep only freshest state snapshot in queue
+      entry.pendingQueue = [{ event: 'state_update', payload: state }];
     }
-
-    channel.send({
-      type: 'broadcast',
-      event: 'state_update',
-      payload: state,
-    });
-  } catch (err) {
-    console.warn('[Shotimer Realtime] WebSocket broadcast error:', err);
   }
 
-  // 2. Debounced persistence in live_sessions table so late-joining screens get immediate state
+  // Debounced persistence in live_sessions table if it exists
   if (broadcastDebounceMap.has(roomId)) {
     clearTimeout(broadcastDebounceMap.get(roomId));
   }
@@ -261,13 +348,32 @@ export async function broadcastLiveRoomState(
           updated_at: new Date().toISOString(),
         });
     } catch {
-      // live_sessions table optional if Realtime Broadcast is active
+      // Optional fallback
     } finally {
       broadcastDebounceMap.delete(roomId);
     }
-  }, 150);
+  }, 200);
 
   broadcastDebounceMap.set(roomId, timer);
+}
+
+/**
+ * Request active room state synchronization from any open controller over Supabase Realtime
+ */
+export function requestLiveRoomSync(roomId: string): void {
+  if (!isSupabaseConfigured || !supabase) return;
+  const entry = getOrCreateManagedChannel(roomId);
+  if (entry) {
+    if (entry.status === 'connected' && entry.channel) {
+      entry.channel.send({
+        type: 'broadcast',
+        event: 'ping_sync',
+        payload: { timestamp: Date.now() },
+      }).catch(() => {});
+    } else {
+      entry.pendingQueue.push({ event: 'ping_sync', payload: { timestamp: Date.now() } });
+    }
+  }
 }
 
 /**
@@ -275,52 +381,56 @@ export async function broadcastLiveRoomState(
  */
 export function subscribeToLiveRoomState(
   roomId: string,
-  onUpdate: (state: Partial<RoomState>) => void
+  onUpdate: (state: Partial<RoomState>) => void,
+  onPingSync?: () => void,
+  onStatusChange?: (status: CloudSyncStatus) => void
 ): () => void {
   if (!isSupabaseConfigured || !supabase) {
+    onStatusChange?.('local_only');
     return () => {};
   }
 
-  const client = supabase;
+  const entry = getOrCreateManagedChannel(roomId);
+  if (!entry) return () => {};
 
-  // First, fetch the latest stored state from live_sessions table if it exists
+  entry.stateListeners.add(onUpdate);
+  if (onPingSync) entry.pingListeners.add(onPingSync);
+  if (onStatusChange) {
+    entry.statusListeners.add(onStatusChange);
+    onStatusChange(entry.status);
+  }
+
+  // 1. Immediately attempt to fetch stored snapshot from live_sessions table if it exists
   (async () => {
     try {
-      const { data } = await client
+      const { data, error } = await supabase!
         .from('live_sessions')
         .select('payload')
         .eq('room_id', roomId)
         .maybeSingle();
 
-      if (data && data.payload) {
+      if (!error && data && data.payload) {
         onUpdate(data.payload as Partial<RoomState>);
       }
     } catch {
-      // table might not be initialized yet
+      // Table may not be created yet, WebSocket channel handles live sync
     }
   })();
 
-  // Subscribe to real-time broadcast channel
-  const channel = client.channel(`room:${roomId}`, {
-    config: { broadcast: { self: false } },
-  });
-
-  channel
-    .on('broadcast', { event: 'state_update' }, (payload: any) => {
-      if (payload && payload.payload) {
-        onUpdate(payload.payload as Partial<RoomState>);
-      }
-    })
-    .subscribe();
-
-  activeChannels.set(roomId, channel);
+  // 2. Broadcast a ping_sync so any active controller announces its current running state
+  requestLiveRoomSync(roomId);
 
   return () => {
-    if (client) {
-      client.removeChannel(channel);
-    }
-    if (activeChannels.get(roomId) === channel) {
-      activeChannels.delete(roomId);
+    entry.stateListeners.delete(onUpdate);
+    if (onPingSync) entry.pingListeners.delete(onPingSync);
+    if (onStatusChange) entry.statusListeners.delete(onStatusChange);
+
+    // If no more listeners for this room, clean up channel
+    if (entry.stateListeners.size === 0 && entry.pingListeners.size === 0) {
+      if (supabase && entry.channel) {
+        supabase.removeChannel(entry.channel);
+      }
+      managedChannels.delete(roomId);
     }
   };
 }

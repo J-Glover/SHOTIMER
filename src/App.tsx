@@ -64,6 +64,24 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [status, start, pause, reset, nextTimer, previousTimer, toggleBlackout]);
 
+  // Keep view and room in sync with browser navigation (back/forward/URL changes)
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const v = params.get('view') as ActiveView;
+      if (['controller', 'viewer', 'agenda', 'moderator', 'overlay'].includes(v)) {
+        setCurrentView(v);
+      }
+      const r = params.get('room');
+      if (r && r !== useTimerStore.getState().roomId) {
+        useTimerStore.getState().switchRoom(r);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#141414] text-neutral-200 flex flex-col font-sans">
       {/* Subtle Top View Switcher Dock (only visible on Controller or when not in fullscreen Viewer/Overlay) */}

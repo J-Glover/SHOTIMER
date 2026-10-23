@@ -78,7 +78,8 @@ export default function ControllerView() {
     reorderRundown,
     toggleAutoStartNext,
     isProUser,
-    currentUser
+    currentUser,
+    cloudSyncStatus,
   } = useTimerStore();
 
   const [editingTimerId, setEditingTimerId] = useState<string | null>(null);
@@ -185,7 +186,7 @@ export default function ControllerView() {
   };
 
   const handleCopyViewerLink = () => {
-    const url = `${window.location.origin}/?view=viewer`;
+    const url = `${window.location.origin}/app/?room=${encodeURIComponent(roomId)}&view=viewer`;
     navigator.clipboard.writeText(url);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
@@ -222,7 +223,33 @@ export default function ControllerView() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="font-bold text-lg tracking-tight text-white">SHOTIMER</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Local Broadcast Sync Active" />
+            <div 
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-neutral-900 border border-neutral-800"
+              title={
+                cloudSyncStatus === 'connected'
+                  ? 'Cloud Realtime WebSockets Active: Remote monitors & mobile devices synced in real time (<20ms)'
+                  : cloudSyncStatus === 'connecting'
+                  ? 'Connecting to Supabase Cloud...'
+                  : 'Local broadcast sync active (tabs on this device)'
+              }
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                cloudSyncStatus === 'connected'
+                  ? 'bg-emerald-400 animate-pulse'
+                  : cloudSyncStatus === 'connecting'
+                  ? 'bg-amber-400 animate-pulse'
+                  : 'bg-neutral-500'
+              }`} />
+              <span className={`hidden md:inline ${
+                cloudSyncStatus === 'connected'
+                  ? 'text-emerald-400'
+                  : cloudSyncStatus === 'connecting'
+                  ? 'text-amber-400'
+                  : 'text-neutral-400'
+              }`}>
+                {cloudSyncStatus === 'connected' ? 'Cloud Live' : cloudSyncStatus === 'connecting' ? 'Connecting...' : 'Local Bus'}
+              </span>
+            </div>
           </div>
 
           <div className="h-5 w-px bg-neutral-700 hidden sm:block" />
@@ -385,7 +412,7 @@ export default function ControllerView() {
 
           {/* Open Stage Monitor in New Window */}
           <a
-            href="/?view=viewer"
+            href={`/app/?room=${encodeURIComponent(roomId)}&view=viewer`}
             target="_blank"
             rel="noopener noreferrer"
             className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium flex items-center gap-1.5 shadow-md shadow-emerald-900/30 transition-colors"

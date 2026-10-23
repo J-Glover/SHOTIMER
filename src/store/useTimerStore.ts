@@ -21,6 +21,7 @@ import {
   broadcastLiveRoomState,
   subscribeToLiveRoomState,
   type UserCloudProfile,
+  type CloudSyncStatus,
 } from '../services/dbService';
 
 export const FREE_TIMER_LIMIT = 3;
@@ -239,6 +240,7 @@ export interface TimerStore extends RoomState {
   currentUser: CloudUser | null;
   userProfile: UserCloudProfile | null;
   isAuthLoading: boolean;
+  cloudSyncStatus: CloudSyncStatus;
   createCustomRoom: (name: string) => Promise<string>;
   deleteCustomRoom: (roomId: string) => Promise<void>;
 
@@ -300,6 +302,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
     currentUser: null,
     userProfile: null,
     isAuthLoading: true,
+    cloudSyncStatus: 'connecting',
     activeTimerId: initialTimer.id,
     status: 'stopped',
     targetDuration: initialTimer.durationSeconds,
@@ -974,12 +977,23 @@ if (typeof window !== 'undefined') {
       unsubLive();
       unsubLive = null;
     }
-    unsubLive = subscribeToLiveRoomState(roomId, (remoteState) => {
-      const local = useTimerStore.getState();
-      if (remoteState && remoteState.roomId === local.roomId) {
-        local._applyExternalState(remoteState);
+    unsubLive = subscribeToLiveRoomState(
+      roomId,
+      (remoteState) => {
+        const local = useTimerStore.getState();
+        if (remoteState && remoteState.roomId === local.roomId) {
+          local._applyExternalState(remoteState);
+        }
+      },
+      () => {
+        // Ping sync requested by a newly connected stage monitor or viewer!
+        // Immediately broadcast current state so the new screen is 100% in sync.
+        useTimerStore.getState()._broadcastState();
+      },
+      (status) => {
+        useTimerStore.setState({ cloudSyncStatus: status });
       }
-    });
+    );
   };
 
   attachLiveListener(useTimerStore.getState().roomId);

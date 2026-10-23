@@ -15,6 +15,8 @@ export default function ViewerView() {
     blackout,
     activeMessage,
     theme,
+    roomId,
+    cloudSyncStatus,
   } = useTimerStore();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -186,6 +188,20 @@ export default function ViewerView() {
 
         {/* Fullscreen & View controls (auto-hiding) */}
         <div className={`transition-opacity duration-300 flex items-center gap-2 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-900/90 border border-white/10 text-xs font-medium text-neutral-300">
+            <span className={`w-2 h-2 rounded-full ${
+              cloudSyncStatus === 'connected'
+                ? 'bg-emerald-400 animate-pulse'
+                : cloudSyncStatus === 'connecting'
+                ? 'bg-amber-400 animate-pulse'
+                : 'bg-neutral-500'
+            }`} />
+            <span className="font-mono text-[11px] text-neutral-400">{roomId}</span>
+            <span className="text-[10px] uppercase font-semibold tracking-wider text-emerald-400 ml-0.5">
+              {cloudSyncStatus === 'connected' ? 'Live' : cloudSyncStatus === 'connecting' ? 'Syncing...' : 'Local'}
+            </span>
+          </div>
+
           {isWakeLocked && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-800/90 text-emerald-400 border border-white/10 text-xs font-medium">
               <Sun className="w-3.5 h-3.5" />
@@ -194,10 +210,10 @@ export default function ViewerView() {
           )}
           <button
             onClick={toggleFullscreen}
-            className="p-3 rounded-lg bg-neutral-800/80 hover:bg-neutral-700 text-neutral-300 transition-colors border border-white/10"
+            className="p-2.5 rounded-lg bg-neutral-800/80 hover:bg-neutral-700 text-neutral-300 transition-colors border border-white/10"
             title="Toggle Fullscreen (F11)"
           >
-            {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
         </div>
       </header>

@@ -17,9 +17,10 @@
    - Bypasses browser tab throttling when minimized using an inline Web Worker that ticks every 50ms via `performance.now()`.
 2. **Procedural Web Audio API (`src/audio/soundSynthesizer.ts`):**
    - Zero external `.mp3` or `.wav` downloads. Synthesizes Soft Bell, Marimba, Deep Gong, and 3-2-1 Alert Beeps directly on the sound card using math oscillators.
-3. **Hybrid Real-Time Sync Engine (`src/store/useTimerStore.ts`):**
+3. **Hybrid Real-Time Sync Engine (`src/store/useTimerStore.ts` & `src/services/dbService.ts`):**
    - **Local Tab/Window Sync:** Uses `BroadcastChannel('shotimer-sync-bus')` with epoch timestamps (`Date.now()`) for $< 1\text{ms}$ latency across tabs on the same device.
-   - **Internet Cloud Broadcast (`src/services/dbService.ts`):** Uses Supabase Realtime WebSockets (`room:${roomId}`) with sub-10ms broadcast latency, backed by debounced PostgreSQL storage in `live_sessions` table.
+   - **Internet Cloud Broadcast & Handshake (`src/services/dbService.ts`):** Uses Supabase Realtime WebSockets (`room:${roomId}`) with sub-10ms broadcast latency. Employs a bidirectional handshake (`ping_sync` -> `state_update`), outgoing message queuing until channel subscription is confirmed (`status === 'SUBSCRIBED'`), and debounced PostgreSQL snapshot storage in `live_sessions`.
+   - **Zero-Friction Mobile QR Connectivity:** [ShareModal.tsx](file:///c:/Users/aero1/Desktop/AI%20PROJECTS/SHOTIMER/src/components/common/ShareModal.tsx) strictly encodes `&room=${roomId}&view=${role}` and features an automatic Local Wi-Fi IP helper (`192.168.0.151:5173`) so phone cameras scanning QR codes in local development connect instantly without looping back to the phone's localhost.
 4. **Supabase Cloud Backend (`src/lib/supabase.ts`, `src/services/`):**
    - Pure cloud SaaS architecture using `@supabase/supabase-js`.
    - **Authentication (`authService.ts`):** Supabase GoTrue Auth with Email/Password registration & sign-in, Google OAuth popup sign-in, and password reset.
