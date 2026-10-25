@@ -8,9 +8,13 @@ import type {
   SyncMessage, 
   ThemeConfig, 
   TimerType, 
-  RoomInfo 
+  RoomInfo,
+  OutputRole,
+  OutputViewConfig,
+  OutputElementConfig,
+  OutputCustomizationMap,
 } from '../types/timer';
-import { FREE_ROOMS } from '../types/timer';
+import { FREE_ROOMS, DEFAULT_OUTPUT_CUSTOMIZATION } from '../types/timer';
 import { soundSynth } from '../audio/soundSynthesizer';
 import { subscribeToAuthState } from '../services/authService';
 import {
@@ -232,6 +236,24 @@ const loadRoomData = (roomId: string) => {
   return { name, rundown };
 };
 
+const getInitialOutputCustomization = (roomId: string): OutputCustomizationMap => {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem(`shotimer_output_customization_${roomId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...DEFAULT_OUTPUT_CUSTOMIZATION,
+          ...parsed,
+        };
+      }
+    } catch {
+      // fallback
+    }
+  }
+  return DEFAULT_OUTPUT_CUSTOMIZATION;
+};
+
 export interface TimerStore extends RoomState {
   // Rooms
   availableRooms: RoomInfo[];
@@ -269,6 +291,16 @@ export interface TimerStore extends RoomState {
   setRoomName: (name: string) => void;
   setRundown: (items: TimerItem[]) => void;
   updateTheme: (updates: Partial<ThemeConfig>) => void;
+
+  // Output Studio Customization
+  outputCustomization: OutputCustomizationMap;
+  updateOutputConfig: (role: OutputRole, updates: Partial<OutputViewConfig>) => void;
+  updateOutputElement: (role: OutputRole, elementId: string, updates: Partial<OutputElementConfig>) => void;
+  reorderOutputElements: (role: OutputRole, sourceIndex: number, destinationIndex: number) => void;
+  addOutputElement: (role: OutputRole, element: OutputElementConfig) => void;
+  removeOutputElement: (role: OutputRole, elementId: string) => void;
+  resetOutputConfig: (role?: OutputRole) => void;
+
   activatePro: (key: string) => void;
   deactivatePro: () => void;
   
@@ -327,6 +359,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       showTimeOfDay: true,
       showUpNext: true,
     },
+    outputCustomization: getInitialOutputCustomization(initialRoomId),
 
     createCustomRoom: async (name: string) => {
       const newId = `room-${Date.now().toString(36)}`;
@@ -409,6 +442,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
         timeRemaining: firstTimer.durationSeconds,
         elapsedTime: 0,
         overtimeSeconds: 0,
+        outputCustomization: getInitialOutputCustomization(newRoomId),
       });
 
       get()._broadcastState();
@@ -716,6 +750,108 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       get()._broadcastState();
     },
 
+    updateOutputConfig: (role: OutputRole, updates: Partial<OutputViewConfig>) => {
+      const current = get().outputCustomization || DEFAULT_OUTPUT_CUSTOMIZATION;
+      const roleConfig = current[role] || DEFAULT_OUTPUT_CUSTOMIZATION[role];
+      const updatedRole = { ...roleConfig, ...updates };
+      const updatedMap: OutputCustomizationMap = { ...current, [role]: updatedRole };
+      set({ outputCustomization: updatedMap });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`shotimer_output_customization_${get().roomId}`, JSON.stringify(updatedMap));
+      }
+      get()._broadcastState();
+    },
+
+    updateOutputElement: (role: OutputRole, elementId: string, updates: Partial<OutputElementConfig>) => {
+      const current = get().outputCustomization || DEFAULT_OUTPUT_CUSTOMIZATION;
+      const roleConfig = current[role] || DEFAULT_OUTPUT_CUSTOMIZATION[role];
+      const updatedElements = roleConfig.elements.map((el) =>
+        el.id === elementId ? { ...el, ...updates } : el
+      );
+      const updatedMap: OutputCustomizationMap = {
+        ...current,
+        [role]: { ...roleConfig, elements: updatedElements },
+      };
+      set({ outputCustomization: updatedMap });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`shotimer_output_customization_${get().roomId}`, JSON.stringify(updatedMap));
+      }
+      get()._broadcastState();
+    },
+
+    reorderOutputElements: (role: OutputRole, sourceIndex: number, destinationIndex: number) => {
+      const current = get().outputCustomization || DEFAULT_OUTPUT_CUSTOMIZATION;
+      const roleConfig = current[role] || DEFAULT_OUTPUT_CUSTOMIZATION[role];
+      const items = [...roleConfig.elements];
+      if (sourceIndex < 0 || sourceIndex >= items.length || destinationIndex < 0 || destinationIndex >= items.length) {
+        return;
+      }
+      const [moved] = items.splice(sourceIndex, 1);
+      items.splice(destinationIndex, 0, moved);
+      const reordered = items.map((item, idx) => ({ ...item, order: idx }));
+      const updatedMap: OutputCustomizationMap = {
+        ...current,
+        [role]: { ...roleConfig, elements: reordered },
+      };
+      set({ outputCustomization: updatedMap });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`shotimer_output_customization_${get().roomId}`, JSON.stringify(updatedMap));
+      }
+      get()._broadcastState();
+    },
+
+    addOutputElement: (role: OutputRole, element: OutputElementConfig) => {
+      const current = get().outputCustomization || DEFAULT_OUTPUT_CUSTOMIZATION;
+      const roleConfig = current[role] || DEFAULT_OUTPUT_CUSTOMIZATION[role];
+      const updatedMap: OutputCustomizationMap = {
+        ...current,
+        [role]: {
+          ...roleConfig,
+          elements: [...roleConfig.elements, element],
+        },
+      };
+      set({ outputCustomization: updatedMap });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`shotimer_output_customization_${get().roomId}`, JSON.stringify(updatedMap));
+      }
+      get()._broadcastState();
+    },
+
+    removeOutputElement: (role: OutputRole, elementId: string) => {
+      const current = get().outputCustomization || DEFAULT_OUTPUT_CUSTOMIZATION;
+      const roleConfig = current[role] || DEFAULT_OUTPUT_CUSTOMIZATION[role];
+      const updatedMap: OutputCustomizationMap = {
+        ...current,
+        [role]: {
+          ...roleConfig,
+          elements: roleConfig.elements.filter((el) => el.id !== elementId),
+        },
+      };
+      set({ outputCustomization: updatedMap });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`shotimer_output_customization_${get().roomId}`, JSON.stringify(updatedMap));
+      }
+      get()._broadcastState();
+    },
+
+    resetOutputConfig: (role?: OutputRole) => {
+      let updatedMap: OutputCustomizationMap;
+      if (role) {
+        const current = get().outputCustomization || DEFAULT_OUTPUT_CUSTOMIZATION;
+        updatedMap = {
+          ...current,
+          [role]: JSON.parse(JSON.stringify(DEFAULT_OUTPUT_CUSTOMIZATION[role])),
+        };
+      } else {
+        updatedMap = JSON.parse(JSON.stringify(DEFAULT_OUTPUT_CUSTOMIZATION));
+      }
+      set({ outputCustomization: updatedMap });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`shotimer_output_customization_${get().roomId}`, JSON.stringify(updatedMap));
+      }
+      get()._broadcastState();
+    },
+
     activatePro: (key: string) => {
       set({ isProUser: true, licenseKey: key });
       if (typeof window !== 'undefined') {
@@ -852,6 +988,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
           activeMessage: state.activeMessage,
           rundown: state.rundown,
           theme: state.theme,
+          outputCustomization: state.outputCustomization,
           isAudioMuted: state.isAudioMuted,
         },
       };

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTimerStore } from '../store/useTimerStore';
 import { Maximize2, Minimize2, EyeOff, Bell, Sun } from 'lucide-react';
 import { useWakeLock } from '../hooks/useWakeLock';
+import { DEFAULT_OUTPUT_CUSTOMIZATION, type OutputElementType } from '../types/timer';
 
 export default function ViewerView() {
   const isWakeLocked = useWakeLock(true);
@@ -17,7 +18,19 @@ export default function ViewerView() {
     theme,
     roomId,
     cloudSyncStatus,
+    outputCustomization,
   } = useTimerStore();
+
+  const viewerConfig = outputCustomization?.viewer || DEFAULT_OUTPUT_CUSTOMIZATION.viewer;
+
+  const isElemVisible = (type: OutputElementType) => {
+    const elem = viewerConfig.elements.find((el) => el.type === type);
+    return elem ? elem.visible : true;
+  };
+
+  const getElem = (type: OutputElementType) => {
+    return viewerConfig.elements.find((el) => el.type === type);
+  };
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentTimeStr, setCurrentTimeStr] = useState('');
@@ -124,7 +137,8 @@ export default function ViewerView() {
   if (blackout) {
     return (
       <div 
-        className="fixed inset-0 bg-[#000000] flex flex-col items-center justify-center cursor-none z-50"
+        className="fixed inset-0 flex flex-col items-center justify-center cursor-none z-50 transition-colors"
+        style={{ backgroundColor: viewerConfig.blackoutColor || '#000000' }}
         onMouseMove={() => setShowControls(true)}
       >
         <div className="text-white/20 text-sm tracking-widest uppercase flex items-center gap-2">
@@ -137,7 +151,11 @@ export default function ViewerView() {
 
   return (
     <div 
-      className={`fixed inset-0 ${theme.oledBlack ? 'bg-[#000000]' : 'bg-[#181818]'} text-white flex flex-col justify-between p-6 sm:p-10 select-none overflow-hidden`}
+      className={`fixed inset-0 text-white flex flex-col justify-between p-6 sm:p-10 select-none overflow-hidden transition-colors`}
+      style={{
+        backgroundColor: viewerConfig.backgroundColor || (theme.oledBlack ? '#000000' : '#181818'),
+        fontFamily: viewerConfig.fontFamily ? `'${viewerConfig.fontFamily}', -apple-system, BlinkMacSystemFont, sans-serif` : undefined,
+      }}
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
       onMouseMove={() => {
@@ -150,10 +168,24 @@ export default function ViewerView() {
       <header className="flex items-center justify-between z-20">
         <div className="flex flex-col">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight text-white drop-shadow-md">
-              {activeTimer?.title || 'Stage Segment'}
-            </h1>
-            {statusBadge && (
+            {/* Custom Logo if present and visible */}
+            {isElemVisible('logo') && (getElem('logo')?.customValue || getElem('logo')?.customProps?.imageUrl) && (
+              <img 
+                src={(getElem('logo')?.customValue || getElem('logo')?.customProps?.imageUrl) as string} 
+                alt="Logo" 
+                className="max-h-12 max-w-[160px] object-contain drop-shadow mr-2" 
+              />
+            )}
+
+            {/* Segment Title */}
+            {isElemVisible('segmentTitle') && (
+              <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight text-white drop-shadow-md">
+                {activeTimer?.title || 'Stage Segment'}
+              </h1>
+            )}
+
+            {/* On Air Indicator */}
+            {isElemVisible('onAirIndicator') && statusBadge && (
               <span className={`px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider text-white shadow-lg ${
                 statusBadge === 'OVERTIME' ? 'bg-red-600/90 animate-pulse' :
                 statusBadge === 'CRITICAL' ? 'bg-red-500/90' :
@@ -163,6 +195,7 @@ export default function ViewerView() {
                 {statusBadge}
               </span>
             )}
+
             {activeTimer?.autoStartNext && (
               <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
                 ⚡ Auto-Advance
@@ -174,14 +207,25 @@ export default function ViewerView() {
               </span>
             )}
           </div>
-          {activeTimer?.speaker && (
+
+          {/* Speaker Name */}
+          {isElemVisible('speaker') && activeTimer?.speaker && (
             <p className="text-base sm:text-2xl text-neutral-400 font-light mt-1">
               {activeTimer.speaker}
             </p>
           )}
-          {activeTimer?.notes && (
+
+          {/* Speaker Notes */}
+          {isElemVisible('speakerNotes') && activeTimer?.notes && (
             <div className="mt-2 max-w-2xl bg-neutral-900/90 border border-neutral-700/60 rounded-xl px-3.5 py-1.5 text-xs sm:text-sm text-amber-300/90 font-medium drop-shadow-md">
               💡 {activeTimer.notes}
+            </div>
+          )}
+
+          {/* Custom Text / Banner */}
+          {isElemVisible('customText') && (getElem('customText')?.customValue || getElem('customText')?.customProps?.text) && (
+            <div className="mt-1.5 text-xs sm:text-sm text-amber-400 font-medium tracking-wide">
+              {(getElem('customText')?.customValue || getElem('customText')?.customProps?.text) as string}
             </div>
           )}
         </div>
@@ -219,17 +263,19 @@ export default function ViewerView() {
       </header>
 
       {/* Center: Massive Edge-to-Edge Confidence Monitor Digits */}
-      <div className="flex-1 flex flex-col items-center justify-center my-auto py-2 z-10">
-        <div className={`tabular-numbers font-bold text-center leading-none tracking-tight ${colorClass} text-[18vw] sm:text-[22vw] lg:text-[24vw] drop-shadow-2xl`}>
-          {isClock ? currentTimeStr : isCountup ? formatDisplayTime(elapsedTime) : formatDisplayTime(timeRemaining)}
-        </div>
-
-        {isOvertime && (
-          <div className="text-red-400 text-sm sm:text-xl font-semibold uppercase tracking-widest mt-2">
-            Overtime: +{Math.floor(overtimeSeconds)}s
+      {isElemVisible('timer') && (
+        <div className="flex-1 flex flex-col items-center justify-center my-auto py-2 z-10">
+          <div className={`tabular-numbers font-bold text-center leading-none tracking-tight ${colorClass} text-[18vw] sm:text-[22vw] lg:text-[24vw] drop-shadow-2xl`}>
+            {isClock ? currentTimeStr : isCountup ? formatDisplayTime(elapsedTime) : formatDisplayTime(timeRemaining)}
           </div>
-        )}
-      </div>
+
+          {isOvertime && (
+            <div className="text-red-400 text-sm sm:text-xl font-semibold uppercase tracking-widest mt-2">
+              Overtime: +{Math.floor(overtimeSeconds)}s
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Prominent Stage Flash Message Banner */}
       {activeMessage && activeMessage.visible && (
@@ -254,8 +300,8 @@ export default function ViewerView() {
 
       {/* Bottom Area: Progress Bar + Time of Day & Next Segment */}
       <footer className="w-full flex flex-col gap-4 z-20">
-        {/* Stage Progress Bar (toggleable) */}
-        {theme.showProgressBar && (
+        {/* Stage Progress Bar (toggleable via output customization or theme) */}
+        {isElemVisible('progressBar') && theme.showProgressBar && (
           <div className="w-full h-4 sm:h-5 bg-neutral-800 rounded-full overflow-hidden p-0.5 border border-white/10">
             <div 
               className={`h-full rounded-full transition-all duration-200 ${barColorClass}`}
@@ -266,21 +312,25 @@ export default function ViewerView() {
 
         {/* Footer Meta: Clock & Next Segment */}
         <div className="flex items-center justify-between text-sm sm:text-xl text-neutral-400 font-light">
-          <div className="tabular-numbers font-mono">
-            {currentTimeStr}
-          </div>
+          {isElemVisible('timeOfDay') ? (
+            <div className="tabular-numbers font-mono">
+              {currentTimeStr}
+            </div>
+          ) : <div />}
 
-          {theme.showUpNext && nextTimer ? (
-            <div className="flex items-center gap-2 truncate text-right">
-              <span className="text-neutral-500 hidden sm:inline">Up Next:</span>
-              <span className="text-neutral-200 font-normal truncate">
-                {nextTimer.title} {nextTimer.speaker ? `(${nextTimer.speaker})` : ''}
-              </span>
-            </div>
-          ) : (
-            <div className="text-neutral-500 text-xs sm:text-base">
-              End of Rundown
-            </div>
+          {isElemVisible('upNext') && theme.showUpNext && (
+            nextTimer ? (
+              <div className="flex items-center gap-2 truncate text-right">
+                <span className="text-neutral-500 hidden sm:inline">Up Next:</span>
+                <span className="text-neutral-200 font-normal truncate">
+                  {nextTimer.title} {nextTimer.speaker ? `(${nextTimer.speaker})` : ''}
+                </span>
+              </div>
+            ) : (
+              <div className="text-neutral-500 text-xs sm:text-base">
+                End of Rundown
+              </div>
+            )
           )}
         </div>
       </footer>

@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { 
-  Tv, 
   Play, 
   Pause, 
   RotateCcw, 
@@ -10,10 +9,13 @@ import {
   Bell, 
   Clock, 
   ExternalLink,
-  Radio
+  Radio,
+  Paintbrush,
+  ChevronDown
 } from 'lucide-react';
-import type { TimerItem, FlashMessage, TimerStatus } from '../../types/timer';
+import type { TimerItem, FlashMessage, TimerStatus, OutputRole } from '../../types/timer';
 import type { ScheduleMetrics } from '../../utils/scheduleMath';
+import { useTimerStore } from '../../store/useTimerStore';
 import ScheduleDriftBadge from './ScheduleDriftBadge';
 
 interface LiveMonitorPreviewProps {
@@ -32,6 +34,7 @@ interface LiveMonitorPreviewProps {
   previousTimer: () => void;
   nextTimer: () => void;
   onLaunchStage?: () => void;
+  onOpenCustomize?: (role: OutputRole) => void;
   scheduleMetrics?: ScheduleMetrics;
 }
 
@@ -51,8 +54,11 @@ export default function LiveMonitorPreview({
   previousTimer,
   nextTimer,
   onLaunchStage,
+  onOpenCustomize,
   scheduleMetrics,
 }: LiveMonitorPreviewProps) {
+  const roomId = useTimerStore((s) => s.roomId);
+  const [previewRole, setPreviewRole] = useState<OutputRole>('viewer');
   const isRunning = status === 'running';
   const timerType = activeTimer?.type || 'countdown';
   const isCountup = timerType === 'countup';
@@ -186,11 +192,53 @@ export default function LiveMonitorPreview({
 
   return (
     <div className="bg-[#1C1C1C] rounded-xl border border-neutral-800 p-4 sm:p-5 flex flex-col gap-4 shadow-xl">
-      {/* Top Header of the Monitor Box */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Tv className="w-4 h-4 text-emerald-400" />
-          <h3 className="text-sm font-bold uppercase tracking-wider text-white">Stage Monitor Preview</h3>
+      {/* Top Header of the Monitor Box (Stagetimer.io parity) */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] font-bold tracking-wider text-neutral-400 uppercase">PREVIEW:</span>
+          <div className="relative">
+            <select
+              value={previewRole}
+              onChange={(e) => setPreviewRole(e.target.value as OutputRole)}
+              className="bg-[#242428] hover:bg-[#2C2C32] text-white text-xs font-semibold pl-2.5 pr-7 py-1 rounded-lg border border-neutral-700 outline-none cursor-pointer appearance-none transition-colors"
+            >
+              <option value="viewer">Stage Monitor</option>
+              <option value="agenda">Agenda</option>
+              <option value="moderator">Moderator</option>
+              <option value="overlay">OBS Overlay</option>
+            </select>
+            <ChevronDown className="w-3 h-3 text-neutral-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+
+          {/* Customize Output Button (Paintbrush) */}
+          <button
+            onClick={() => onOpenCustomize?.(previewRole)}
+            className="p-1.5 rounded-lg bg-[#242428] hover:bg-amber-500 text-neutral-300 hover:text-neutral-950 border border-neutral-700 transition-all flex items-center justify-center group"
+            title={`Customize Output "${previewRole === 'viewer' ? 'Stage Monitor' : previewRole === 'agenda' ? 'Agenda' : previewRole === 'moderator' ? 'Moderator' : 'OBS Overlay'}"`}
+          >
+            <Paintbrush className="w-3.5 h-3.5 text-amber-400 group-hover:text-neutral-950 transition-colors" />
+          </button>
+
+          {/* Pop-out View in New Window */}
+          {onLaunchStage && previewRole === 'viewer' ? (
+            <button
+              onClick={onLaunchStage}
+              className="p-1.5 rounded-lg bg-[#242428] hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-colors flex items-center justify-center cursor-pointer"
+              title="Open Stage Monitor in new window"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <a
+              href={`/app/?room=${encodeURIComponent(roomId)}&view=${previewRole}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 rounded-lg bg-[#242428] hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-colors flex items-center justify-center"
+              title={`Open ${previewRole} in new window`}
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -207,17 +255,6 @@ export default function LiveMonitorPreview({
             }`} />
             {isRunning ? 'ON AIR' : status === 'paused' ? 'PAUSED' : 'STANDBY'}
           </span>
-
-          {/* Quick Launch Viewer Button */}
-          {onLaunchStage && (
-            <button
-              onClick={onLaunchStage}
-              className="p-1 rounded text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
-              title="Launch Stage Monitor in new tab"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-            </button>
-          )}
         </div>
       </div>
 

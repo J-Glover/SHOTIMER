@@ -32,7 +32,7 @@ import {
   Layers
 } from 'lucide-react';
 import { soundSynth } from '../audio/soundSynthesizer';
-import type { ChimeStyle, TimerType } from '../types/timer';
+import type { ChimeStyle, TimerType, OutputRole } from '../types/timer';
 import ShareModal from '../components/common/ShareModal';
 import SettingsModal from '../components/common/SettingsModal';
 import ProPaywallModal from '../components/common/ProPaywallModal';
@@ -41,6 +41,7 @@ import AccountSettingsModal from '../components/account/AccountSettingsModal';
 import LiveMonitorPreview from '../components/controller/LiveMonitorPreview';
 import ScheduleDriftBadge from '../components/controller/ScheduleDriftBadge';
 import TimerSettingsModal from '../components/controller/TimerSettingsModal';
+import CustomizeOutputModal from '../components/controller/CustomizeOutputModal';
 import { calculateScheduleMetrics } from '../utils/scheduleMath';
 
 export default function ControllerView() {
@@ -107,6 +108,8 @@ export default function ControllerView() {
   });
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [paywallFeature, setPaywallFeature] = useState('Shotimer Pro');
+  const [isCustomizeOutputOpen, setIsCustomizeOutputOpen] = useState(false);
+  const [customizeRole, setCustomizeRole] = useState<OutputRole>('viewer');
 
   // Adaptive Monitor Rundown Layout: 'auto' | 'single' | 'two-tier'
   const [layoutPreference, setLayoutPreference] = useState<'auto' | 'single' | 'two-tier'>('auto');
@@ -445,7 +448,14 @@ export default function ControllerView() {
             adjustTime={adjustTime}
             previousTimer={previousTimer}
             nextTimer={nextTimer}
-            onLaunchStage={() => window.open('/?view=viewer', '_blank')}
+            onLaunchStage={() => {
+              const url = `/app/?view=viewer&room=${encodeURIComponent(roomId)}`;
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }}
+            onOpenCustomize={(role) => {
+              setCustomizeRole(role);
+              setIsCustomizeOutputOpen(true);
+            }}
             scheduleMetrics={scheduleMetrics}
           />
         </div>
@@ -1299,6 +1309,17 @@ export default function ControllerView() {
         onDuplicate={duplicateTimer}
         onDelete={deleteTimer}
         canDelete={rundown.length > 1}
+        onOpenPaywall={(feat) => {
+          setPaywallFeature(feat);
+          setIsPaywallOpen(true);
+        }}
+      />
+
+      {/* Customize Output Studio Modal (Stagetimer.io Parity) */}
+      <CustomizeOutputModal
+        isOpen={isCustomizeOutputOpen}
+        onClose={() => setIsCustomizeOutputOpen(false)}
+        initialRole={customizeRole}
         onOpenPaywall={(feat) => {
           setPaywallFeature(feat);
           setIsPaywallOpen(true);

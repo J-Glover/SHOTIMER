@@ -1,0 +1,4 @@
+# Shotimer Robots.txt
+User-agent: *
+Allow: /
+Sitemap: https://shotimer.com/sitemap.xml

@@ -87,6 +87,7 @@ export interface RoomState {
   
   // Customization & Appearance
   theme: ThemeConfig;
+  outputCustomization?: OutputCustomizationMap;
   
   // Audio state
   isAudioMuted: boolean;
@@ -97,6 +98,99 @@ export interface RoomState {
 }
 
 export type ActiveView = 'controller' | 'viewer' | 'agenda' | 'moderator' | 'overlay';
+export type OutputRole = 'viewer' | 'agenda' | 'moderator' | 'overlay';
+export type AspectRatio = '16:9' | '4:3' | '9:16' | '21:9';
+
+export type OutputElementType = 
+  | 'timer' 
+  | 'progressBar' 
+  | 'timeOfDay' 
+  | 'segmentTitle' 
+  | 'speaker' 
+  | 'speakerNotes' 
+  | 'upNext' 
+  | 'onAirIndicator' 
+  | 'logo' 
+  | 'customText';
+
+export interface OutputElementConfig {
+  id: string;
+  type: OutputElementType;
+  label: string;
+  visible: boolean;
+  order: number;
+  customValue?: string; // Text string or image URL
+  customProps?: Record<string, any>;
+}
+
+export interface OutputViewConfig {
+  aspectRatio: AspectRatio;
+  backgroundColor: string;
+  blackoutColor: string;
+  fontFamily: string;
+  elements: OutputElementConfig[];
+}
+
+export type OutputCustomizationMap = Record<OutputRole, OutputViewConfig>;
+
+export const DEFAULT_VIEWER_ELEMENTS: OutputElementConfig[] = [
+  { id: 'el-title', type: 'segmentTitle', label: 'Segment Title', visible: true, order: 0 },
+  { id: 'el-speaker', type: 'speaker', label: 'Speaker Name', visible: true, order: 1 },
+  { id: 'el-notes', type: 'speakerNotes', label: 'Speaker Notes / Cues', visible: true, order: 2 },
+  { id: 'el-tally', type: 'onAirIndicator', label: 'On Air Indicator', visible: true, order: 3 },
+  { id: 'el-timer', type: 'timer', label: 'Timer Digits', visible: true, order: 4 },
+  { id: 'el-progress', type: 'progressBar', label: 'Progress Bar', visible: true, order: 5 },
+  { id: 'el-clock', type: 'timeOfDay', label: 'Time of Day (Clock)', visible: true, order: 6 },
+  { id: 'el-next', type: 'upNext', label: 'Up Next Preview', visible: true, order: 7 },
+  { id: 'el-logo', type: 'logo', label: 'Image / Logo', visible: false, order: 8, customValue: '' },
+  { id: 'el-text', type: 'customText', label: 'Custom Text', visible: false, order: 9, customValue: '' },
+];
+
+export const DEFAULT_OUTPUT_CUSTOMIZATION: OutputCustomizationMap = {
+  viewer: {
+    aspectRatio: '16:9',
+    backgroundColor: '#181818',
+    blackoutColor: '#000000',
+    fontFamily: 'JetBrains Mono',
+    elements: DEFAULT_VIEWER_ELEMENTS,
+  },
+  agenda: {
+    aspectRatio: '16:9',
+    backgroundColor: '#181818',
+    blackoutColor: '#000000',
+    fontFamily: 'Plus Jakarta Sans',
+    elements: [
+      { id: 'el-agenda-tally', type: 'onAirIndicator', label: 'On Air Indicator', visible: true, order: 0 },
+      { id: 'el-agenda-clock', type: 'timeOfDay', label: 'Time of Day (Clock)', visible: true, order: 1 },
+      { id: 'el-agenda-list', type: 'timer', label: 'Agenda Rundown Table', visible: true, order: 2 },
+      { id: 'el-agenda-logo', type: 'logo', label: 'Image / Logo', visible: false, order: 3, customValue: '' },
+      { id: 'el-agenda-text', type: 'customText', label: 'Custom Text', visible: false, order: 4, customValue: '' },
+    ],
+  },
+  moderator: {
+    aspectRatio: '16:9',
+    backgroundColor: '#181818',
+    blackoutColor: '#000000',
+    fontFamily: 'Plus Jakarta Sans',
+    elements: [
+      { id: 'el-mod-timer', type: 'timer', label: 'Compact Countdown', visible: true, order: 0 },
+      { id: 'el-mod-clock', type: 'timeOfDay', label: 'Time of Day (Clock)', visible: true, order: 1 },
+      { id: 'el-mod-notes', type: 'speakerNotes', label: 'Moderator Notes & Cues', visible: true, order: 2 },
+    ],
+  },
+  overlay: {
+    aspectRatio: '16:9',
+    backgroundColor: 'transparent',
+    blackoutColor: 'transparent',
+    fontFamily: 'JetBrains Mono',
+    elements: [
+      { id: 'el-ovl-title', type: 'segmentTitle', label: 'Segment Title', visible: true, order: 0 },
+      { id: 'el-ovl-speaker', type: 'speaker', label: 'Speaker Name', visible: true, order: 1 },
+      { id: 'el-ovl-timer', type: 'timer', label: 'Broadcast Lower-Third Timer', visible: true, order: 2 },
+      { id: 'el-ovl-tally', type: 'onAirIndicator', label: 'ON-AIR Badge', visible: true, order: 3 },
+    ],
+  },
+};
 
 export type SyncActionType = 
   | 'SYNC_FULL_STATE'
@@ -112,6 +206,7 @@ export type SyncActionType =
   | 'TOGGLE_BLACKOUT'
   | 'UPDATE_RUNDOWN'
   | 'UPDATE_THEME'
+  | 'UPDATE_OUTPUT_CUSTOMIZATION'
   | 'TRIGGER_CHIME'
   | 'PING_SYNC';
 
@@ -122,3 +217,4 @@ export interface SyncMessage {
   timestamp: number;
   payload?: any;
 }
+

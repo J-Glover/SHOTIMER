@@ -202,6 +202,175 @@
 
 9. **Next Steps (On Deck):**
    - **Bit 4:** Outputs Suite with Live Role Previews, Teleprompter Horizontal Mirroring (`scaleX(-1)`), and SDI/Broadcast Delay Offset.
+   - **Controller PIN Lock:** Optional 4-digit security PIN to protect Controller view from audience tampering.
+
+---
+
+### Session Date: October 25, 2026
+**Conversation ID:** `4b4dc002-3005-459c-9bea-05eea870bb2e`  
+**Model:** Gemini 3.8 Flash (High)  
+**Task:** Session Sync & Account Architecture Plan Reconciliation
+1. **Plan Audit & Task Ticking:**
+   - Audited the codebase against `session_sync_and_account_architecture_plan.md`.
+   - Confirmed completed status for:
+     - All link generators attaching `&room=` and `&view=`.
+     - Local Wi-Fi Network IP detection and switcher (`192.168.0.151`) in `ShareModal.tsx`.
+     - Two-way Supabase Realtime cloud handshake (`ping_sync` / `state_update`).
+     - Channel subscription ready queueing (`pendingQueue` flushing on `SUBSCRIBED`).
+     - Immediate snapshot retrieval from `live_sessions` PostgreSQL table on client connection.
+     - Visual connection status pills in Controller header, Stage Monitor, and Share Modal.
+     - Seamless account linkage for organizers via Supabase Auth + `rooms` table.
+     - Zero-friction guest viewer access (no logins forced on stage displays/phones).
+   - Updated and ticked off all completed tasks across Phase 1, Phase 2, and Phase 3 in the plan artifact.
+2. **Code Uniformity Polish:**
+   - Updated `onLaunchStage` in `src/views/ControllerView.tsx` to strictly navigate to `/app/?view=viewer&room=${encodeURIComponent(roomId)}`.
+   - Verified clean lint and build (`npm run lint`, `npm run build` in 840ms with 0 errors).
+
+---
+
+### Session Date: October 25, 2026 (Evening)
+**Conversation ID:** `4b4dc002-3005-459c-9bea-05eea870bb2e`  
+**Model:** Gemini 3.8 Flash (High)  
+**Task:** Full "Coming Soon" Landing Page Redesign to Match Marketing Website Design Language
+
+1. **Aesthetic & Design System Alignment:**
+   - Rebuilt [`website_coming_soon/index.html`](file:///c:/Users/aero1/Desktop/AI%20PROJECTS/SHOTIMER/website_coming_soon/index.html) to adopt the exact same **Warm Neutral Studio** design language as [`website/index.html`](file:///c:/Users/aero1/Desktop/AI%20PROJECTS/SHOTIMER/website/index.html):
+     - Warm Linen canvas (`#FAF8F5`, `#F4F1EA`), Obsidian Slate (`#18181B`, `#27272A`), Stage Amber Tally (`#F59E0B`), and Broadcast Emerald (`#10B981`).
+     - Google Fonts typography (`Plus Jakarta Sans` for headers and copy, `JetBrains Mono` for tabular stage digits).
+     - Master SVG stopwatch icon and wordmark lockup with animated `● COMING SOON` pulsing badge.
+     - Frosted glass sticky header navigation (`site-nav`) with smooth scroll to waitlist (`Join Waitlist ↓`).
+2. **Interactive Live Stage Hero Demo:**
+   - Integrated the live interactive stage demo widget directly into the hero section:
+     - 16:9 Confidence Monitor replica with live ticking digits (14:35), progress bar, active segment metadata ("Keynote Presentation • Dr. Kimberly Vance"), and flash talkback banner.
+     - Multi-mode switcher tabs (Confidence Monitor, Rundown Playlist, OBS Lower-Third Overlay).
+     - Director transport dock (Pause/Start, Reset, +1m, -1m, and Flash Cue text input).
+     - Procedural Web Audio API audition buttons (Soft Bell, Marimba, Deep Gong) operating with zero audio file downloads.
+3. **High-Converting Dual Waitlist Capture Engine:**
+   - **Hero Card:** Prominent above-the-fold work email input with amber tally CTA button (`Notify Me at Launch →`) and privacy reassurance badge.
+   - **Bottom Card:** Dark obsidian secondary capture card right above the footer.
+   - **Dual Storage:** Submits asynchronously to `POST /api/waitlist` (persisting to `data/waitlist.json` with timestamp and IP) with `localStorage` fallback.
+   - **Celebration & Reset:** Smoothly transitions into an animated celebration card (`✓ You're on the VIP launch list!`) with a `+ Register another team email` reset button for easy testing.
+4. **Rich Production Content Sections:**
+   - Trust strip with conference/broadcaster logos (TEDx, Twitch, BBC, Global, WorshipTech).
+   - 4-Crew Persona Section (Show Callers, Stage Managers, Broadcast & Video Techs, Houses of Worship).
+   - Core Features Spotlight (Confidence Monitor, Silent Talkback, Web Worker Engine, Cloud Sync).
+   - What's Included At Launch tier preview (Free Starter 100% free forever vs Pro Production).
+   - Interactive Pre-Launch FAQ accordion.
+5. **Static File Resolution Fix in Server:**
+   - Fixed `server.js` candidate resolution order so subdirectories like `website_coming_soon/` prioritize exact directory files and CSS over root `dist/index.html`.
+6. **Live Subagent Verification:**
+   - Verified in headless browser on `http://localhost:3000/website_coming_soon/`:
+     - Visual styles, colors, and typography rendered with complete fidelity.
+     - Submitted `director@stage-production.com`, verified success celebration card and reset button.
+     - Confirmed submission was stored on disk in `data/waitlist.json`.
+     - Validated production build (`npm run build` in 600ms, 0 errors).
+
+---
+
+### Session Date: October 25, 2026 (Night)
+**Conversation ID:** `4b4dc002-3005-459c-9bea-05eea870bb2e`  
+**Model:** Gemini 3.8 Flash (High)  
+**Task:** Hero Banner Simplification & Simulated Stage Monitor Removal on "Coming Soon" Page
+
+1. **User Requirement & Rationale:**
+   - The user requested removing the simulated stage monitor demo widget on the right-hand side of the "Coming Soon" landing page ([`website_coming_soon/index.html`](file:///c:/Users/aero1/Desktop/AI%20PROJECTS/SHOTIMER/website_coming_soon/index.html)) to ensure audiences do not get a false or mismatched impression of the actual production monitor.
+   - Replace the 2-column hero split with a centered, high-impact hero banner where the email waitlist capture card serves as the central focal point.
+
+2. **Hero Structure Overhaul:**
+   - Removed `<div id="demo-preview">...</div>` (simulated monitor, tabs, controller dock, and audio test strip) from `website_coming_soon/index.html`.
+   - Replaced `<div class="hero-grid">` with a centered container `.hero-center` (`max-width: 820px; margin: 0 auto; text-align: center;`).
+   - Centered:
+     - Development status badge (`● Development in Progress • Launching 2026`)
+     - Main headline (`Broadcast-Grade Stage Timing. Zero Drift. Total Control.`)
+     - Subheadline copy explaining Shotimer's unthrottled browser-based stage timing and VIP launch list
+     - The high-converting waitlist capture card (`#waitlist-section`, `max-width: 620px; margin: 0 auto 1.5rem auto; text-align: left;`)
+     - Reassurance badges (`Zero software install required` / `Full Free plan available at launch`)
+   - Removed `<script src="js/interactive-demo.js"></script>` from the bottom of the page.
+   - Updated footer anchor link from `#demo-preview` ("Try Interactive Demo") to `#features` ("Features Preview").
+
+3. **Styling Polish (`website_coming_soon/css/website.css`):**
+   - Added responsive `.hero-center` rules ensuring clean padding, centered alignment, and centered reassurance badges on mobile, tablet, and desktop viewports.
+
+4. **Testing & Live Verification:**
+   - Launched browser subagent on `http://localhost:3000/website_coming_soon/`.
+   - Visually confirmed that the simulated stage monitor demo widget is completely absent.
+   - Captured and reviewed screenshots:
+     - `hero_banner_centered_1792954483281.png`: Clean, centered hero layout with the waitlist card as centerpiece.
+     - `waitlist_success_1792954500440.png`: Submitted `vip-tester@shotimer.com`, animated celebration card appeared seamlessly.
+     - `form_reset_1792954508438.png`: Clicked `+ Register another team email`, confirmed clean form reset.
+   - Confirmed `vip-tester@shotimer.com` was successfully recorded on disk in `data/waitlist.json`.
+   - Code validation passed: `npm run lint` (0 errors) and `npm run build` (built in 618ms).
+
+---
+
+### Session Date: October 25, 2026 (Late Night)
+**Conversation ID:** `4b4dc002-3005-459c-9bea-05eea870bb2e`  
+**Model:** Gemini 3.8 Flash (High)  
+**Task:** Customize Output Studio (Stagetimer.io Parity)
+
+1. **User Request & Reference:**
+   - Recreate Stagetimer.io's "Customize Output" studio based on provided reference screenshots:
+     - Screenshot 1: Controller monitor header with `PREVIEW: [ Agenda (dropdown) ] [ 🖌️ ] [ ↗ ]`.
+     - Screenshot 2: Modal `Customize Output "Agenda"`, interactive 16:9 canvas with alignment dot grid `+ + + +`, right sidebar with Elements (order, visibility eye toggles, `+ Add`) and Display Settings (aspect ratio 16:9, 4:3, 9:16, 21:9, background/blackout color pickers, typography font picker).
+
+2. **Types & State Architecture:**
+   - `src/types/timer.ts`: Added `AspectRatio`, `OutputRole`, `OutputElementType`, `OutputElementConfig`, `OutputViewConfig`, `OutputCustomizationMap`, `DEFAULT_VIEWER_ELEMENTS`, and `DEFAULT_OUTPUT_CUSTOMIZATION`.
+   - `src/store/useTimerStore.ts`: Added `outputCustomization` state, sync actions (`updateOutputConfig`, `updateOutputElement`, `reorderOutputElements`, `addOutputElement`, `removeOutputElement`, `resetOutputConfig`), `BroadcastChannel` local tab sync, debounced cloud broadcast, and `localStorage` persistence (`shotimer_output_customization_${roomId}`).
+
+3. **Components & Views Implemented:**
+   - `src/components/controller/CustomizeOutputModal.tsx`: Full WYSIWYG customize studio modal with role tabs (`Stage Monitor`, `Agenda`, `Moderator`, `OBS Overlay`), live interactive canvas with dot grid, responsive aspect ratio chassis, real-time element reordering & visibility toggling, custom logo URL / text editing, color pickers with curated palette swatches, and font family selection.
+   - `src/components/controller/LiveMonitorPreview.tsx`: Replaced static header with `PREVIEW: [ Stage Monitor ▾ ] [ 🖌️ ] [ ↗ ]` and `• ON AIR / STANDBY` status chip, matching Stagetimer.io exactly.
+   - `src/views/ControllerView.tsx`: Integrated `CustomizeOutputModal` triggered via the `[ 🖌️ ]` button or popout actions.
+   - `src/views/ViewerView.tsx`: Enhanced to read `outputCustomization.viewer`, dynamically applying custom background/blackout colors, custom font families, and conditional rendering for each configured element (`timer`, `progressBar`, `timeOfDay`, `segmentTitle`, `speaker`, `speakerNotes`, `upNext`, `onAirIndicator`, `logo`, `customText`).
+
+4. **Testing & Live Verification:**
+   - Executed `npm run build` and `npx tsc --noEmit` — 0 errors, 100% type safe.
+   - Verified via Playwright browser subagent on `http://localhost:5173/app/?view=controller`:
+     - Visual confirmation of `PREVIEW: [ Stage Monitor ▾ ] [ 🖌️ ] [ ↗ ]` header lockup.
+     - Clicked `[ 🖌️ ]` button: verified modal opened immediately with live canvas, dot grid, active rundown items, elements sidebar, and display settings.
+     - Tested toggling element visibility and changing aspect ratio/display settings.
+     - Captured and reviewed visual screenshots (`customize_output_modal_1792963219336.png` and `display_settings_tab_1792963226261.png`).
+
+---
+
+### Session Date: October 25, 2026 (Night Part 2)
+**Conversation ID:** `4b4dc002-3005-459c-9bea-05eea870bb2e`  
+**Model:** Gemini 3.8 Flash (High)  
+**Task:** Reset All Displays to Default & Add Dedicated "Default" Button to Output Studio
+
+1. **User Requirement & Voice Memo:**
+   - Reset all 4 displays back to their authentic default layout and positions as they existed originally.
+   - Place a dedicated `[ ↺ Default ]` button on each output display tab in the Customize Output Studio modal so any view can be reverted to defaults with one click.
+   - Ensure authentic element positions are maintained (e.g. Stage Monitor: Time of Day in footer bottom-left, Up Next in bottom-right, Giant timer in center, Title/Speaker/Notes in top-left, progress bar full-width).
+
+2. **Architecture & Implementation:**
+   - `src/types/timer.ts`:
+     - Re-ordered `DEFAULT_VIEWER_ELEMENTS` to reflect top-to-bottom layout (`segmentTitle` $\to$ `speaker` $\to$ `speakerNotes` $\to$ `onAirIndicator` $\to$ `timer` $\to$ `progressBar` $\to$ `timeOfDay` $\to$ `upNext` $\to$ `logo` $\to$ `customText`).
+     - Added presenter element `el-ovl-speaker` to `DEFAULT_OUTPUT_CUSTOMIZATION.overlay`.
+   - `src/store/useTimerStore.ts`:
+     - Updated `resetOutputConfig(role?: OutputRole)` to accept an optional `role`. If `role` is provided, deep-clones that specific role's default configuration. If omitted, resets all 4 displays (`viewer`, `agenda`, `moderator`, `overlay`) simultaneously.
+     - Persists to `localStorage` and broadcasts to all connected monitor tabs and cloud devices.
+   - `src/components/controller/CustomizeOutputModal.tsx`:
+     - Added prominent `[ ↺ Default ]` button in the toolbar directly alongside role switcher tabs (`[ Stage Monitor ] [ Agenda ] [ Moderator ] [ OBS Overlay ]`).
+     - Added `↺ Reset all displays to default` fallback link in the modal footer.
+     - Rebuilt the WYSIWYG canvas for all 4 roles to display their true default layouts:
+       - **Stage Monitor:** Segment title, speaker, notes in top-left; Live tally in top-right; giant timer digits in center; full-width progress bar; Time of Day in bottom-left; Up Next in bottom-right.
+       - **OBS Overlay:** Floating broadcast lower-third dock anchored at bottom-left.
+       - **Agenda:** Schedule Rundown table with drift badge.
+       - **Moderator:** Speaker cue status card and live stage feed info.
+   - `src/views/ViewerView.tsx`:
+     - Verified exact default layout and positions across full screen monitor.
+
+3. **Visual & Browser Verification:**
+   - Run `npm run build` — 0 errors in 683ms.
+   - Run Playwright subagent on `http://localhost:5173/app/?view=controller` and `http://localhost:5173/app/?view=viewer`:
+     - Verified `[ ↺ Default ]` button on each tab in Customize Output Studio modal (`customize_output_modal_opened_1792964253996.png`).
+     - Tested clicking `[ ↺ Default ]`: immediate feedback and state reset.
+     - Verified Stage Monitor (`stage_viewer_default_verified_1792964336583.png`):
+       - Top-left: Title ("Workshop Intro & Setup"), Speaker ("James"), Notes cue ("💡 Distribute materials and configure environments").
+       - Center: Giant glowing digits ("15:00").
+       - Bottom: Full-width emerald progress bar.
+       - Footer: Real-time wall clock on bottom-left ("21:38:54"), Up Next on bottom-right ("Up Next: Hands-on Lab Session (Attendees & Mentors)").
 
 
 

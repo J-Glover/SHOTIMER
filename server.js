@@ -112,8 +112,16 @@ const server = http.createServer((req, res) => {
     reqPath = '/app/index.html';
   }
 
-  // File resolution: check dist first, then root / public / website fallbacks
+  // File resolution: check dist, exact workspace path, directory index, then website/public
   let filePath = path.join(DIST_DIR, reqPath);
+
+  // If path is a directory or points to /website_coming_soon/ without filename
+  if (reqPath.endsWith('/') || (fs.existsSync(path.join(__dirname, reqPath)) && fs.statSync(path.join(__dirname, reqPath)).isDirectory())) {
+    const dirIndex = path.join(__dirname, reqPath, 'index.html');
+    if (fs.existsSync(dirIndex)) {
+      filePath = dirIndex;
+    }
+  }
 
   if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
     if (reqPath.startsWith('/app')) {
@@ -122,14 +130,15 @@ const server = http.createServer((req, res) => {
         filePath = path.join(__dirname, 'app', 'index.html');
       }
     } else {
-      // Find file across possible locations (dist -> root -> website -> public)
+      // Find file across possible locations prioritizing exact requested path
       const candidates = [
-        path.join(DIST_DIR, 'index.html'),
         path.join(__dirname, reqPath),
-        path.join(__dirname, 'index.html'),
+        path.join(__dirname, reqPath, 'index.html'),
         path.join(__dirname, 'website', reqPath),
-        path.join(__dirname, 'website', 'index.html'),
         path.join(__dirname, 'public', reqPath),
+        path.join(DIST_DIR, reqPath),
+        path.join(DIST_DIR, 'index.html'),
+        path.join(__dirname, 'index.html'),
       ];
       const match = candidates.find((c) => fs.existsSync(c) && !fs.statSync(c).isDirectory());
       if (match) {
