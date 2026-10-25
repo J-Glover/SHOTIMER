@@ -44,7 +44,11 @@ export default function App() {
 
       if (e.code === 'Space') {
         e.preventDefault();
-        status === 'running' ? pause() : start();
+        if (status === 'running') {
+          pause();
+        } else {
+          start();
+        }
       } else if (e.code === 'KeyR') {
         e.preventDefault();
         reset();
@@ -72,9 +76,13 @@ export default function App() {
       if (['controller', 'viewer', 'agenda', 'moderator', 'overlay'].includes(v)) {
         setCurrentView(v);
       }
-      const r = params.get('room');
-      if (r && r !== useTimerStore.getState().roomId) {
-        useTimerStore.getState().switchRoom(r);
+      const rawRoom = params.get('room');
+      if (rawRoom) {
+        // Sanitize room ID parameter (alphanumeric, dashes, underscores, max 64 chars)
+        const cleanRoom = rawRoom.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
+        if (cleanRoom && cleanRoom !== useTimerStore.getState().roomId) {
+          useTimerStore.getState().switchRoom(cleanRoom);
+        }
       }
     };
 

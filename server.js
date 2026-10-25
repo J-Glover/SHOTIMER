@@ -1,5 +1,6 @@
-// Standalone Local Network (LAN) Server & WebSocket Relay for Shotimer
+// Standalone Local Network (LAN) Server & Broadcast Relay for Shotimer
 // Enables wireless remote control from phones/tablets over venue Wi-Fi with 0 internet.
+// Hardened with canonical path confinement, DoS protection, IP rate limiting, and security headers.
 
 import http from 'http';
 import fs from 'fs';
@@ -11,7 +12,60 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PORT = process.env.PORT || 3000;
-const DIST_DIR = path.join(__dirname, 'dist');
+const DIST_DIR = path.resolve(__dirname, 'dist');
+const WEBSITE_DIR = path.resolve(__dirname, 'website');
+const WEBSITE_COMING_SOON_DIR = path.resolve(__dirname, 'website_coming_soon');
+const PUBLIC_DIR = path.resolve(__dirname, 'public');
+const APP_DIR = path.resolve(__dirname, 'app');
+
+// Explicitly permitted root public files
+const ALLOWED_ROOT_FILES = new Set([
+  path.resolve(__dirname, 'index.html'),
+  path.resolve(__dirname, 'pricing.html'),
+  path.resolve(__dirname, 'features.html'),
+  path.resolve(__dirname, 'login.html'),
+]);
+
+// Directories allowed to be served
+const ALLOWED_DIRECTORIES = [
+  DIST_DIR,
+  WEBSITE_DIR,
+  WEBSITE_COMING_SOON_DIR,
+  PUBLIC_DIR,
+  APP_DIR,
+];
+
+// Helper: Ensure target canonical path is strictly inside allowed directory or approved file
+function isPathAllowed(targetPath) {
+  const resolved = path.resolve(targetPath);
+
+  // Check if directly an allowed root file
+  if (ALLOWED_ROOT_FILES.has(resolved)) {
+    return true;
+  }
+
+  // Check if inside any allowed directory
+  for (const dir of ALLOWED_DIRECTORIES) {
+    const rel = path.relative(dir, resolved);
+    if (!rel.startsWith('..') && !path.isAbsolute(rel)) {
+      // Disallow hidden files, env files, git files, or sensitive extensions
+      const basename = path.basename(resolved);
+      if (
+        basename.startsWith('.') ||
+        basename.endsWith('.env') ||
+        basename.endsWith('.sql') ||
+        basename.endsWith('.jsonl') ||
+        basename.endsWith('.config.ts') ||
+        basename.endsWith('.config.js')
+      ) {
+        return false;
+      }
+      return true;
+    }
+  }
+
+  return false;
+}
 
 // Find Local LAN IPv4 address (e.g. 192.168.1.x)
 function getLocalIpAddress() {
@@ -27,47 +81,150 @@ function getLocalIpAddress() {
 }
 
 const MIME_TYPES = {
-  '.html': 'text/html',
-  '.js': 'text/javascript',
-  '.css': 'text/css',
-  '.json': 'application/json',
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',
+  '.webp': 'image/webp',
 };
 
-const server = http.createServer((req, res) => {
-  let reqPath = req.url?.split('?')[0] || '/';
+// Rate limiter: 5 waitlist requests per 10 minutes per IP
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 5;
+const MAX_BODY_SIZE = 16 * 1024; // 16 KB max payload
 
-  // API: Waitlist Email Submission (Stores to data/waitlist.json)
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+
+  if (!record || now > record.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false;
+  }
+
+  record.count += 1;
+  return true;
+}
+
+// Clean up stale rate limit entries every 15 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of rateLimitMap.entries()) {
+    if (now > record.resetAt) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}, 15 * 60 * 1000);
+
+const server = http.createServer((req, res) => {
+  // Apply Broadcast Security Headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  // OBS Overlay & Stage Monitors require iframe embedding capability for broadcast tools.
+  // Controller / Management views are framed safely with SAMEORIGIN.
+  const fullUrl = req.url || '/';
+  if (!fullUrl.includes('view=overlay')) {
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  }
+
+  // Parse and sanitize requested path
+  let rawPath = '/';
+  try {
+    rawPath = decodeURIComponent(req.url?.split('?')[0] || '/');
+  } catch {
+    res.writeHead(400, { 'Content-Type': 'text/plain' });
+    res.end('400 Bad Request');
+    return;
+  }
+
+  // Disallow null bytes or path control sequences
+  if (rawPath.includes('\0') || rawPath.includes('%00')) {
+    res.writeHead(400, { 'Content-Type': 'text/plain' });
+    res.end('400 Bad Request: Invalid characters');
+    return;
+  }
+
+  // Defend against path traversal
+  if (rawPath.includes('..')) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    res.end('403 Forbidden: Path traversal prohibited');
+    return;
+  }
+
+  let reqPath = rawPath;
+
+  // ----------------------------------------------------------------------------
+  // API: Waitlist Email Submission (Stores to data/waitlist.json with DoS defense)
+  // ----------------------------------------------------------------------------
   if (req.method === 'POST' && reqPath === '/api/waitlist') {
+    const clientIp = req.socket.remoteAddress || '127.0.0.1';
+
+    if (!checkRateLimit(clientIp)) {
+      res.writeHead(429, {
+        'Content-Type': 'application/json',
+        'Retry-After': '600',
+      });
+      res.end(JSON.stringify({ error: 'Too many requests. Please try again later.' }));
+      return;
+    }
+
     let body = '';
+    let bodyLength = 0;
+    let limitExceeded = false;
+
     req.on('data', (chunk) => {
+      if (limitExceeded) return;
+      bodyLength += chunk.length;
+      if (bodyLength > MAX_BODY_SIZE) {
+        limitExceeded = true;
+        res.writeHead(413, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Payload too large. Maximum size is 16KB.' }));
+        req.resume();
+        return;
+      }
       body += chunk.toString();
     });
+
     req.on('end', () => {
+      if (limitExceeded) return;
+
       try {
         const data = JSON.parse(body || '{}');
-        const email = (data.email || '').trim().toLowerCase();
+        const email = String(data.email || '').trim().toLowerCase();
 
-        if (!email || !email.includes('@')) {
+        // Strict RFC 5322-compliant email regex
+        const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+
+        if (!email || email.length > 100 || !emailRegex.test(email)) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Invalid email address' }));
+          res.end(JSON.stringify({ error: 'Invalid email address format' }));
           return;
         }
 
-        const dataDir = path.join(__dirname, 'data');
+        const dataDir = path.resolve(__dirname, 'data');
         if (!fs.existsSync(dataDir)) {
           fs.mkdirSync(dataDir, { recursive: true });
         }
 
-        const waitlistFile = path.join(dataDir, 'waitlist.json');
+        const waitlistFile = path.resolve(dataDir, 'waitlist.json');
         let list = [];
         if (fs.existsSync(waitlistFile)) {
           try {
             list = JSON.parse(fs.readFileSync(waitlistFile, 'utf8') || '[]');
+            if (!Array.isArray(list)) list = [];
           } catch {
             list = [];
           }
@@ -75,7 +232,6 @@ const server = http.createServer((req, res) => {
 
         const existing = list.find((item) => item.email === email);
         if (!existing) {
-          const clientIp = req.socket.remoteAddress || '127.0.0.1';
           list.push({
             email,
             timestamp: new Date().toISOString(),
@@ -86,15 +242,17 @@ const server = http.createServer((req, res) => {
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, count: list.length }));
-      } catch (err) {
+      } catch {
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Server error processing waitlist submission' }));
+        res.end(JSON.stringify({ error: 'Internal server error' }));
       }
     });
     return;
   }
 
-  // Clean route mappings
+  // ----------------------------------------------------------------------------
+  // Static Route Mappings
+  // ----------------------------------------------------------------------------
   if (reqPath === '/' || reqPath === '') {
     reqPath = '/index.html';
   } else if (reqPath === '/pricing') {
@@ -107,61 +265,73 @@ const server = http.createServer((req, res) => {
     reqPath = '/app/index.html';
   }
 
-  // If path starts with /app/ and isn't an explicit file with extension, serve app/index.html
   if (reqPath.startsWith('/app/') && !path.extname(reqPath)) {
     reqPath = '/app/index.html';
   }
 
-  // File resolution: check dist, exact workspace path, directory index, then website/public
-  let filePath = path.join(DIST_DIR, reqPath);
+  const hasExt = Boolean(path.extname(reqPath));
+  const sanitizedRelPath = reqPath.replace(/^\/+/, '');
 
-  // If path is a directory or points to /website_coming_soon/ without filename
-  if (reqPath.endsWith('/') || (fs.existsSync(path.join(__dirname, reqPath)) && fs.statSync(path.join(__dirname, reqPath)).isDirectory())) {
-    const dirIndex = path.join(__dirname, reqPath, 'index.html');
-    if (fs.existsSync(dirIndex)) {
-      filePath = dirIndex;
-    }
-  }
+  // Prioritized file resolution candidates
+  const candidates = [
+    path.resolve(DIST_DIR, sanitizedRelPath),
+    path.resolve(DIST_DIR, sanitizedRelPath, 'index.html'),
+    path.resolve(WEBSITE_DIR, sanitizedRelPath),
+    path.resolve(WEBSITE_DIR, sanitizedRelPath, 'index.html'),
+    path.resolve(WEBSITE_COMING_SOON_DIR, sanitizedRelPath),
+    path.resolve(WEBSITE_COMING_SOON_DIR, sanitizedRelPath, 'index.html'),
+    path.resolve(PUBLIC_DIR, sanitizedRelPath),
+    path.resolve(APP_DIR, sanitizedRelPath),
+  ];
 
-  if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+  // Only allow SPA index.html fallback for extension-less routes
+  if (!hasExt) {
     if (reqPath.startsWith('/app')) {
-      filePath = path.join(DIST_DIR, 'app', 'index.html');
-      if (!fs.existsSync(filePath)) {
-        filePath = path.join(__dirname, 'app', 'index.html');
-      }
+      candidates.push(path.resolve(DIST_DIR, 'app', 'index.html'));
+      candidates.push(path.resolve(APP_DIR, 'index.html'));
     } else {
-      // Find file across possible locations prioritizing exact requested path
-      const candidates = [
-        path.join(__dirname, reqPath),
-        path.join(__dirname, reqPath, 'index.html'),
-        path.join(__dirname, 'website', reqPath),
-        path.join(__dirname, 'public', reqPath),
-        path.join(DIST_DIR, reqPath),
-        path.join(DIST_DIR, 'index.html'),
-        path.join(__dirname, 'index.html'),
-      ];
-      const match = candidates.find((c) => fs.existsSync(c) && !fs.statSync(c).isDirectory());
-      if (match) {
-        filePath = match;
+      candidates.push(path.resolve(DIST_DIR, 'index.html'));
+      candidates.push(path.resolve(__dirname, 'index.html'));
+    }
+  }
+
+  let selectedFile = null;
+
+  for (const candidate of candidates) {
+    if (isPathAllowed(candidate) && fs.existsSync(candidate)) {
+      try {
+        if (!fs.statSync(candidate).isDirectory()) {
+          selectedFile = candidate;
+          break;
+        }
+      } catch {
+        continue;
       }
     }
   }
 
-  const ext = path.extname(filePath).toLowerCase();
+  // If no allowed static file resolved
+  if (!selectedFile) {
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('404 Not Found');
+    return;
+  }
+
+  // Double check authorization
+  if (!isPathAllowed(selectedFile)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    res.end('403 Forbidden');
+    return;
+  }
+
+  const ext = path.extname(selectedFile).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-  fs.readFile(filePath, (err, content) => {
+  fs.readFile(selectedFile, (err, content) => {
     if (err) {
-      console.error(`[Shotimer Server] Failed to read ${filePath}:`, err);
-      // Emergency fallback to root index.html
-      const emergency = path.join(__dirname, 'index.html');
-      if (fs.existsSync(emergency)) {
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(fs.readFileSync(emergency));
-        return;
-      }
+      console.error('[Shotimer Server] File read error:', err.message);
       res.writeHead(500, { 'Content-Type': 'text/plain' });
-      res.end(`500 Server Error: ${err.message}`);
+      res.end('500 Internal Server Error');
       return;
     }
     res.writeHead(200, { 'Content-Type': contentType });

@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Shotimer — Complete Production PostgreSQL Database Schema
+-- Shotimer — Complete Production PostgreSQL Database Schema (Hardened)
 -- Run this in your Supabase Dashboard: SQL Editor -> New Query -> Run
 -- Project: https://supabase.com/dashboard/project/yodcnmzgmjcjgxizcowm
 -- ==============================================================================
@@ -61,6 +61,60 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- Trigger to protect is_pro and license_key against client-side privilege escalation
+create or replace function public.protect_user_profile_pro_fields()
+returns trigger as $$
+begin
+  -- Prevent direct modification of is_pro or license_key by standard authenticated users
+  if (old.is_pro is distinct from new.is_pro or old.license_key is distinct from new.license_key) then
+    if nullif(current_setting('shotimer.allow_license_update', true), '') is null then
+      -- Revert unauthorized changes to sensitive fields while allowing display_name updates
+      new.is_pro := old.is_pro;
+      new.license_key := old.license_key;
+    end if;
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists tr_protect_user_profile on public.user_profiles;
+create trigger tr_protect_user_profile
+  before update on public.user_profiles
+  for each row execute function public.protect_user_profile_pro_fields();
+
+-- Security Definer Function: Safely validate and claim a Pro license
+create or replace function public.claim_pro_license(input_key text)
+returns jsonb as $$
+declare
+  clean_key text := upper(trim(coalesce(input_key, '')));
+  calling_user_id uuid := auth.uid();
+begin
+  if calling_user_id is null then
+    return jsonb_build_object('success', false, 'error', 'Authentication required to activate license');
+  end if;
+
+  -- Validate authorized evaluation key or production key patterns
+  if clean_key = 'PRO-STAGE-2026' or clean_key = 'DEMO' or clean_key like 'SHOTIMER-PRO-%' then
+    -- Authorize bypass flag within current local transaction
+    perform set_config('shotimer.allow_license_update', 'true', true);
+
+    update public.user_profiles
+    set is_pro = true,
+        license_key = clean_key,
+        updated_at = now()
+    where id = calling_user_id;
+
+    return jsonb_build_object(
+      'success', true,
+      'is_pro', true,
+      'license_key', clean_key
+    );
+  else
+    return jsonb_build_object('success', false, 'error', 'Invalid license key');
+  end if;
+end;
+$$ language plpgsql security definer;
+
 -- ------------------------------------------------------------------------------
 -- 2. Table: rooms (Saved Rundowns, Themes & Output Customization Studio)
 -- ------------------------------------------------------------------------------
@@ -78,7 +132,7 @@ create table if not exists public.rooms (
 
 alter table public.rooms enable row level security;
 
--- Policies for rooms (Private to owning authenticated user)
+-- Policies for rooms (Strictly private to owning authenticated user)
 drop policy if exists "Users can view their own rooms" on public.rooms;
 create policy "Users can view their own rooms"
   on public.rooms for select
@@ -119,12 +173,25 @@ create policy "Anyone can read live sessions"
   on public.live_sessions for select
   using (true);
 
--- Allow upserting live telemetry
+-- Allow inserting live telemetry with valid room_id length bounds
+drop policy if exists "Anyone can insert live telemetry" on public.live_sessions;
+create policy "Anyone can insert live telemetry"
+  on public.live_sessions for insert
+  with check (length(room_id) <= 128);
+
+-- Allow updating live telemetry with valid room_id length bounds
 drop policy if exists "Anyone can broadcast live telemetry" on public.live_sessions;
-create policy "Anyone can broadcast live telemetry"
-  on public.live_sessions for all
-  using (true)
-  with check (true);
+drop policy if exists "Anyone can update live telemetry" on public.live_sessions;
+create policy "Anyone can update live telemetry"
+  on public.live_sessions for update
+  using (length(room_id) <= 128)
+  with check (length(room_id) <= 128);
+
+-- Only authenticated users or room owners can delete live sessions (prevents public table wipe)
+drop policy if exists "Only authenticated users can delete live sessions" on public.live_sessions;
+create policy "Only authenticated users can delete live sessions"
+  on public.live_sessions for delete
+  using (auth.uid() is not null);
 
 -- Index for lightning-fast room lookups
 create index if not exists idx_live_sessions_updated_at on public.live_sessions(updated_at);

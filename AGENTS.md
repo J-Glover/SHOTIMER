@@ -39,6 +39,10 @@
    - **Scheduled Start Triggers:** Scheduled wall-clock auto-triggers (`HH:MM`) checked every 1000ms.
    - **3-Room Starter Management:** Supports 3 default rooms (`Main Auditorium`, `Breakout Hall`, `Workshop Studio`) plus authenticated custom room creation.
    - **Free Plan Enforcement:** Capped at 3 timers per room with clean counter badge (`Free Tier: 3/3 Timers`).
+9. **Broadcast-Grade Security Architecture:**
+   - **Server Confinement (`server.js`):** Strict canonical path confinement preventing directory traversal (`/..%2f`), 16KB payload limits preventing memory DoS, sliding-window IP rate limiting (5 req / 10 min) on `/api/waitlist`, and broadcast HTTP security headers (`nosniff`, `Referrer-Policy`, and scoped `X-Frame-Options` allowing OBS overlay embedding).
+   - **Database RLS & Privilege Protection (`supabase_schema.sql`):** PostgreSQL `claim_pro_license` security definer RPC with transaction-local bypass preventing client-side `is_pro` elevation, and hardened `live_sessions` policies preventing unauthenticated deletion of active show telemetry.
+   - **Data Sanitization & Injection Defense (`src/utils/exportImport.ts`):** Neutralizes CSV formula injection (CWE-1236) by escaping `=,+,-,@` triggers on export, enforces 200-item rundown caps, validates item schemas, and whitelists broadcast state properties to eliminate prototype pollution.
 
 ---
 
@@ -68,6 +72,7 @@
 
 ## 4. Master Plan Artifacts
 - Master Free Tier MVP Plan: `shotimer_free_mvp_plan.md` in the conversation artifact directory.
+- Master Security Hardening Plan: `shotimer_security_hardening_plan.md` in the conversation artifact directory.
 
 ---
 

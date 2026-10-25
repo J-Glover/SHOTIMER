@@ -98,6 +98,20 @@ export async function saveUserSettings(
   if (!isSupabaseConfigured || !supabase) return false;
 
   try {
+    // If attempting to activate license, invoke secure PostgreSQL RPC first
+    if (updates.licenseKey) {
+      try {
+        const { data: rpcRes, error: rpcErr } = await supabase.rpc('claim_pro_license', {
+          input_key: updates.licenseKey,
+        });
+        if (!rpcErr && rpcRes?.success) {
+          return true;
+        }
+      } catch {
+        // Fall through to standard update if RPC is not yet created in Supabase Dashboard
+      }
+    }
+
     const payload: Record<string, any> = {
       updated_at: new Date().toISOString(),
     };

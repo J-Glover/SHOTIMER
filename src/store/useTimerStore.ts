@@ -28,6 +28,7 @@ import {
   type UserCloudProfile,
   type CloudSyncStatus,
 } from '../services/dbService';
+import { validateAndSanitizeRundown } from '../utils/exportImport';
 
 export const FREE_TIMER_LIMIT = 3;
 export const FREE_ROOM_LIMIT = 3;
@@ -998,20 +999,79 @@ export const useTimerStore = create<TimerStore>((set, get) => {
         console.warn('Sync broadcast error:', err);
       }
 
-      // Broadcast live telemetry to Cloud Firestore for remote stage monitors across the internet
+      // Broadcast live telemetry to Supabase Realtime for remote stage monitors across the internet
       broadcastLiveRoomState(state.roomId, syncMsg.payload);
     },
 
     _applyExternalState: (extState) => {
+      if (!extState || typeof extState !== 'object') return;
+
+      const sanitized: Partial<RoomState> = {};
+      if (['running', 'paused', 'stopped'].includes(extState.status as string)) {
+        sanitized.status = extState.status;
+      }
+      if (typeof extState.targetDuration === 'number' && Number.isFinite(extState.targetDuration)) {
+        sanitized.targetDuration = Math.max(0, extState.targetDuration);
+      }
+      if (typeof extState.timeRemaining === 'number' && Number.isFinite(extState.timeRemaining)) {
+        sanitized.timeRemaining = extState.timeRemaining;
+      }
+      if (typeof extState.elapsedTime === 'number' && Number.isFinite(extState.elapsedTime)) {
+        sanitized.elapsedTime = Math.max(0, extState.elapsedTime);
+      }
+      if (extState.startedAt === null || (typeof extState.startedAt === 'number' && Number.isFinite(extState.startedAt))) {
+        sanitized.startedAt = extState.startedAt;
+      }
+      if (extState.pausedAt === null || (typeof extState.pausedAt === 'number' && Number.isFinite(extState.pausedAt))) {
+        sanitized.pausedAt = extState.pausedAt;
+      }
+      if (typeof extState.overtimeSeconds === 'number' && Number.isFinite(extState.overtimeSeconds)) {
+        sanitized.overtimeSeconds = Math.max(0, extState.overtimeSeconds);
+      }
+      if (typeof extState.blackout === 'boolean') {
+        sanitized.blackout = extState.blackout;
+      }
+      if (typeof extState.isAudioMuted === 'boolean') {
+        sanitized.isAudioMuted = extState.isAudioMuted;
+      }
+      if (extState.activeTimerId === null || (typeof extState.activeTimerId === 'string' && extState.activeTimerId.length < 100)) {
+        sanitized.activeTimerId = extState.activeTimerId;
+      }
+      if (extState.activeMessage === null) {
+        sanitized.activeMessage = null;
+      } else if (extState.activeMessage && typeof extState.activeMessage === 'object') {
+        sanitized.activeMessage = {
+          id: String(extState.activeMessage.id || ''),
+          text: String(extState.activeMessage.text || '').slice(0, 500),
+          severity: ['info', 'warning', 'danger'].includes(extState.activeMessage.severity)
+            ? extState.activeMessage.severity
+            : 'info',
+          visible: Boolean(extState.activeMessage.visible),
+          isFlashing: Boolean(extState.activeMessage.isFlashing),
+          createdAt: typeof extState.activeMessage.createdAt === 'number'
+            ? extState.activeMessage.createdAt
+            : Date.now(),
+        };
+      }
+      if (Array.isArray(extState.rundown)) {
+        sanitized.rundown = validateAndSanitizeRundown(extState.rundown);
+      }
+      if (extState.theme && typeof extState.theme === 'object') {
+        sanitized.theme = extState.theme;
+      }
+      if (extState.outputCustomization && typeof extState.outputCustomization === 'object') {
+        sanitized.outputCustomization = extState.outputCustomization;
+      }
+
       set((current) => ({
         ...current,
-        ...extState,
+        ...sanitized,
       }));
 
       // Keep local Web Worker in sync with external state
-      if (extState.status === 'running') {
+      if (sanitized.status === 'running') {
         if (worker) worker.postMessage({ command: 'start', interval: 50 });
-      } else if (extState.status === 'paused' || extState.status === 'stopped') {
+      } else if (sanitized.status === 'paused' || sanitized.status === 'stopped') {
         if (worker) worker.postMessage({ command: 'stop' });
       }
     },

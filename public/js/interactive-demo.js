@@ -241,7 +241,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Controls
   if (playToggleBtn) {
     playToggleBtn.addEventListener('click', () => {
-      isRunning ? pauseTimer() : startTimer();
+      if (isRunning) {
+        pauseTimer();
+      } else {
+        startTimer();
+      }
     });
   }
 

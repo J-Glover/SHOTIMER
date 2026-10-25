@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { X, Upload, FileText, FileSpreadsheet, Palette, Sparkles, Sliders } from 'lucide-react';
 import { useTimerStore } from '../../store/useTimerStore';
 
-import { exportRundownJSON, exportRundownCSV, parseCSVToRundown } from '../../utils/exportImport';
+import { exportRundownJSON, exportRundownCSV, parseCSVToRundown, validateAndSanitizeRundown } from '../../utils/exportImport';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -54,9 +54,18 @@ export default function SettingsModal({ isOpen, onClose, onOpenPaywall }: Settin
       try {
         if (file.name.endsWith('.json')) {
           const parsed = JSON.parse(content);
-          if (parsed && Array.isArray(parsed.rundown)) {
-            setRundown(parsed.rundown);
-            setImportStatus(`Successfully imported ${parsed.rundown.length} timers from JSON!`);
+          const rawItems = parsed && Array.isArray(parsed.rundown)
+            ? parsed.rundown
+            : (Array.isArray(parsed) ? parsed : null);
+
+          if (rawItems) {
+            const sanitized = validateAndSanitizeRundown(rawItems);
+            if (sanitized.length > 0) {
+              setRundown(sanitized);
+              setImportStatus(`Successfully validated and imported ${sanitized.length} timers from JSON!`);
+            } else {
+              setImportStatus('JSON file contained no valid timer segments.');
+            }
           } else {
             setImportStatus('Invalid JSON rundown format.');
           }
@@ -64,13 +73,15 @@ export default function SettingsModal({ isOpen, onClose, onOpenPaywall }: Settin
           // Parse CSV
           const timers = parseCSVToRundown(content);
           if (timers.length > 0) {
-            const newRundown = timers.map((t, idx) => ({
-              ...t,
-              id: `timer-${Date.now()}-${idx}`,
-              order: idx,
-            }));
+            const newRundown = validateAndSanitizeRundown(
+              timers.map((t, idx) => ({
+                ...t,
+                id: `timer-${Date.now()}-${idx}`,
+                order: idx,
+              }))
+            );
             setRundown(newRundown);
-            setImportStatus(`Successfully imported ${newRundown.length} segments from CSV!`);
+            setImportStatus(`Successfully validated and imported ${newRundown.length} segments from CSV!`);
           } else {
             setImportStatus('Could not parse timers from this CSV file.');
           }

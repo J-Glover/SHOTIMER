@@ -23,5 +23,10 @@
     "email": "vip-tester@shotimer.com",
     "timestamp": "2026-10-25T18:54:57.292Z",
     "ip": "127.0.0.1"
+  },
+  {
+    "email": "security_test@shotimer.io",
+    "timestamp": "2026-10-25T22:41:39.674Z",
+    "ip": "127.0.0.1"
   }
 ]
