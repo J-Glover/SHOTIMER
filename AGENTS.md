@@ -6,9 +6,11 @@
 
 ## 1. Project Overview & Reference
 - **Project Name:** Shotimer (Broadcast-Grade Stage Timer & Event Rundown System)
+- **Official Domain:** `shotimer.io` (Public Coming Soon & Waitlist) / `app.shotimer.io` (Broadcast App Console)
 - **Reference Application:** [Stagetimer.io](https://stagetimer.io/)
 - **Core Purpose:** High-precision, remote-controlled countdown timer, confidence monitor, and event rundown tool for live productions, conferences, and broadcasts.
 - **Tech Stack:** React 19, TypeScript, Vite 8, Tailwind CSS v4, Zustand, Lucide Icons, Web Audio API, Web Workers.
+
 
 ---
 
@@ -43,6 +45,12 @@
    - **Server Confinement (`server.js`):** Strict canonical path confinement preventing directory traversal (`/..%2f`), 16KB payload limits preventing memory DoS, sliding-window IP rate limiting (5 req / 10 min) on `/api/waitlist`, and broadcast HTTP security headers (`nosniff`, `Referrer-Policy`, and scoped `X-Frame-Options` allowing OBS overlay embedding).
    - **Database RLS & Privilege Protection (`supabase_schema.sql`):** PostgreSQL `claim_pro_license` security definer RPC with transaction-local bypass preventing client-side `is_pro` elevation, and hardened `live_sessions` policies preventing unauthenticated deletion of active show telemetry.
    - **Data Sanitization & Injection Defense (`src/utils/exportImport.ts`):** Neutralizes CSV formula injection (CWE-1236) by escaping `=,+,-,@` triggers on export, enforces 200-item rundown caps, validates item schemas, and whitelists broadcast state properties to eliminate prototype pollution.
+10. **Multi-Domain Virtual Host & Stealth Studio Protection (`server.js` & `src/components/common/StealthGate.tsx`):**
+    - **Public Coming Soon:** Requests to `shotimer.io` or `www.shotimer.io` resolve exclusively to the Coming Soon pre-launch site (`website_coming_soon`), collecting VIP waitlist emails with rate limiting and DoS defense.
+    - **Live App Subdomain (`app.shotimer.io`):** Resolves directly to the full broadcast timer application.
+    - **Anti-Crawler Blackout:** Dynamically emits `X-Robots-Tag: noindex, nofollow, noarchive` and `Disallow: /` on `app.shotimer.io` to ensure Google and web bots never index the hidden app.
+    - **Stealth Passkey Gate (`StealthGate.tsx`):** Unlocks via master production passkey (`SHOTIMER-ALPHA-2026`) or URL token (`?access=...`), persisting in localStorage for the operator's devices. Scanned mobile QR codes automatically carry the access token so mobile phones pair seamlessly without login prompts. Automatically bypassed in localhost and LAN environments.
+
 
 ---
 
