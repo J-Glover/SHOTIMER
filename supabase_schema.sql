@@ -195,3 +195,29 @@ create policy "Only authenticated users can delete live sessions"
 
 -- Index for lightning-fast room lookups
 create index if not exists idx_live_sessions_updated_at on public.live_sessions(updated_at);
+
+-- ------------------------------------------------------------------------------
+-- 4. Table: waitlist (Pre-Launch VIP Email Signups for shotimer.io)
+-- ------------------------------------------------------------------------------
+create table if not exists public.waitlist (
+  id uuid primary key default gen_random_uuid(),
+  email text unique not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  source text default 'website_coming_soon',
+  ip text
+);
+
+alter table public.waitlist enable row level security;
+
+-- Anyone can submit their email to the waitlist
+drop policy if exists "Anyone can join waitlist" on public.waitlist;
+create policy "Anyone can join waitlist"
+  on public.waitlist for insert
+  with check (length(email) <= 100);
+
+-- Only authenticated admins can view waitlist entries
+drop policy if exists "Only authenticated users can view waitlist" on public.waitlist;
+create policy "Only authenticated users can view waitlist"
+  on public.waitlist for select
+  using (auth.uid() is not null);
+

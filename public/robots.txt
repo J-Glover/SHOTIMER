@@ -1,4 +1,7 @@
-# Shotimer Robots.txt
+# Shotimer Robots.txt (Public Coming Soon)
 User-agent: *
 Allow: /
-Sitemap: https://shotimer.com/sitemap.xml
+Disallow: /app/
+Disallow: /api/
+Sitemap: https://shotimer.io/sitemap.xml
+

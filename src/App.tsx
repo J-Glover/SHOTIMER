@@ -7,6 +7,8 @@ import ModeratorView from './views/ModeratorView';
 import OverlayView from './views/OverlayView';
 import { useTimerStore } from './store/useTimerStore';
 import { Sliders, Tv, Calendar, MessageSquare, Layers, ArrowLeft, ExternalLink } from 'lucide-react';
+import StealthGate from './components/common/StealthGate';
+
 
 export default function App() {
   const { start, pause, reset, nextTimer, previousTimer, toggleBlackout, status, roomId } = useTimerStore();
@@ -91,74 +93,76 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#141414] text-neutral-200 flex flex-col font-sans">
-      {/* Subtle Top View Switcher Dock (only visible on Controller or when not in fullscreen Viewer/Overlay) */}
-      {currentView !== 'viewer' && currentView !== 'overlay' && (
-        <div className="bg-[#181818] border-b border-neutral-800 px-4 py-2 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-1">
-            <a
-              href="/"
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-neutral-400 hover:text-amber-400 hover:bg-neutral-800 transition-colors mr-2 border-r border-neutral-800 pr-3"
-              title="Return to Shotimer Homepage"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span className="font-medium hidden sm:inline">Shotimer Home</span>
-            </a>
-            {[
-              { id: 'controller', label: 'Controller', icon: Sliders },
-              { id: 'viewer', label: 'Stage Monitor', icon: Tv },
-              { id: 'agenda', label: 'Agenda', icon: Calendar },
-              { id: 'moderator', label: 'Moderator', icon: MessageSquare },
-              { id: 'overlay', label: 'OBS Overlay', icon: Layers },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isActive = currentView === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    if (tab.id === 'controller') {
-                      handleViewChange('controller');
-                    } else {
-                      const url = `/app/?view=${tab.id}&room=${encodeURIComponent(roomId)}`;
-                      window.open(url, '_blank', 'noopener,noreferrer');
-                    }
-                  }}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs transition-colors ${
-                    isActive
-                      ? 'bg-neutral-700 text-white font-semibold shadow-sm'
-                      : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800'
-                  }`}
-                  title={tab.id === 'controller' ? 'Active Controller' : `Launch ${tab.label} in new browser tab`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{tab.label}</span>
-                  {tab.id !== 'controller' && (
-                    <ExternalLink className="w-2.5 h-2.5 opacity-50 ml-0.5" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
+    <StealthGate>
+      <div className="min-h-screen bg-[#141414] text-neutral-200 flex flex-col font-sans">
+        {/* Subtle Top View Switcher Dock (only visible on Controller or when not in fullscreen Viewer/Overlay) */}
+        {currentView !== 'viewer' && currentView !== 'overlay' && (
+          <div className="bg-[#181818] border-b border-neutral-800 px-4 py-2 flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1">
+              <a
+                href="/"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-neutral-400 hover:text-amber-400 hover:bg-neutral-800 transition-colors mr-2 border-r border-neutral-800 pr-3"
+                title="Return to Shotimer Homepage"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span className="font-medium hidden sm:inline">Shotimer Home</span>
+              </a>
+              {[
+                { id: 'controller', label: 'Controller', icon: Sliders },
+                { id: 'viewer', label: 'Stage Monitor', icon: Tv },
+                { id: 'agenda', label: 'Agenda', icon: Calendar },
+                { id: 'moderator', label: 'Moderator', icon: MessageSquare },
+                { id: 'overlay', label: 'OBS Overlay', icon: Layers },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = currentView === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      if (tab.id === 'controller') {
+                        handleViewChange('controller');
+                      } else {
+                        const url = `/app/?view=${tab.id}&room=${encodeURIComponent(roomId)}`;
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs transition-colors ${
+                      isActive
+                        ? 'bg-neutral-700 text-white font-semibold shadow-sm'
+                        : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800'
+                    }`}
+                    title={tab.id === 'controller' ? 'Active Controller' : `Launch ${tab.label} in new browser tab`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
+                    {tab.id !== 'controller' && (
+                      <ExternalLink className="w-2.5 h-2.5 opacity-50 ml-0.5" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
 
-          <div className="text-[11px] text-neutral-500 hidden sm:block">
-            Hotkeys: <span className="text-neutral-400 font-mono">[Space]</span> Start/Pause • <span className="text-neutral-400 font-mono">[R]</span> Reset • <span className="text-neutral-400 font-mono">[B]</span> Blackout
+            <div className="text-[11px] text-neutral-500 hidden sm:block">
+              Hotkeys: <span className="text-neutral-400 font-mono">[Space]</span> Start/Pause • <span className="text-neutral-400 font-mono">[R]</span> Reset • <span className="text-neutral-400 font-mono">[B]</span> Blackout
+            </div>
           </div>
+        )}
+
+        {/* Render Active View */}
+        <div className="flex-1 flex flex-col">
+          {currentView === 'controller' && <ControllerView />}
+          {currentView === 'viewer' && <ViewerView />}
+          {currentView === 'agenda' && (
+            <AgendaView onBackToController={() => handleViewChange('controller')} />
+          )}
+          {currentView === 'moderator' && (
+            <ModeratorView onBackToController={() => handleViewChange('controller')} />
+          )}
+          {currentView === 'overlay' && <OverlayView />}
         </div>
-      )}
-
-      {/* Render Active View */}
-      <div className="flex-1 flex flex-col">
-        {currentView === 'controller' && <ControllerView />}
-        {currentView === 'viewer' && <ViewerView />}
-        {currentView === 'agenda' && (
-          <AgendaView onBackToController={() => handleViewChange('controller')} />
-        )}
-        {currentView === 'moderator' && (
-          <ModeratorView onBackToController={() => handleViewChange('controller')} />
-        )}
-        {currentView === 'overlay' && <OverlayView />}
       </div>
-    </div>
+    </StealthGate>
   );
 }

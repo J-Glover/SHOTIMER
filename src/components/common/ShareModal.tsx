@@ -50,7 +50,21 @@ export default function ShareModal({ isOpen, onClose, roomName }: ShareModalProp
   const getRoleUrl = (role: string) => {
     const base = getBaseUrl();
     if (!base) return '';
-    return `${base}/app/?room=${encodeURIComponent(roomId)}&view=${role}`;
+    const isLocal = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || 
+       window.location.hostname === '127.0.0.1' || 
+       window.location.hostname.startsWith('192.168.') ||
+       window.location.hostname.startsWith('10.'));
+
+    // Check if running on app.shotimer.io subdomain vs subpath
+    const isSubdomain = typeof window !== 'undefined' && window.location.hostname.startsWith('app.');
+    const pathPrefix = isSubdomain ? '/' : '/app/';
+
+    // If on live cloud/subdomain, attach access key so scanned QR codes on phones unlock immediately
+    const passkey = (import.meta.env.VITE_STEALTH_PASSKEY || 'SHOTIMER-ALPHA-2026');
+    const accessParam = !isLocal ? `&access=${encodeURIComponent(passkey)}` : '';
+
+    return `${base}${pathPrefix}?room=${encodeURIComponent(roomId)}&view=${role}${accessParam}`;
   };
 
   const currentUrl = getRoleUrl(selectedRole);
