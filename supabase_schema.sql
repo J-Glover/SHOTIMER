@@ -213,11 +213,24 @@ alter table public.waitlist enable row level security;
 drop policy if exists "Anyone can join waitlist" on public.waitlist;
 create policy "Anyone can join waitlist"
   on public.waitlist for insert
-  with check (length(email) <= 100);
+  with check (length(email) <= 100 and position('@' in email) > 1);
 
--- Only authenticated admins can view waitlist entries
+-- Only authenticated users or dashboard admins can view waitlist entries
 drop policy if exists "Only authenticated users can view waitlist" on public.waitlist;
 create policy "Only authenticated users can view waitlist"
   on public.waitlist for select
   using (auth.uid() is not null);
+
+-- ------------------------------------------------------------------------------
+-- 5. Seed Initial Test Waitlist Subscribers (Imported from waitlist.json)
+-- ------------------------------------------------------------------------------
+insert into public.waitlist (email, created_at, source, ip)
+values
+  ('av-crew@live-events.com', '2026-10-19T21:09:44.675Z', 'website_coming_soon', '127.0.0.1'),
+  ('producer@stagebroadcast.io', '2026-10-19T21:10:10.267Z', 'website_coming_soon', '127.0.0.1'),
+  ('director@live-broadcast.com', '2026-10-25T18:37:31.665Z', 'website_coming_soon', '127.0.0.1'),
+  ('director@stage-production.com', '2026-10-25T18:41:45.533Z', 'website_coming_soon', '127.0.0.1'),
+  ('vip-tester@shotimer.com', '2026-10-25T18:54:57.292Z', 'website_coming_soon', '127.0.0.1'),
+  ('security_test@shotimer.io', '2026-10-25T22:41:39.674Z', 'website_coming_soon', '127.0.0.1')
+on conflict (email) do nothing;
 

@@ -71,7 +71,22 @@ document.addEventListener('DOMContentLoaded', () => {
           throw new Error('Server returned ' + response.status);
         }
       } catch (err) {
-        console.warn('Backend waitlist API unavailable, falling back to local storage:', err);
+        console.warn('Backend waitlist API unavailable, falling back to direct Supabase sync:', err);
+        // Direct Supabase fallback (works on static hosting or offline dev)
+        try {
+          await fetch('https://yodcnmzgmjcjgxizcowm.supabase.co/rest/v1/waitlist', {
+            method: 'POST',
+            headers: {
+              apikey: 'sb_publishable__L0Nx0Gr4xTdpxZrAq0veA_6de4-j8E',
+              Authorization: 'Bearer sb_publishable__L0Nx0Gr4xTdpxZrAq0veA_6de4-j8E',
+              'Content-Type': 'application/json',
+              Prefer: 'resolution=ignore-duplicates',
+            },
+            body: JSON.stringify({ email, source: 'website_coming_soon_direct' }),
+          });
+        } catch (supabaseErr) {
+          console.warn('Supabase direct insert deferred:', supabaseErr);
+        }
       } finally {
         try {
           localStorage.setItem('shotimer_last_submitted_email', email);

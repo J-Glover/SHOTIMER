@@ -240,6 +240,27 @@ const server = http.createServer((req, res) => {
           fs.writeFileSync(waitlistFile, JSON.stringify(list, null, 2), 'utf8');
         }
 
+        // Asynchronously sync subscriber to Supabase Cloud Database
+        const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://yodcnmzgmjcjgxizcowm.supabase.co';
+        const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable__L0Nx0Gr4xTdpxZrAq0veA_6de4-j8E';
+
+        fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+            Prefer: 'resolution=ignore-duplicates',
+          },
+          body: JSON.stringify({
+            email,
+            ip: clientIp,
+            source: 'website_coming_soon',
+          }),
+        }).catch((err) => {
+          console.warn('[Waitlist] Supabase sync note:', err?.message || err);
+        });
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, count: list.length }));
       } catch {
