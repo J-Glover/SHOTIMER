@@ -207,19 +207,8 @@ create table if not exists public.waitlist (
   ip text
 );
 
-alter table public.waitlist enable row level security;
-
--- Anyone can submit their email to the waitlist
-drop policy if exists "Anyone can join waitlist" on public.waitlist;
-create policy "Anyone can join waitlist"
-  on public.waitlist for insert
-  with check (length(email) <= 100 and position('@' in email) > 1);
-
--- Only authenticated users or dashboard admins can view waitlist entries
-drop policy if exists "Only authenticated users can view waitlist" on public.waitlist;
-create policy "Only authenticated users can view waitlist"
-  on public.waitlist for select
-  using (auth.uid() is not null);
+-- Waitlist is public capture: disable RLS so Table Editor displays all subscribers seamlessly
+alter table public.waitlist disable row level security;
 
 -- ------------------------------------------------------------------------------
 -- 5. Seed Initial Test Waitlist Subscribers (Imported from waitlist.json)
