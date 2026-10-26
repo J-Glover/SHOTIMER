@@ -251,47 +251,104 @@ const server = http.createServer((req, res) => {
   }
 
   // ----------------------------------------------------------------------------
-  // Static Route Mappings
+  // Multi-Domain Virtual Host Routing
   // ----------------------------------------------------------------------------
-  if (reqPath === '/' || reqPath === '') {
-    reqPath = '/index.html';
-  } else if (reqPath === '/pricing') {
-    reqPath = '/pricing.html';
-  } else if (reqPath === '/features') {
-    reqPath = '/features.html';
-  } else if (reqPath === '/login') {
-    reqPath = '/login.html';
-  } else if (reqPath === '/app' || reqPath === '/app/') {
-    reqPath = '/app/index.html';
+  const hostHeader = (req.headers.host || '').toLowerCase().split(':')[0];
+  const isAppDomain =
+    hostHeader === 'app.shotimer.io' ||
+    hostHeader.startsWith('app.') ||
+    (req.url && req.url.includes('__app=1'));
+
+  // On App subdomain, strictly block search engines from crawling
+  if (isAppDomain) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
   }
 
-  if (reqPath.startsWith('/app/') && !path.extname(reqPath)) {
-    reqPath = '/app/index.html';
+  // Dynamic robots.txt
+  if (reqPath === '/robots.txt') {
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+    if (isAppDomain) {
+      res.end("User-agent: *\nDisallow: /\n");
+    } else {
+      res.end("User-agent: *\nAllow: /\nDisallow: /app/\nDisallow: /api/\nSitemap: https://shotimer.io/sitemap.xml\n");
+    }
+    return;
   }
 
+  // Dynamic sitemap.xml
+  if (reqPath === '/sitemap.xml') {
+    const sitemapFile = path.resolve(WEBSITE_COMING_SOON_DIR, 'sitemap.xml');
+    if (fs.existsSync(sitemapFile)) {
+      res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8' });
+      fs.createReadStream(sitemapFile).pipe(res);
+      return;
+    }
+  }
+
+  // ----------------------------------------------------------------------------
+  // Route Resolution: App Subdomain vs Coming Soon Public Website
+  // ----------------------------------------------------------------------------
   const hasExt = Boolean(path.extname(reqPath));
-  const sanitizedRelPath = reqPath.replace(/^\/+/, '');
+  let candidates = [];
 
-  // Prioritized file resolution candidates
-  const candidates = [
-    path.resolve(DIST_DIR, sanitizedRelPath),
-    path.resolve(DIST_DIR, sanitizedRelPath, 'index.html'),
-    path.resolve(WEBSITE_DIR, sanitizedRelPath),
-    path.resolve(WEBSITE_DIR, sanitizedRelPath, 'index.html'),
-    path.resolve(WEBSITE_COMING_SOON_DIR, sanitizedRelPath),
-    path.resolve(WEBSITE_COMING_SOON_DIR, sanitizedRelPath, 'index.html'),
-    path.resolve(PUBLIC_DIR, sanitizedRelPath),
-    path.resolve(APP_DIR, sanitizedRelPath),
-  ];
+  if (isAppDomain) {
+    // --------------------------------------------------------------------------
+    // SUBDOMAIN: app.shotimer.io (The Broadcast App)
+    // --------------------------------------------------------------------------
+    const sanitizedRel = reqPath.replace(/^\/+/, '');
 
-  // Only allow SPA index.html fallback for extension-less routes
-  if (!hasExt) {
-    if (reqPath.startsWith('/app')) {
+    if (!hasExt) {
       candidates.push(path.resolve(DIST_DIR, 'app', 'index.html'));
       candidates.push(path.resolve(APP_DIR, 'index.html'));
-    } else {
-      candidates.push(path.resolve(DIST_DIR, 'index.html'));
-      candidates.push(path.resolve(__dirname, 'index.html'));
+    }
+
+    candidates.push(
+      path.resolve(DIST_DIR, sanitizedRel),
+      path.resolve(PUBLIC_DIR, sanitizedRel),
+      path.resolve(APP_DIR, sanitizedRel),
+      path.resolve(DIST_DIR, sanitizedRel, 'index.html')
+    );
+  } else {
+    // --------------------------------------------------------------------------
+    // ROOT DOMAIN: shotimer.io / www.shotimer.io (Coming Soon Site)
+    // --------------------------------------------------------------------------
+    // If someone visits /app on the main domain, redirect to app.shotimer.io on live host
+    if (reqPath === '/app' || reqPath.startsWith('/app/')) {
+      if (hostHeader.includes('shotimer.io')) {
+        const queryPart = req.url?.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
+        res.writeHead(302, { Location: `https://app.shotimer.io/${queryPart}` });
+        res.end();
+        return;
+      }
+      // On local dev, allow accessing app via /app/
+      reqPath = '/app/index.html';
+      candidates.push(
+        path.resolve(DIST_DIR, 'app', 'index.html'),
+        path.resolve(APP_DIR, 'index.html')
+      );
+    } else if (reqPath === '/' || reqPath === '' || reqPath === '/index.html') {
+      reqPath = '/index.html';
+      candidates.push(path.resolve(WEBSITE_COMING_SOON_DIR, 'index.html'));
+    } else if (reqPath === '/pricing' || reqPath === '/pricing.html') {
+      candidates.push(path.resolve(WEBSITE_COMING_SOON_DIR, 'pricing.html'));
+    } else if (reqPath === '/features' || reqPath === '/features.html') {
+      candidates.push(path.resolve(WEBSITE_COMING_SOON_DIR, 'features.html'));
+    } else if (reqPath === '/login' || reqPath === '/login.html') {
+      candidates.push(path.resolve(WEBSITE_COMING_SOON_DIR, 'login.html'));
+    }
+
+    const sanitizedRel = reqPath.replace(/^\/+/, '');
+    candidates.push(
+      path.resolve(WEBSITE_COMING_SOON_DIR, sanitizedRel),
+      path.resolve(WEBSITE_COMING_SOON_DIR, sanitizedRel, 'index.html'),
+      path.resolve(PUBLIC_DIR, sanitizedRel),
+      path.resolve(DIST_DIR, sanitizedRel),
+      path.resolve(WEBSITE_DIR, sanitizedRel)
+    );
+
+    // Fallback to Coming Soon index for extension-less root routes
+    if (!hasExt && !reqPath.startsWith('/app')) {
+      candidates.push(path.resolve(WEBSITE_COMING_SOON_DIR, 'index.html'));
     }
   }
 
@@ -342,13 +399,14 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, '0.0.0.0', () => {
   const localIp = getLocalIpAddress();
   console.log(`\n======================================================`);
-  console.log(`  🚀 SHOTIMER LOCAL BROADCAST SERVER RUNNING`);
+  console.log(`  🚀 SHOTIMER MULTI-DOMAIN BROADCAST SERVER RUNNING`);
   console.log(`======================================================`);
-  console.log(`  Local Computer:       http://localhost:${PORT}/`);
-  console.log(`  Coming Soon Page:     http://localhost:${PORT}/website_coming_soon/`);
-  console.log(`  Marketing Website:    http://localhost:${PORT}/website/`);
-  console.log(`  Venue Wi-Fi (Phones): http://${localIp}:${PORT}/`);
-  console.log(`  Confidence Monitor:   http://${localIp}:${PORT}/?view=viewer`);
-  console.log(`  Moderator Portal:     http://${localIp}:${PORT}/?view=moderator`);
+  console.log(`  Public Domain (Coming Soon):  http://shotimer.io/`);
+  console.log(`  App Subdomain (Live Studio):  http://app.shotimer.io/`);
+  console.log(`  Local Coming Soon Preview:    http://localhost:${PORT}/`);
+  console.log(`  Local App Studio Preview:     http://localhost:${PORT}/app/`);
+  console.log(`  Venue Wi-Fi (Phones/LAN):     http://${localIp}:${PORT}/app/`);
+  console.log(`  Stealth Studio Passkey:       SHOTIMER-ALPHA-2026`);
   console.log(`======================================================\n`);
 });
+
