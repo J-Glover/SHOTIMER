@@ -250,7 +250,6 @@ const server = http.createServer((req, res) => {
             apikey: SUPABASE_ANON_KEY,
             Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
             'Content-Type': 'application/json',
-            Prefer: 'resolution=ignore-duplicates',
           },
           body: JSON.stringify({
             email,

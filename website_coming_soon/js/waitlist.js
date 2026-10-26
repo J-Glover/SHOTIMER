@@ -60,33 +60,35 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.textContent = 'Saving...';
       }
 
+      // 1. Direct Supabase Cloud Database Insert
       try {
-        const response = await fetch('/api/waitlist', {
+        const supaRes = await fetch('https://yodcnmzgmjcjgxizcowm.supabase.co/rest/v1/waitlist', {
+          method: 'POST',
+          headers: {
+            apikey: 'sb_publishable__L0Nx0Gr4xTdpxZrAq0veA_6de4-j8E',
+            Authorization: 'Bearer sb_publishable__L0Nx0Gr4xTdpxZrAq0veA_6de4-j8E',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, source: 'website_coming_soon' }),
+        });
+
+        // 201 Created or 409 Conflict (already on list) both count as success
+        if (!supaRes.ok && supaRes.status !== 409) {
+          console.warn('[Waitlist] Supabase sync note:', supaRes.status, await supaRes.text());
+        }
+      } catch (supabaseErr) {
+        console.warn('[Waitlist] Supabase network error:', supabaseErr);
+      }
+
+      // 2. Also log to local server backup if server.js is running
+      try {
+        await fetch('/api/waitlist', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email }),
         });
-
-        if (!response.ok) {
-          throw new Error('Server returned ' + response.status);
-        }
-      } catch (err) {
-        console.warn('Backend waitlist API unavailable, falling back to direct Supabase sync:', err);
-        // Direct Supabase fallback (works on static hosting or offline dev)
-        try {
-          await fetch('https://yodcnmzgmjcjgxizcowm.supabase.co/rest/v1/waitlist', {
-            method: 'POST',
-            headers: {
-              apikey: 'sb_publishable__L0Nx0Gr4xTdpxZrAq0veA_6de4-j8E',
-              Authorization: 'Bearer sb_publishable__L0Nx0Gr4xTdpxZrAq0veA_6de4-j8E',
-              'Content-Type': 'application/json',
-              Prefer: 'resolution=ignore-duplicates',
-            },
-            body: JSON.stringify({ email, source: 'website_coming_soon_direct' }),
-          });
-        } catch (supabaseErr) {
-          console.warn('Supabase direct insert deferred:', supabaseErr);
-        }
+      } catch {
+        // Ignored if running statically without local node server
       } finally {
         try {
           localStorage.setItem('shotimer_last_submitted_email', email);
