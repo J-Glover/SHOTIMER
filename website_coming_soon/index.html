@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shotimer — Coming Soon | Broadcast-Grade Stage Timer & Event Rundown System</title>
-  <meta name="description" content="High-precision, remote-controlled stage countdown timer, confidence monitor, and event rundown system for live productions, conferences, and broadcasts. Coming soon to all browsers.">
-  <meta name="keywords" content="stage timer, stagetimer alternative, confidence monitor, stage countdown timer, event rundown software, church stage timer, worship countdown timer, broadcast timer, OBS stage timer, vMix timer overlay, web worker timer, speaker timer online">
+  <title>Shotimer — Simple, Remote-Controlled Presentation & Event Countdown Timer</title>
+  <meta name="description" content="Keep your presentations, meetings, and events running on time. A giant, clear countdown timer for speakers, controlled wirelessly from any phone or laptop. Runs in any browser.">
+  <meta name="keywords" content="presentation timer, stage timer, meeting countdown timer, speech timer, church timer, conference timer, speaker clock, remote timer online">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
   <link rel="canonical" href="https://shotimer.io/">
   
-  <!-- Open Graph / Facebook / LinkedIn Social Sharing -->
+  <!-- Open Graph / Social Sharing -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Shotimer">
   <meta property="og:url" content="https://shotimer.io/">
   <meta property="og:locale" content="en_US">
-  <meta property="og:title" content="Shotimer — Coming Soon | Broadcast-Grade Stage Timer & Confidence Monitor">
-  <meta property="og:description" content="Unthrottled Web Worker precision stage countdown timer, digital confidence monitor, and live event rundown tool. Sign up for early VIP launch access.">
+  <meta property="og:title" content="Shotimer — Simple, Remote-Controlled Presentation & Event Timer">
+  <meta property="og:description" content="Keep your presentations and events running on time. Giant screen for your speaker, remote control from your phone. No apps to install.">
   <meta property="og:image" content="assets/hero_stage_mockup.jpg">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Shotimer — Coming Soon | Broadcast-Grade Stage Timer">
-  <meta name="twitter:description" content="Zero tab drift, instant cloud synchronization, silent producer talkback, and multi-screen QR pairing. Free tier available at launch.">
+  <meta name="twitter:title" content="Shotimer — Simple, Remote-Controlled Presentation & Event Timer">
+  <meta name="twitter:description" content="Giant screen for your speaker, controlled from your phone or laptop. Free plan available at launch.">
   <meta name="twitter:image" content="assets/hero_stage_mockup.jpg">
 
   <!-- Favicon (SVG stopwatch with pulse dot) -->
@@ -38,7 +38,7 @@
         "url": "https://shotimer.io",
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "All modern browsers (Chrome, Safari, Edge, Firefox)",
-        "description": "High-precision, remote-controlled stage countdown timer, confidence monitor, and event rundown system for live productions, conferences, and broadcasts.",
+        "description": "Simple, remote-controlled countdown timer and confidence monitor for presentations, meetings, and events.",
         "offers": {
           "@type": "AggregateOffer",
           "priceCurrency": "USD",
@@ -52,10 +52,18 @@
         "mainEntity": [
           {
             "@type": "Question",
-            "name": "When is Shotimer officially launching?",
+            "name": "Do presenters or speakers need to download an app?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Shotimer is currently in final production testing and will launch publicly in 2026. Waitlist subscribers will receive early access before the public release, alongside exclusive founder benefits."
+              "text": "No. Shotimer runs entirely in any standard web browser on laptops, iPads, tablets, and smart TVs. You just give them a web link or let them scan a QR code."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I control the timer from my smartphone?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Scan the QR code with your phone to open the controller. Any button you tap (Start, Pause, +1 Min) updates the speaker display instantly."
             }
           },
           {
@@ -63,39 +71,15 @@
             "name": "Will there be a free plan when Shotimer launches?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes. Shotimer includes a full Free Starter plan supporting up to 3 rooms, 3 timers per room, all core timing modes (countdown, count-up, wall clock), auto-advance linking, and unlimited connected viewers."
+              "text": "Yes! Shotimer includes a generous 100% Free plan forever for everyday meetings, church services, and community events."
             }
           },
           {
             "@type": "Question",
-            "name": "Do presenters need to download an app or create an account?",
+            "name": "When will Shotimer launch?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "No. Speakers and stage talent never have to download software or sign in. You simply send them a viewer URL or let them scan a QR code from the director console."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "How does real-time cloud synchronization work across multiple devices?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Shotimer uses ultra-fast cloud pipelines to synchronize state instantly over the internet. When a director presses Play, adds time (+1m), or triggers a talkback flash message on the controller, all connected stage monitors update in real time with sub-100ms latency."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "How does Shotimer prevent background tab sleep throttling?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Modern operating systems freeze inactive tabs to save battery. Shotimer solves this by decoupling its clock calculation into a dedicated HTML5 Web Worker thread that runs continuously at 50ms intervals using high-resolution hardware timestamps (performance.now())."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "How does Shotimer compare to Stagetimer.io and traditional web timers?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Shotimer is engineered specifically to eliminate background tab throttling with an unthrottled Web Worker engine, procedural Web Audio API chimes that require zero audio file downloads, native auto-advance linking, and real-time cloud synchronization across all devices."
+              "text": "Shotimer is currently in final testing and will launch in 2026. Waitlist subscribers will receive early access before the public release."
             }
           }
         ]
@@ -104,7 +88,7 @@
   }
   </script>
 
-  <!-- Stylesheet (Shared Production Design System) -->
+  <!-- Stylesheet -->
   <link rel="stylesheet" href="css/website.css">
 </head>
 <body>
@@ -125,7 +109,7 @@
         </svg>
         <span>Sho<span style="color: var(--amber-tally);">timer</span></span>
         <span class="brand-badge">
-          <span class="pulse-dot"></span>
+          <span class="status-pulse"></span>
           <span>Coming Soon</span>
         </span>
       </a>
@@ -133,10 +117,11 @@
       <!-- Desktop Links -->
       <nav>
         <ul class="nav-links">
-          <li><a href="#features" class="nav-link">Features Preview</a></li>
-          <li><a href="#use-cases" class="nav-link">Use Cases</a></li>
-          <li><a href="#launch-preview" class="nav-link">What's Included</a></li>
-          <li><a href="#faq" class="nav-link">Launch FAQ</a></li>
+          <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
+          <li><a href="#features" class="nav-link">Features</a></li>
+          <li><a href="#who-its-for" class="nav-link">Who It's For</a></li>
+          <li><a href="#pricing-preview" class="nav-link">Pricing</a></li>
+          <li><a href="#faq" class="nav-link">FAQ</a></li>
         </ul>
       </nav>
 
@@ -159,17 +144,18 @@
 
   <!-- Mobile Drawer -->
   <div id="mobile-drawer" class="mobile-menu-drawer">
-    <a href="#features" class="nav-link" style="font-size: 1.25rem;">Features Preview</a>
-    <a href="#use-cases" class="nav-link" style="font-size: 1.25rem;">Use Cases</a>
-    <a href="#launch-preview" class="nav-link" style="font-size: 1.25rem;">What's Included</a>
-    <a href="#faq" class="nav-link" style="font-size: 1.25rem;">Launch FAQ</a>
+    <a href="#how-it-works" class="nav-link" style="font-size: 1.25rem;">How It Works</a>
+    <a href="#features" class="nav-link" style="font-size: 1.25rem;">Features</a>
+    <a href="#who-its-for" class="nav-link" style="font-size: 1.25rem;">Who It's For</a>
+    <a href="#pricing-preview" class="nav-link" style="font-size: 1.25rem;">Pricing</a>
+    <a href="#faq" class="nav-link" style="font-size: 1.25rem;">FAQ</a>
     <hr style="border: none; border-top: 1px solid var(--border-light); margin: 0.5rem 0;">
     <a href="#waitlist-section" class="btn btn-tally" style="width: 100%;">Join VIP Waitlist ↓</a>
   </div>
 
   <main>
     <!-- ========================================================================
-         HERO SECTION WITH WAITLIST CAPTURE & LIVE INTERACTIVE STAGE DEMO
+         HERO SECTION WITH WAITLIST CAPTURE
          ======================================================================== -->
     <section class="hero-section">
       <div class="container">
@@ -177,16 +163,16 @@
           
           <div class="status-badge">
             <span class="status-pulse"></span>
-            <span>Development in Progress • Launching 2026</span>
+            <span>Early Access Preview • Launching 2026</span>
           </div>
 
           <h1 class="hero-title">
-            Broadcast-Grade Stage Timing.<br>
-            <span class="highlight-tally">Zero Drift.</span> Total Control.
+            Keep your presentations and events<br>
+            <span class="highlight-tally">running on time.</span>
           </h1>
 
           <p class="hero-subtitle">
-            We're putting the final polish on Shotimer — the unthrottled, browser-based stage countdown timer, confidence monitor, and event rundown system. Join the VIP launch list to receive early access the moment we go live.
+            A giant countdown timer for your speakers, controlled wirelessly from your phone or laptop. No software to install—everything runs directly in your web browser.
           </p>
 
           <!-- High-Converting Waitlist Card -->
@@ -194,10 +180,10 @@
             <div id="waitlist-form-container">
               <div class="waitlist-card-title">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--amber-tally)" stroke-width="2.2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                <span>Get Notified First on Launch Day</span>
+                <span>Get Early Access on Launch Day</span>
               </div>
               <p class="waitlist-card-desc">
-                Join AV technical directors, event producers, and broadcast engineers on the official launch list.
+                Be the first to know when we open. Free plan included for all early signups.
               </p>
 
               <form id="waitlist-form" class="waitlist-form">
@@ -207,19 +193,19 @@
                     type="email" 
                     id="waitlist-email" 
                     class="waitlist-input" 
-                    placeholder="Enter your work email address..." 
+                    placeholder="Enter your email address..." 
                     required
                   />
                 </div>
                 <button type="submit" id="waitlist-submit-btn" class="waitlist-btn">
-                  <span>Notify Me at Launch</span>
+                  <span>Get Early Access</span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                 </button>
               </form>
 
               <div class="waitlist-footer-note">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-live)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <span>🔒 Strictly 1 launch notification • Zero spam • Early adopter perks included</span>
+                <span>🔒 Strictly 1 email when we open • Zero spam • Free plan included</span>
               </div>
             </div>
 
@@ -227,10 +213,10 @@
             <div id="waitlist-success" class="waitlist-success">
               <div class="waitlist-success-title">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-live)" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                <span>You're on the VIP launch list!</span>
+                <span>You're on the early access list!</span>
               </div>
               <p class="waitlist-success-desc">
-                We'll email <strong id="waitlist-user-email" style="color: var(--text-primary); font-family: var(--font-mono);">your email</strong> the exact second Shotimer officially opens.
+                We'll email <strong id="waitlist-user-email" style="color: var(--text-primary); font-family: var(--font-mono);">your email</strong> the exact moment Shotimer opens.
               </p>
               <button id="waitlist-reset-btn" type="button" class="waitlist-reset-btn">
                 + Register another team email
@@ -242,11 +228,15 @@
           <div class="hero-reassurance">
             <span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-live)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              Zero software install required
+              Works on any phone, tablet, or TV
             </span>
             <span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-live)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              Full Free plan available at launch
+              No apps or accounts required for speakers
+            </span>
+            <span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-live)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Generous Free tier at launch
             </span>
           </div>
 
@@ -255,173 +245,86 @@
     </section>
 
     <!-- ========================================================================
-         SOCIAL PROOF & TRUST STRIP
+         HOW IT WORKS IN 3 SIMPLE STEPS
          ======================================================================== -->
-    <section class="trust-strip">
+    <section id="how-it-works" class="how-it-works-section" style="padding: 4.5rem 0; background: var(--bg-card); border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light);">
       <div class="container">
-        <div class="trust-heading">
-          Trusted by technical directors, A1 sound engineers, and event producers at
-        </div>
-        <div class="trust-logos">
-          <div class="trust-logo-item">
-            <span style="font-weight: 900; color: #E11D48;">TEDx</span>
-            <span>Conferences</span>
-          </div>
-          <div class="trust-logo-item">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="#9146FF"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
-            <span>Twitch Events</span>
-          </div>
-          <div class="trust-logo-item">
-            <span style="font-family: serif; font-weight: 700; letter-spacing: -0.05em; font-size: 1.25rem;">BBC</span>
-            <span>Broadcast Group</span>
-          </div>
-          <div class="trust-logo-item">
-            <span style="color: #0284C7; font-weight: 800;">GLOBAL</span>
-            <span>Live Summit</span>
-          </div>
-          <div class="trust-logo-item">
-            <span style="font-weight: 700; color: #059669;">WorshipTech</span>
-            <span>Productions</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================================================================
-         WHO IT'S FOR: 4-CREW PERSONA SECTION
-         ======================================================================== -->
-    <section class="persona-section">
-      <div class="container">
-        <div class="section-header" style="margin-bottom: 2.5rem;">
-          <div class="section-label">Backstage & FOH Alignment</div>
-          <h2 class="section-title">Engineered for every seat in the production truck.</h2>
+        
+        <div class="section-header" style="margin-bottom: 3rem;">
+          <div class="section-label">Dead Simple</div>
+          <h2 class="section-title">How Shotimer works in 3 easy steps.</h2>
           <p class="section-description">
-            One synchronized countdown across front-of-house, stage floor wedges, green rooms, and live broadcast switchers.
+            No cables between devices, and nothing for your speakers to install.
           </p>
         </div>
 
-        <div class="persona-grid">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
           
-          <div class="persona-card">
-            <div class="persona-badge">Show Callers & Tech Directors</div>
-            <h3 class="persona-role-title">Call the show from one master clock.</h3>
-            <p class="persona-quote">"Run the entire session sequence from the exact rundown everyone else is watching. Catch overruns before doors, not mid-show."</p>
-            <ul class="persona-features-mini">
-              <li>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Live elapsed & remaining delta</span>
-              </li>
-              <li>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Automated rundown auto-advancing</span>
-              </li>
-              <li>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Hotkeys: Space, R, B, & Arrow keys</span>
-              </li>
-            </ul>
+          <div style="background: var(--bg-main); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2.25rem 1.75rem; display: flex; flex-direction: column;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(245, 158, 11, 0.15); color: var(--amber-tally); font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">1</div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.65rem; color: var(--text-primary);">Open on the Speaker's Screen</h3>
+            <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+              Open your viewer link on any TV, iPad, or laptop facing the speaker. Giant, high-contrast numbers fill the display so they can read it effortlessly from across the room.
+            </p>
           </div>
 
-          <div class="persona-card">
-            <div class="persona-badge">Stage Managers & Talent Crews</div>
-            <h3 class="persona-role-title">Never wave cue cards again.</h3>
-            <p class="persona-quote">"Give keynote speakers giant, unmissable confidence displays without awkward hand waving from the aisles or whispering near mics."</p>
-            <ul class="persona-features-mini">
-              <li>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>24vw auto-fitting bold numbers</span>
-              </li>
-              <li>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Amber at 2m, Red at 30s warnings</span>
-              </li>
-              <li>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Silent flashing talkback messages</span>
-              </li>
-            </ul>
+          <div style="background: var(--bg-main); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2.25rem 1.75rem; display: flex; flex-direction: column;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: var(--emerald-live); font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">2</div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.65rem; color: var(--text-primary);">Control from Your Phone</h3>
+            <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+              Scan the QR code with your smartphone or open the controller on your laptop. Start, pause, or add 2 minutes with a single tap from anywhere in the venue.
+            </p>
           </div>
 
-          <div class="persona-card">
-            <div class="persona-badge">Broadcast & Video Techs</div>
-            <h3 class="persona-role-title">Integrate with hardware & switchers.</h3>
-            <p class="persona-quote">"Map countdown triggers directly to Elgato Stream Deck physical keycaps and pipe transparent lower-thirds into OBS and vMix."</p>
-            <ul class="persona-features-mini">
-              <li>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Stream Deck & Companion REST API</span>
-              </li>
-              <li>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>OBS Studio alpha channel overlay</span>
-              </li>
-              <li>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Zero tab sleep drift (Web Worker)</span>
-              </li>
-            </ul>
-          </div>
-
-          <div class="persona-card">
-            <div class="persona-badge">Houses of Worship & Summits</div>
-            <h3 class="persona-role-title">Volunteer-friendly reliability.</h3>
-            <p class="persona-quote">"Keep worship service runtimes and sermon countdowns strictly in sync. Share a link and every screen, phone, and confidence monitor syncs in real time."</p>
-            <ul class="persona-features-mini">
-              <li>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Real-time multi-screen cloud sync</span>
-              </li>
-              <li>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Scan QR code to join instantly</span>
-              </li>
-              <li>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Procedural soft bell & gong chimes</span>
-              </li>
-            </ul>
+          <div style="background: var(--bg-main); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2.25rem 1.75rem; display: flex; flex-direction: column;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(2, 132, 199, 0.15); color: #0284C7; font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">3</div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.65rem; color: var(--text-primary);">Keep Everyone on Schedule</h3>
+            <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+              The screen changes color automatically as time runs out (Green &rarr; Yellow &rarr; Red). Send silent text notes like "Wrap up" directly to the screen without interrupting.
+            </p>
           </div>
 
         </div>
+
       </div>
     </section>
 
     <!-- ========================================================================
-         CORE FEATURES SPOTLIGHT (ALTERNATING SWISS GRID)
+         CORE FEATURES SPOTLIGHT (3 CLEAR POWERS)
          ======================================================================== -->
     <section id="features" class="features-section">
       <div class="container">
         
         <div class="section-header">
-          <div class="section-label">Engineered for Live Production</div>
-          <h2 class="section-title">Built for the high-stakes reality of live stages.</h2>
+          <div class="section-label">Everything You Need</div>
+          <h2 class="section-title">Built to keep presentations running smoothly.</h2>
           <p class="section-description">
-            Traditional web timers freeze when browser tabs sleep, and spreadsheets are impossible for presenters to read from 30 feet away. Shotimer fixes live timing once and for all.
+            No complicated settings or technical jargon. Just clear timing that presenters love.
           </p>
         </div>
 
-        <!-- Feature 1: The Confidence Monitor -->
+        <!-- Feature 1: Giant Screen for Speaker -->
         <div class="feature-row">
           <div class="feature-content">
             <div class="feature-badge">
-              <span class="badge badge-amber">Stage Confidence View</span>
+              <span class="badge badge-amber">Giant Speaker Display</span>
             </div>
-            <h3 class="feature-title">Giant, crystal-clear digits visible from the back row.</h3>
+            <h3 class="feature-title">Unmissable numbers your speaker can see from across the room.</h3>
             <p class="feature-text">
-              The Presenter View automatically expands typography up to 24vw to completely fill 75" venue TVs or stage floor wedges. Clean, high-contrast numerals guarantee presenters always know their remaining time at a glance.
+              The display automatically scales up to fill any TV screen, computer monitor, or tablet. Clean, high-contrast numerals mean your speaker always knows their remaining time at a single glance.
             </p>
             <ul class="feature-bullets">
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Automatic color shifts:</b> Reassuring green &rarr; Amber at 2 mins &rarr; Red at 30 seconds &rarr; Pulsing overtime.</span>
+                <span><b>Automatic color warnings:</b> Reassuring green &rarr; yellow warning at 2 minutes &rarr; bright red at 30 seconds.</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>True OLED Pitch Black (#000000):</b> Perfect for seamless letterbox rendering on stage LED walls.</span>
+                <span><b>Never goes to sleep:</b> Prevents stage laptops and tablets from dimming or locking mid-presentation.</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Screen Wake Lock API:</b> Prevents stage laptops and tablets from ever dimming or going to sleep mid-event.</span>
+                <span><b>Zero software required:</b> Runs directly inside Chrome, Safari, Edge, or tablet browsers.</span>
               </li>
             </ul>
           </div>
@@ -430,107 +333,87 @@
           </div>
         </div>
 
-        <!-- Feature 2: Silent Producer Talkback -->
+        <!-- Feature 2: Silent Notes to Stage -->
         <div class="feature-row reverse">
           <div class="feature-content">
             <div class="feature-badge">
-              <span class="badge badge-emerald">Silent Stage Talkback</span>
+              <span class="badge badge-emerald">Silent Stage Messages</span>
             </div>
-            <h3 class="feature-title">Communicate with talent without interrupting their flow.</h3>
+            <h3 class="feature-title">Communicate with your speaker without saying a word.</h3>
             <p class="feature-text">
-              Need the speaker to wrap up for lunch, switch microphones, or take an urgent audience question? Send real-time text cues straight to the confidence monitor screen.
+              Need the speaker to wrap up for lunch, switch microphones, or take an audience question? Type a quick note from your phone and it appears right on their screen.
             </p>
             <ul class="feature-bullets">
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Instant screen takeover or subtle banner:</b> Choose between gentle lower banner or prominent screen flash.</span>
+                <span><b>No awkward hand waving:</b> Send discreet reminders from the back of the room without disrupting their speech.</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Color-coded priority:</b> Neutral info notes vs urgent red wrap-up warnings.</span>
+                <span><b>Quick 1-tap presets:</b> Built-in buttons for "2 Mins Left", "Wrap Up", and "Audience Q&A".</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Auto-clearing or persistent:</b> Set cues to dismiss after 10 seconds or remain until acknowledged.</span>
+                <span><b>Gentle or prominent:</b> Choose between a subtle bottom banner or a noticeable strobe flash for urgent notices.</span>
               </li>
             </ul>
           </div>
           <div class="feature-visual" style="background-color: var(--bg-dark); color: #FFFFFF; padding: 2.5rem 2rem; border-radius: var(--radius-xl);">
-            <div style="font-size: 0.75rem; font-weight: 700; color: #A1A1AA; text-transform: uppercase; margin-bottom: 1rem; letter-spacing: 0.05em;">Live Producer Console Cue Dock</div>
-            <div style="background-color: #18181B; border: 1px solid #3F3F46; border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1rem;">
-              <div style="font-size: 0.8125rem; color: #71717A; margin-bottom: 0.35rem;">Active Stage Message:</div>
-              <div style="font-size: 1.15rem; font-weight: 700; color: #F87171;">⚠️ Speaker 2 Mic is muted — please unmute!</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: #A1A1AA; text-transform: uppercase; margin-bottom: 1rem; letter-spacing: 0.05em;">Message Sent from Your Phone:</div>
+            <div style="background-color: #18181B; border: 1px solid #3F3F46; border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.25rem;">
+              <div style="font-size: 0.8125rem; color: #71717A; margin-bottom: 0.35rem;">What the speaker sees on screen:</div>
+              <div style="font-size: 1.25rem; font-weight: 700; color: #F87171;">⚠️ 2 minutes left — please begin wrapping up</div>
             </div>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <span class="badge badge-neutral" style="background-color: #27272A; color: #E4E4E7;">Preset: "Wrap up in 2 mins"</span>
-              <span class="badge badge-neutral" style="background-color: #27272A; color: #E4E4E7;">Preset: "Audience Q&A Start"</span>
-              <span class="badge badge-neutral" style="background-color: #27272A; color: #E4E4E7;">Preset: "Next: Dr. Kimberly Vance"</span>
+              <span class="badge badge-neutral" style="background-color: #27272A; color: #E4E4E7;">Preset: "2 mins left"</span>
+              <span class="badge badge-neutral" style="background-color: #27272A; color: #E4E4E7;">Preset: "Wrap up"</span>
+              <span class="badge badge-neutral" style="background-color: #27272A; color: #E4E4E7;">Preset: "Start Q&A"</span>
             </div>
           </div>
         </div>
 
-        <!-- Feature 3: Unthrottled Web Worker Timing Engine -->
+        <!-- Feature 3: Remote Control Anywhere -->
         <div class="feature-row">
           <div class="feature-content">
             <div class="feature-badge">
-              <span class="badge badge-amber">Hardware-Level Precision</span>
+              <span class="badge badge-amber">Wireless Remote Control</span>
             </div>
-            <h3 class="feature-title">Unthrottled Web Worker. Zero background tab drift.</h3>
+            <h3 class="feature-title">Control the countdown from anywhere in the room.</h3>
             <p class="feature-text">
-              Browsers aggressively throttle background tabs, causing ordinary JavaScript timers to lose 10–30 seconds when an operator switches to checking email or notes. Shotimer runs its timing clock inside an isolated Web Worker using performance.now() epoch deltas.
+              Sitting at the back table or walking around the venue? Open the controller on your phone or laptop. Every tap updates the stage screen instantly with zero delay.
             </p>
             <ul class="feature-bullets">
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Ticking every 50ms:</b> High-precision refresh rate ensures zero stutter on smooth countdown bars.</span>
+                <span><b>Instant 1-tap buttons:</b> Start, pause, reset, or add +1 min and +5 mins with one click.</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Procedural Web Audio API:</b> Zero external mp3 downloads. Pure mathematical oscillators synthesize soft bell, marimba, and warning beeps directly.</span>
+                <span><b>Auto-advance linking:</b> Automatically starts the next presenter's timer when the previous one finishes.</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Real-Time Cloud Synchronization:</b> Connect unlimited stage monitors, laptops, and crew phones across any internet connection with sub-millisecond responsiveness.</span>
+                <span><b>Rock-solid accuracy:</b> Never freezes or loses time, even if your phone screen dims or you check an email.</span>
               </li>
             </ul>
           </div>
-          <div class="feature-visual" style="background-color: #FAF8F5; border: 1px solid var(--border-light); padding: 2rem;">
-            <div style="font-family: var(--font-mono); font-size: 0.8125rem; line-height: 1.7; color: #27272A;">
-              <div style="color: #059669; font-weight: 700;">// Web Worker Precision Engine</div>
-              <div>worker.postMessage({ type: 'START', duration: 1200000 });</div>
-              <div style="color: #71717A;">// Tab minimized &rarr; OS thread prioritizes Worker:</div>
-              <div>delta = performance.now() - epochAnchor;</div>
-              <div style="background-color: #FEF3C7; padding: 0.25rem 0.5rem; border-radius: 4px; margin: 0.5rem 0; font-weight: 700; color: #92400E;">
-                ⏱ Drift Accumulated: 0.00ms (Rock solid)
+          <div class="feature-visual" style="background-color: #FAF8F5; border: 1px solid var(--border-light); padding: 2.25rem; border-radius: var(--radius-xl);">
+            <div style="font-size: 0.8125rem; font-weight: 700; color: #78716C; text-transform: uppercase; margin-bottom: 1rem; letter-spacing: 0.05em;">Mobile Operator Controls</div>
+            <div style="background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow-sm);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span style="font-size: 0.85rem; font-weight: 600; color: #18181B;">Opening Keynote Speech</span>
+                <span style="background: rgba(16, 185, 129, 0.15); color: #059669; font-weight: 700; font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px;">● LIVE</span>
               </div>
-              <div style="color: #059669;">✓ Procedural harmonic bell synthesized: 880Hz Sine</div>
+              <div style="font-family: var(--font-mono); font-size: 2.75rem; font-weight: 800; color: #18181B; margin-bottom: 1rem; text-align: center; letter-spacing: -0.03em;">
+                14:22
+              </div>
+              <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.8rem; pointer-events: none;">-1m</button>
+                <button type="button" class="btn btn-sm btn-tally" style="font-size: 0.8rem; pointer-events: none;">❚❚ Pause</button>
+                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.8rem; pointer-events: none;">+1m</button>
+                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.8rem; pointer-events: none;">+5m</button>
+              </div>
             </div>
-          </div>
-        </div>
-
-        <!-- Feature 4: Real-Time Cloud Sync & Global Device Pairing Banner -->
-        <div class="venue-lan-banner">
-          <div>
-            <div class="badge badge-amber" style="margin-bottom: 0.75rem;">Instant Global Sync</div>
-            <h3 style="font-size: 1.85rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.25; margin-bottom: 1rem;">
-              Real-Time Cloud Sync.<br>Instant multi-screen control.
-            </h3>
-            <p style="font-size: 1rem; line-height: 1.6; color: #D6D3D1; margin-bottom: 1.5rem;">
-              Whether your director is in the master control room, your speakers are on stage, or remote producers are monitoring from anywhere, Shotimer keeps every confidence monitor, teleprompter, and crew phone synchronized with ultra-low latency over the internet.
-            </p>
-            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-              <span class="badge badge-neutral" style="background-color: #292524; color: #E7E5E4; border-color: #44403C;">Instant Cloud Sync</span>
-              <span class="badge badge-neutral" style="background-color: #292524; color: #E7E5E4; border-color: #44403C;">QR Code Mobile Pairing</span>
-              <span class="badge badge-neutral" style="background-color: #292524; color: #E7E5E4; border-color: #44403C;">Unlimited Screen Connections</span>
-            </div>
-          </div>
-          <div class="venue-lan-code-box">
-            <div style="color: #10B981; font-weight: 700; margin-bottom: 0.5rem;">// Real-Time Cloud Sync Stream</div>
-            <div style="color: #D6D3D1;">🚀 SHOTIMER CLOUD PIPELINE ACTIVE</div>
-            <div>Controller:   https://app.shotimer.io/</div>
-            <div style="color: #F59E0B; font-weight: 600;">Stage Monitor: https://app.shotimer.io/?view=viewer</div>
-            <div>Overlay Link:  https://app.shotimer.io/?view=overlay</div>
-            <div style="margin-top: 0.65rem; color: #78716C; font-size: 0.75rem;">// Sub-millisecond sync across unlimited production screens</div>
           </div>
         </div>
 
@@ -538,14 +421,17 @@
     </section>
 
     <!-- ========================================================================
-         USE CASES STRIP
+         WHO IT'S FOR: 4 PRACTICAL SCENARIOS
          ======================================================================== -->
-    <section id="use-cases" class="use-cases-section">
+    <section id="who-its-for" class="use-cases-section">
       <div class="container">
         
         <div class="section-header" style="margin-bottom: 2.5rem;">
-          <div class="section-label">Production Tested</div>
-          <h2 class="section-title">One system. Every live production scenario.</h2>
+          <div class="section-label">Who Uses Shotimer</div>
+          <h2 class="section-title">Perfect for any live presentation or meeting.</h2>
+          <p class="section-description">
+            Simple enough for a 10-person team meeting, yet reliable enough for a 2,000-seat conference.
+          </p>
         </div>
 
         <div class="use-cases-grid">
@@ -554,32 +440,32 @@
             <div class="use-case-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
             </div>
-            <h3 class="use-case-title">Conferences & Summits</h3>
-            <p class="use-case-desc">Keep 20+ keynote speakers strictly on schedule across multiple breakout rooms without awkward hand-waving from the aisles.</p>
-          </div>
-
-          <div class="use-case-card">
-            <div class="use-case-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>
-            </div>
-            <h3 class="use-case-title">Broadcast & Streaming</h3>
-            <p class="use-case-desc">Transparent OBS Studio & vMix lower-third countdown browser overlays, SDI/NDI feeds, and producer talkback intercoms.</p>
-          </div>
-
-          <div class="use-case-card">
-            <div class="use-case-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-            </div>
-            <h3 class="use-case-title">Houses of Worship</h3>
-            <p class="use-case-desc">Manage sermon runtimes, worship band music transitions, and service cues seamlessly from the back-of-house sound booth.</p>
+            <h3 class="use-case-title">Conferences & Events</h3>
+            <p class="use-case-desc">Keep a packed schedule of keynote speakers on track without waving papers or walking onto the stage.</p>
           </div>
 
           <div class="use-case-card">
             <div class="use-case-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
             </div>
-            <h3 class="use-case-title">Hybrid All-Hands</h3>
-            <p class="use-case-desc">Synchronize remote Zoom or Microsoft Teams presenters with stage executives via shareable web links and QR codes.</p>
+            <h3 class="use-case-title">Team Meetings & Workshops</h3>
+            <p class="use-case-desc">Give every speaker a set time slot and finish your company agendas strictly on time.</p>
+          </div>
+
+          <div class="use-case-card">
+            <div class="use-case-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            </div>
+            <h3 class="use-case-title">Churches & Worship</h3>
+            <p class="use-case-desc">Coordinate sermon timing, announcements, and music transitions from the sound booth with ease.</p>
+          </div>
+
+          <div class="use-case-card">
+            <div class="use-case-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>
+            </div>
+            <h3 class="use-case-title">Livestreams & Video</h3>
+            <p class="use-case-desc">Add clean countdown timer overlays directly into OBS Studio, vMix, Zoom, or studio video feeds.</p>
           </div>
 
         </div>
@@ -588,26 +474,26 @@
     </section>
 
     <!-- ========================================================================
-         WHAT'S INCLUDED AT LAUNCH (TIER OVERVIEW)
+         PRICING PREVIEW: SIMPLE & TRANSPARENT
          ======================================================================== -->
-    <section id="launch-preview" class="pricing-section">
+    <section id="pricing-preview" class="pricing-section">
       <div class="container">
         
         <div class="section-header">
-          <div class="section-label">Coming at Launch</div>
-          <h2 class="section-title">Generous Free Plan. Powerful Pro Features.</h2>
+          <div class="section-label">Honest Pricing</div>
+          <h2 class="section-title">Generous Free Plan. Affordable Pro Upgrade.</h2>
           <p class="section-description">
-            Shotimer is built with a commitment to an authentic, fully functional Free tier so grassroots events, students, and community organizers always have a reliable stage clock.
+            Shotimer is built with a commitment to a 100% free tier so schools, churches, and community meetups always have a great timer.
           </p>
         </div>
 
-        <div class="pricing-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); max-width: 960px; margin: 0 auto;">
+        <div class="pricing-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); max-width: 900px; margin: 0 auto;">
           
-          <!-- Free Starter Tier at Launch -->
+          <!-- Free Plan -->
           <div class="pricing-card">
             <div class="badge badge-emerald" style="display: inline-flex; margin-bottom: 0.75rem;">100% Free Forever</div>
-            <div class="pricing-plan-name">Free Starter Tier</div>
-            <div class="pricing-plan-tagline">Everything needed for single rooms, rehearsals, and meetups.</div>
+            <div class="pricing-plan-name">Free Starter</div>
+            <div class="pricing-plan-tagline">Everything you need for everyday presentations and meetings.</div>
             <div class="pricing-price-wrap">
               <span class="pricing-amount">$0</span>
               <span class="pricing-period">forever free</span>
@@ -615,40 +501,40 @@
             <ul class="pricing-features-list">
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Up to 3 rooms & 3 timers per rundown</b></span>
+                <span><b>Up to 3 rooms & 3 timers per event</b></span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Unlimited viewer screens & mobile devices</span>
+                <span>Unlimited speaker screens and mobile devices</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>All modes: Countdown, Count-up, Wall Clock</span>
+                <span>Countdown, Count-up, and Real-time Clock modes</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Auto-advance linking between segments</span>
+                <span>Automatic color warnings (Green &rarr; Yellow &rarr; Red)</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Unthrottled Web Worker drift-free engine</span>
+                <span>QR code wireless phone pairing</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Procedural Web Audio chimes (Soft Bell, Gong)</span>
+                <span>Soft sound chimes & beeps</span>
               </li>
             </ul>
-            <a href="#waitlist-section" class="btn btn-secondary" style="width: 100%;">Get Launch Notification</a>
+            <a href="#waitlist-section" class="btn btn-secondary" style="width: 100%;">Get Early Access</a>
           </div>
 
-          <!-- Pro Production Tier at Launch -->
+          <!-- Pro Plan -->
           <div class="pricing-card featured">
-            <div class="pricing-featured-badge">For AV Crews & Broadcasters</div>
-            <div class="pricing-plan-name">Pro Production</div>
-            <div class="pricing-plan-tagline">Unlimited power for venues, studios, and production companies.</div>
+            <div class="pricing-featured-badge">For Power Users & Venues</div>
+            <div class="pricing-plan-name">Pro Plan</div>
+            <div class="pricing-plan-tagline">Unlimited power for multi-track conferences and busy venues.</div>
             <div class="pricing-price-wrap">
-              <span class="pricing-amount">Early VIP</span>
-              <span class="pricing-period">special launch offer</span>
+              <span class="pricing-amount">$14.99</span>
+              <span class="pricing-period">/ month (or $8.25/mo billed annually)</span>
             </div>
             <ul class="pricing-features-list">
               <li>
@@ -657,23 +543,23 @@
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>CSV & Excel rundown spreadsheet import/export</span>
+                <span>Import and export schedules via Excel / CSV</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>True OLED Pitch Black theme (#000000)</span>
+                <span>Custom client or sponsor logos on the screen</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Custom client / sponsor logo on confidence monitors</span>
+                <span>Pitch Black theme for stage environments</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Bitfocus Companion & Stream Deck REST API</span>
+                <span>Saved account history synced across all devices</span>
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Cloud account persistence across all devices</span>
+                <span>Priority email support from founders</span>
               </li>
             </ul>
             <a href="#waitlist-section" class="btn btn-tally" style="width: 100%;">Join Early Adopter List</a>
@@ -685,85 +571,55 @@
     </section>
 
     <!-- ========================================================================
-         FAQ ACCORDION
+         FAQ ACCORDION: 4 CLEAR, HUMAN QUESTIONS
          ======================================================================== -->
     <section id="faq" class="faq-section">
       <div class="container">
         
         <div class="section-header">
-          <div class="section-label">Frequently Asked Questions</div>
-          <h2 class="section-title">Everything you need to know about the launch.</h2>
+          <div class="section-label">Questions & Answers</div>
+          <h2 class="section-title">Frequently asked questions.</h2>
         </div>
 
         <div class="faq-list">
           
           <div class="faq-item open">
             <button class="faq-question">
+              <span>Do my presenters or speakers need to download an app?</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-answer">
+              No. Speakers and stage talent never have to install an app or create an account. You simply send them a link or let them scan a QR code with their camera. It opens instantly in Safari, Chrome, Edge, or tablet browsers with zero setup.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Can I really control the timer from my smartphone?</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-answer">
+              Yes. You can open the controller on your phone by scanning a QR code or bookmarking the link. Any button you press (Start, Pause, +1 Min) updates the speaker's screen in real time over the internet.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Will there be a free plan when you launch?</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="faq-answer">
+              Yes! Shotimer includes a generous 100% Free plan forever. It supports up to 3 rooms, 3 timers per event, all timing modes (countdown, count-up, wall clock), auto-advance linking, and unlimited connected viewer screens.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question">
               <span>When is Shotimer officially launching?</span>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </button>
             <div class="faq-answer">
-              Shotimer is currently in final production testing and will launch publicly in 2026. Waitlist subscribers will receive early access before the public release, alongside exclusive founder benefits.
-            </div>
-          </div>
-
-          <div class="faq-item">
-            <button class="faq-question">
-              <span>Will there be a free plan when Shotimer launches?</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-            <div class="faq-answer">
-              Yes. Shotimer includes a full Free Starter plan supporting up to 3 rooms, 3 timers per room, all core timing modes (countdown, count-up, wall clock), auto-advance linking, and unlimited connected viewers.
-            </div>
-          </div>
-
-          <div class="faq-item">
-            <button class="faq-question">
-              <span>Do presenters need to download an app or create an account?</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-            <div class="faq-answer">
-              No. Speakers and stage talent never have to download software or sign in. You simply send them a viewer URL or let them scan a QR code from the director console. It opens in Safari, Chrome, Edge, Firefox, and tablet browsers with zero configuration.
-            </div>
-          </div>
-
-          <div class="faq-item">
-            <button class="faq-question">
-              <span>How does real-time cloud synchronization work across multiple devices?</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-            <div class="faq-answer">
-              Shotimer uses ultra-fast cloud pipelines to synchronize state instantly over the internet. When a director presses Play, adds time (+1m), or triggers a talkback flash message on the controller, all connected stage monitors, confidence displays, and crew mobile phones update in real time with sub-100ms latency.
-            </div>
-          </div>
-
-          <div class="faq-item">
-            <button class="faq-question">
-              <span>How does Shotimer prevent background tab sleep throttling?</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-            <div class="faq-answer">
-              Modern operating systems and browsers freeze inactive tabs to save battery. Shotimer solves this by decoupling its clock calculation into a dedicated HTML5 Web Worker thread that runs continuously at 50ms intervals using high-resolution hardware timestamps (performance.now()).
-            </div>
-          </div>
-
-          <div class="faq-item">
-            <button class="faq-question">
-              <span>Can I use Shotimer offline on venue Wi-Fi?</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-            <div class="faq-answer">
-              Yes. Shotimer includes an offline local broadcast server mode that runs on any venue laptop and pairs with phones and tablets over local Wi-Fi with zero external internet required.
-            </div>
-          </div>
-
-          <div class="faq-item">
-            <button class="faq-question">
-              <span>How does Shotimer compare to Stagetimer.io and traditional web timers?</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-            <div class="faq-answer">
-              Shotimer is engineered specifically to eliminate background tab throttling with an unthrottled Web Worker engine, procedural Web Audio API chimes that require zero audio file downloads, native auto-advance linking, and real-time cloud synchronization across all devices.
+              Shotimer is currently in final testing and will launch publicly in 2026. Waitlist subscribers will receive early access before the public release, along with special founder perks.
             </div>
           </div>
 
@@ -777,9 +633,9 @@
          ======================================================================== -->
     <section class="bottom-cta-section">
       <div class="container">
-        <h2 class="bottom-cta-title">Be first in line when the curtain goes up.</h2>
+        <h2 class="bottom-cta-title">Be first in line when we launch.</h2>
         <p class="bottom-cta-subtitle">
-          Join hundreds of technical directors, event producers, and broadcast crews getting launch day access.
+          Join event organizers, conference speakers, and presenters getting early access.
         </p>
 
         <!-- Secondary Email Capture Box -->
@@ -792,7 +648,7 @@
                   type="email" 
                   id="bottom-waitlist-email" 
                   class="waitlist-input" 
-                  placeholder="Enter your work email address..." 
+                  placeholder="Enter your email address..." 
                   required
                 />
               </div>
@@ -836,32 +692,21 @@
             <span>Shotimer</span>
           </div>
           <p style="color: #71717A; line-height: 1.6; max-width: 320px; margin-bottom: 1.25rem;">
-            Broadcast-grade stage timing and event rundown system. Built for live conferences, video productions, and church worship.
+            Remote-controlled countdown timer and confidence monitor for presentations, conferences, and meetings.
           </p>
           <div style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; background-color: #1F1F23; padding: 0.25rem 0.65rem; border-radius: var(--radius-full); border: 1px solid #333338;">
-            <span class="pulse-dot"></span>
-            <span style="color: #E4E4E7;">Launch in progress • Q1 2026</span>
+            <span class="status-pulse" style="width: 6px; height: 6px;"></span>
+            <span style="color: #E4E4E7;">Launch in progress • 2026</span>
           </div>
         </div>
 
         <div>
-          <div class="footer-col-title">Planned Views</div>
+          <div class="footer-col-title">Navigation</div>
           <ul class="footer-links">
-            <li><a href="#features">Director Console</a></li>
-            <li><a href="#features">Confidence Monitor</a></li>
-            <li><a href="#features">Agenda Timeline</a></li>
-            <li><a href="#features">OBS Lower-Third</a></li>
-            <li><a href="#features">Moderator Cue Portal</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <div class="footer-col-title">Product</div>
-          <ul class="footer-links">
-            <li><a href="#launch-preview">Free Starter Tier</a></li>
-            <li><a href="#launch-preview">Pro Production Tier</a></li>
-            <li><a href="#features">Web Worker Engine</a></li>
-            <li><a href="#faq">Launch FAQ</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#who-its-for">Who It's For</a></li>
+            <li><a href="#pricing-preview">Pricing</a></li>
           </ul>
         </div>
 
@@ -870,7 +715,7 @@
           <ul class="footer-links">
             <li><a href="#waitlist-section">Join VIP Waitlist</a></li>
             <li><a href="mailto:support@shotimer.io">Contact Founders</a></li>
-            <li><a href="#features">Features Preview</a></li>
+            <li><a href="#faq">Launch FAQ</a></li>
           </ul>
         </div>
       </div>
@@ -880,7 +725,7 @@
         <div style="display: flex; gap: 1.5rem;">
           <a href="#" style="color: #71717A; text-decoration: none;">Privacy Policy</a>
           <a href="#" style="color: #71717A; text-decoration: none;">Terms of Service</a>
-          <a href="#" style="color: #71717A; text-decoration: none;">Security & Privacy</a>
+          <a href="#" style="color: #71717A; text-decoration: none;">Security</a>
         </div>
       </div>
     </div>
