@@ -60,24 +60,16 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.textContent = 'Saving...';
       }
 
-      // 1. Direct Supabase Cloud Database Insert
+      // 1. Direct Google Sheet Sync (Real-time live spreadsheet in Google Drive)
+      const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxW1-kCU44D6w40coDYwnVU4ASKuS1nVjYt7GL24rwi6z1EekCofHdTvq06BWvxFTnYDQ/exec';
       try {
-        const supaRes = await fetch('https://yodcnmzgmjcjgxizcowm.supabase.co/rest/v1/waitlist', {
+        await fetch(GOOGLE_SHEET_URL, {
           method: 'POST',
-          headers: {
-            apikey: 'sb_publishable__L0Nx0Gr4xTdpxZrAq0veA_6de4-j8E',
-            Authorization: 'Bearer sb_publishable__L0Nx0Gr4xTdpxZrAq0veA_6de4-j8E',
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ email, source: 'website_coming_soon' }),
         });
-
-        // 201 Created or 409 Conflict (already on list) both count as success
-        if (!supaRes.ok && supaRes.status !== 409) {
-          console.warn('[Waitlist] Supabase sync note:', supaRes.status, await supaRes.text());
-        }
-      } catch (supabaseErr) {
-        console.warn('[Waitlist] Supabase network error:', supabaseErr);
+      } catch (sheetErr) {
+        console.warn('[Waitlist] Google Sheets sync note:', sheetErr);
       }
 
       // 2. Also log to local server backup if server.js is running
