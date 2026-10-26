@@ -280,7 +280,7 @@ export default function SettingsModal({ isOpen, onClose, onOpenPaywall }: Settin
             onClick={() => onOpenPaywall('Shotimer Pro Full Access')}
             className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-bold transition-colors shadow-sm"
           >
-            {isProUser ? 'Manage License' : 'Upgrade ($14.99)'}
+            {isProUser ? 'Manage License' : 'Upgrade (TBA)'}
           </button>
         </div>
 

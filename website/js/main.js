@@ -37,15 +37,15 @@ document.addEventListener('DOMContentLoaded', () => {
     btnMonthly.addEventListener('click', () => {
       btnMonthly.classList.add('active');
       btnAnnual.classList.remove('active');
-      proPriceAmount.textContent = '$14.99';
-      if (proPricePeriod) proPricePeriod.textContent = '/ month';
+      proPriceAmount.textContent = 'TBA';
+      if (proPricePeriod) proPricePeriod.textContent = 'Launch pricing to be announced';
     });
 
     btnAnnual.addEventListener('click', () => {
       btnAnnual.classList.add('active');
       btnMonthly.classList.remove('active');
-      proPriceAmount.textContent = '$8.25';
-      if (proPricePeriod) proPricePeriod.textContent = '/ mo (billed $99/yr)';
+      proPriceAmount.textContent = 'TBA';
+      if (proPricePeriod) proPricePeriod.textContent = 'Launch pricing to be announced';
     });
   }
 

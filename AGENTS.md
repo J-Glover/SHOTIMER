@@ -32,7 +32,7 @@
 6. **Rundown Export / Import (`src/utils/exportImport.ts`):**
    - Supports `.json` full backups and `.csv` Excel / Google Sheets schedule imports.
 7. **Pro Paywall Architecture (`src/components/common/ProPaywallModal.tsx`):**
-   - Gating mechanism separating Free Tier vs Pro Membership ($14.99/mo).
+   - Gating mechanism separating Free Tier vs Pro Membership (TBA).
    - Pro features: CSV export/import, True OLED Pitch Black theme (`#000000`), custom themes.
    - Demo license unlock key: `PRO-STAGE-2026`.
 8. **Free Tier MVP Parity (Matching Stagetimer.io Free Specifications):**

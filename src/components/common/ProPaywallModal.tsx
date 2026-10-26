@@ -151,7 +151,7 @@ export default function ProPaywallModal({ isOpen, onClose, featureName = 'This f
                 className="w-full sm:flex-1 py-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-xs font-bold transition-transform shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2"
               >
                 <Lock className="w-3.5 h-3.5" />
-                <span>Upgrade ($14.99/mo)</span>
+                <span>Upgrade (TBA)</span>
               </button>
             </>
           ) : (
