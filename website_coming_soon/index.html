@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shotimer — Simple, Remote-Controlled Presentation & Event Countdown Timer</title>
+  <title>Shotimer — The Modern Presentation & Broadcast Stage Timer</title>
   <meta name="description" content="Keep your presentations, meetings, and events running on time. A giant, clear countdown timer for speakers, controlled wirelessly from any phone or laptop. Runs in any browser.">
   <meta name="keywords" content="presentation timer, stage timer, meeting countdown timer, speech timer, church timer, conference timer, speaker clock, remote timer online">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
@@ -14,13 +14,13 @@
   <meta property="og:site_name" content="Shotimer">
   <meta property="og:url" content="https://shotimer.io/">
   <meta property="og:locale" content="en_US">
-  <meta property="og:title" content="Shotimer — Simple, Remote-Controlled Presentation & Event Timer">
+  <meta property="og:title" content="Shotimer — The Modern Presentation & Broadcast Stage Timer">
   <meta property="og:description" content="Keep your presentations and events running on time. Giant screen for your speaker, remote control from your phone. No apps to install.">
   <meta property="og:image" content="assets/hero_stage_mockup.jpg">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Shotimer — Simple, Remote-Controlled Presentation & Event Timer">
+  <meta name="twitter:title" content="Shotimer — The Modern Presentation & Broadcast Stage Timer">
   <meta name="twitter:description" content="Giant screen for your speaker, controlled from your phone or laptop. Free plan available at launch.">
   <meta name="twitter:image" content="assets/hero_stage_mockup.jpg">
 
@@ -86,34 +86,30 @@
   }
   </script>
 
-  <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/website.css">
+  <!-- Modern Bento Light Stylesheet -->
+  <link rel="stylesheet" href="css/website.css?v=2026.3">
 </head>
 <body>
 
   <!-- ========================================================================
-       GLOBAL HEADER / NAVIGATION
+       FLOATING PILL NAVBAR
        ======================================================================== -->
-  <header class="site-nav">
-    <div class="container">
+  <header class="site-header">
+    <div class="header-dock">
       <!-- Logo -->
-      <a href="index.html" class="nav-brand">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--amber-tally);">
+      <a href="index.html" class="nav-brand" aria-label="Shotimer Home">
+        <svg class="brand-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="13" r="8"></circle>
           <line x1="12" y1="9" x2="12" y2="13"></line>
           <path d="M5 3L2 6"></path>
           <path d="M22 6L19 3"></path>
           <line x1="10" y1="2" x2="14" y2="2"></line>
         </svg>
-        <span>Sho<span style="color: var(--amber-tally);">timer</span></span>
-        <span class="brand-badge">
-          <span class="status-pulse"></span>
-          <span>Coming Soon</span>
-        </span>
+        <span class="brand-name">Sho<span class="brand-name-highlight">timer</span></span>
       </a>
 
       <!-- Desktop Links -->
-      <nav>
+      <nav aria-label="Main Navigation">
         <ul class="nav-links">
           <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
           <li><a href="#features" class="nav-link">Features</a></li>
@@ -123,14 +119,13 @@
         </ul>
       </nav>
 
-      <!-- Action Button -->
+      <!-- Action Button & Hamburger -->
       <div class="nav-actions">
         <a href="#waitlist-section" class="btn btn-tally btn-sm">
           <span>Join Waitlist ↓</span>
         </a>
-        <!-- Mobile Hamburger -->
-        <button id="mobile-menu-toggle" class="btn btn-secondary btn-sm mobile-menu-btn" aria-label="Toggle menu">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <line x1="3" y1="12" x2="21" y2="12"></line>
             <line x1="3" y1="6" x2="21" y2="6"></line>
             <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -140,97 +135,190 @@
     </div>
   </header>
 
-  <!-- Mobile Drawer -->
-  <div id="mobile-drawer" class="mobile-menu-drawer">
-    <a href="#how-it-works" class="nav-link" style="font-size: 1.25rem;">How It Works</a>
-    <a href="#features" class="nav-link" style="font-size: 1.25rem;">Features</a>
-    <a href="#who-its-for" class="nav-link" style="font-size: 1.25rem;">Who It's For</a>
-    <a href="#pricing-preview" class="nav-link" style="font-size: 1.25rem;">Pricing</a>
-    <a href="#faq" class="nav-link" style="font-size: 1.25rem;">FAQ</a>
-    <hr style="border: none; border-top: 1px solid var(--border-light); margin: 0.5rem 0;">
-    <a href="#waitlist-section" class="btn btn-tally" style="width: 100%;">Join VIP Waitlist ↓</a>
+  <!-- Mobile Menu Drawer -->
+  <div id="mobile-drawer" class="mobile-menu-drawer" aria-hidden="true">
+    <a href="#how-it-works" class="nav-link">How It Works</a>
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#who-its-for" class="nav-link">Who It's For</a>
+    <a href="#pricing-preview" class="nav-link">Pricing</a>
+    <a href="#faq" class="nav-link">FAQ</a>
+    <a href="#waitlist-section" class="btn btn-tally" style="width: 100%; margin-top: 0.5rem;">Join VIP Waitlist ↓</a>
   </div>
 
   <main>
     <!-- ========================================================================
-         HERO SECTION WITH WAITLIST CAPTURE
+         HERO SECTION: THE EDITORIAL SPOTLIGHT
          ======================================================================== -->
     <section class="hero-section">
       <div class="container">
-        <div class="hero-center">
+        
+        <!-- Live Announcement Pill -->
+        <div class="hero-announcement">
+          <span class="announcement-tag">New</span>
+          <span>100% Free Plan Included at Launch • Zero App Installs</span>
+        </div>
 
-          <h1 class="hero-title">
-            Keep your presentations and events<br>
-            <span class="highlight-tally">running on time.</span>
-          </h1>
+        <!-- Main Editorial Headline -->
+        <h1 class="hero-title">
+          The stage timer presenters<br>
+          <span class="hero-highlight">actually want to look at.</span>
+        </h1>
 
-          <p class="hero-subtitle">
-            A giant countdown timer for your speakers, controlled wirelessly from your phone or laptop. No software to install—everything runs directly in your web browser.
-          </p>
+        <!-- Subtitle -->
+        <p class="hero-subtitle">
+          Shotimer turns any TV, tablet, or laptop into a giant, high-contrast confidence monitor—controlled wirelessly from your pocket with zero apps to install.
+        </p>
 
-          <!-- High-Converting Waitlist Card -->
-          <div id="waitlist-section" class="waitlist-card">
-            <div id="waitlist-form-container">
-              <div class="waitlist-card-title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--amber-tally)" stroke-width="2.2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                <span>Get Early Access on Launch Day</span>
-              </div>
-              <p class="waitlist-card-desc">
-                Be the first to know when we open. Free plan included for all early signups.
-              </p>
-
-              <form id="waitlist-form" class="waitlist-form">
-                <div class="waitlist-input-wrap">
-                  <svg class="waitlist-input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                  <input 
-                    type="email" 
-                    id="waitlist-email" 
-                    class="waitlist-input" 
-                    placeholder="Enter your email address..." 
-                    required
-                  />
-                </div>
-                <button type="submit" id="waitlist-submit-btn" class="waitlist-btn">
-                  <span>Get Early Access</span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                </button>
-              </form>
-
-              <div class="waitlist-footer-note">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-live)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <span>🔒 Strictly 1 email when we open • Zero spam • Free plan included</span>
-              </div>
-            </div>
-
-            <!-- Animated Success Confirmation State -->
-            <div id="waitlist-success" class="waitlist-success">
-              <div class="waitlist-success-title">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-live)" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                <span>You're on the early access list!</span>
-              </div>
-              <p class="waitlist-success-desc">
-                We'll email <strong id="waitlist-user-email" style="color: var(--text-primary); font-family: var(--font-mono);">your email</strong> the exact moment Shotimer opens.
-              </p>
-              <button id="waitlist-reset-btn" type="button" class="waitlist-reset-btn">
-                + Register another team email
+        <!-- Integrated Spotlight Waitlist Capsule -->
+        <div id="waitlist-section" class="spotlight-waitlist-wrap">
+          <div id="waitlist-form-container">
+            <form id="waitlist-form" class="spotlight-capsule">
+              <svg class="spotlight-input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              <input 
+                type="email" 
+                id="waitlist-email" 
+                class="spotlight-input" 
+                placeholder="Enter your email for early access..." 
+                autocomplete="email"
+                required
+              />
+              <button type="submit" id="waitlist-submit-btn" class="spotlight-btn">
+                <span>Get Early Access</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
               </button>
+            </form>
+            <div class="spotlight-note">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-live)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <span>Strictly 1 email upon launch • Zero spam • Generous Free tier included</span>
             </div>
           </div>
 
-          <!-- Reassurance Bullets -->
-          <div class="hero-reassurance">
-            <span>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-live)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              Works on any phone, tablet, or TV
-            </span>
-            <span>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-live)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              No apps or accounts required for speakers
-            </span>
-            <span>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-live)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              Generous Free tier at launch
-            </span>
+          <!-- Animated Success State -->
+          <div id="waitlist-success" class="waitlist-success">
+            <div class="waitlist-success-title">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span>You're on the VIP early access list!</span>
+            </div>
+            <p class="waitlist-success-desc">
+              We'll email <strong id="waitlist-user-email" class="font-mono" style="color: var(--text-primary);">your email</strong> the exact moment Shotimer goes live.
+            </p>
+            <button id="waitlist-reset-btn" type="button" class="waitlist-reset-btn">
+              + Register another team email
+            </button>
+          </div>
+        </div>
+
+        <!-- The Stage & Remote Duet Visual Showcase -->
+        <div class="hero-duet-showcase">
+          <div class="duet-monitor-chassis">
+            <div class="duet-monitor-bar">
+              <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <span class="duet-status-chip">
+                  <span class="status-pulse-dot"></span>
+                  <span>ON AIR</span>
+                </span>
+                <span class="duet-segment-title">Opening Keynote & Product Vision</span>
+              </div>
+              <span class="badge badge-amber font-mono">ROOM 01</span>
+            </div>
+            <div class="duet-timer-display">
+              14:22
+            </div>
+            <div class="duet-cue-banner">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span>⚠️</span>
+                <span>Director Cue: "2 minutes left — please begin wrapping up"</span>
+              </div>
+              <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--amber-text); letter-spacing: 0.05em;">Received from iPhone</span>
+            </div>
+          </div>
+
+          <!-- Overlapping Pocket Controller Card -->
+          <div class="duet-remote-capsule">
+            <div class="remote-pill-header">
+              <span>Mobile Director Remote</span>
+              <span class="status-pulse-dot"></span>
+            </div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">Keynote (14:22 left)</div>
+            <div class="remote-quick-actions">
+              <span class="remote-action-btn">-1m</span>
+              <span class="remote-action-btn active">❚❚ Pause</span>
+              <span class="remote-action-btn">+1m</span>
+              <span class="remote-action-btn">+5m</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Illustration Purpose Disclaimer -->
+        <p class="illustration-disclaimer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>* App screens and device graphics are for illustration purposes only. Actual application interface may vary.</span>
+        </p>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         KEY METRICS & TRUST TICKER STRIP
+         ======================================================================== -->
+    <section class="trust-strip">
+      <div class="container">
+        <div class="trust-grid">
+          
+          <div class="trust-item">
+            <div class="trust-icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+            </div>
+            <div>
+              <div class="trust-title">Zero App Downloads</div>
+              <div class="trust-subtitle">Runs in Chrome, Safari & Edge</div>
+            </div>
+          </div>
+
+          <div class="trust-item">
+            <div class="trust-icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+            </div>
+            <div>
+              <div class="trust-title">Instant Phone Pairing</div>
+              <div class="trust-subtitle">Scan QR to control wirelessly</div>
+            </div>
+          </div>
+
+          <div class="trust-item">
+            <div class="trust-icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 2.1l4 4-4 4"></path><path d="M3 12.2v-2a4 4 0 0 1 4-4h14"></path><path d="M7 21.9l-4-4 4-4"></path><path d="M21 11.8v2a4 4 0 0 1-4 4H3"></path></svg>
+            </div>
+            <div>
+              <div class="trust-title">Auto-Advance Linking</div>
+              <div class="trust-subtitle">Chains next speaker seamlessly</div>
+            </div>
+          </div>
+
+          <div class="trust-item">
+            <div class="trust-icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+            </div>
+            <div>
+              <div class="trust-title">Generous Free Plan</div>
+              <div class="trust-subtitle">3 rooms & 3 timers forever</div>
+            </div>
           </div>
 
         </div>
@@ -238,42 +326,42 @@
     </section>
 
     <!-- ========================================================================
-         HOW IT WORKS IN 3 SIMPLE STEPS
+         HOW IT WORKS (3 SIMPLE STEPS)
          ======================================================================== -->
-    <section id="how-it-works" class="how-it-works-section" style="padding: 4.5rem 0; background: var(--bg-card); border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light);">
+    <section id="how-it-works" class="how-it-works-section">
       <div class="container">
         
-        <div class="section-header" style="margin-bottom: 3rem;">
+        <div class="section-header">
           <div class="section-label">Dead Simple</div>
           <h2 class="section-title">How Shotimer works in 3 easy steps.</h2>
           <p class="section-description">
-            No cables between devices, and nothing for your speakers to install.
+            No cables between devices, and nothing for your speakers to download or install.
           </p>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+        <div class="steps-container">
           
-          <div style="background: var(--bg-main); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2.25rem 1.75rem; display: flex; flex-direction: column;">
-            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(245, 158, 11, 0.15); color: var(--amber-tally); font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">1</div>
-            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.65rem; color: var(--text-primary);">Open on the Speaker's Screen</h3>
-            <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
-              Open your viewer link on any TV, iPad, or laptop facing the speaker. Giant, high-contrast numbers fill the display so they can read it effortlessly from across the room.
+          <div class="step-card">
+            <div class="step-number-tag step-number-1">01</div>
+            <h3 class="step-card-title">Point Any Screen to the Stage</h3>
+            <p class="step-card-desc">
+              Open your viewer link or scan the QR code on any TV, iPad, or laptop facing the speaker. Giant, high-contrast numerals automatically fill the screen so they can read remaining time from across the room.
             </p>
           </div>
 
-          <div style="background: var(--bg-main); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2.25rem 1.75rem; display: flex; flex-direction: column;">
-            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: var(--emerald-live); font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">2</div>
-            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.65rem; color: var(--text-primary);">Control from Your Phone</h3>
-            <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
-              Scan the QR code with your smartphone or open the controller on your laptop. Start, pause, or add 2 minutes with a single tap from anywhere in the venue.
+          <div class="step-card">
+            <div class="step-number-tag step-number-2">02</div>
+            <h3 class="step-card-title">Control from Your Pocket</h3>
+            <p class="step-card-desc">
+              Scan the controller QR code with your phone or open it on your laptop. Start, pause, or add 2 minutes with a single tap from anywhere in the venue over Wi-Fi or cellular data.
             </p>
           </div>
 
-          <div style="background: var(--bg-main); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2.25rem 1.75rem; display: flex; flex-direction: column;">
-            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(2, 132, 199, 0.15); color: #0284C7; font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">3</div>
-            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.65rem; color: var(--text-primary);">Keep Everyone on Schedule</h3>
-            <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
-              The screen changes color automatically as time runs out (Green &rarr; Yellow &rarr; Red). Send silent text notes like "Wrap up" directly to the screen without interrupting.
+          <div class="step-card">
+            <div class="step-number-tag step-number-3">03</div>
+            <h3 class="step-card-title">Keep Everyone on Schedule</h3>
+            <p class="step-card-desc">
+              The screen changes color automatically as time runs out (Green &rarr; Yellow &rarr; Red). Send silent text notes like "Wrap up" directly to the stage screen without interrupting the speaker.
             </p>
           </div>
 
@@ -283,182 +371,180 @@
     </section>
 
     <!-- ========================================================================
-         CORE FEATURES SPOTLIGHT (3 CLEAR POWERS)
+         CORE CAPABILITIES: THE 2026 AIRY BENTO GRID
          ======================================================================== -->
-    <section id="features" class="features-section">
+    <section id="features" class="bento-section">
       <div class="container">
         
         <div class="section-header">
           <div class="section-label">Everything You Need</div>
-          <h2 class="section-title">Built to keep presentations running smoothly.</h2>
+          <h2 class="section-title">Built for stress-free presentations.</h2>
           <p class="section-description">
-            No complicated settings or technical jargon. Just clear timing that presenters love.
+            No complicated menus or confusing audio jargon. Just crystal-clear timing that speakers love.
           </p>
         </div>
 
-        <!-- Feature 1: Giant Screen for Speaker -->
-        <div class="feature-row">
-          <div class="feature-content">
-            <div class="feature-badge">
+        <div class="bento-grid">
+          
+          <!-- Bento 1: Giant Screen (7 Columns) -->
+          <div class="bento-card bento-span-7">
+            <div class="bento-card-header">
               <span class="badge badge-amber">Giant Speaker Display</span>
+              <h3 class="bento-card-title">Unmissable numbers seen from across the hall.</h3>
+              <p class="bento-card-desc">
+                Automatically scales to fill any TV screen, projector, or tablet. Clean tabular typography with built-in screen wake-lock ensures the stage laptop never goes to sleep.
+              </p>
             </div>
-            <h3 class="feature-title">Unmissable numbers your speaker can see from across the room.</h3>
-            <p class="feature-text">
-              The display automatically scales up to fill any TV screen, computer monitor, or tablet. Clean, high-contrast numerals mean your speaker always knows their remaining time at a single glance.
-            </p>
-            <ul class="feature-bullets">
-              <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Automatic color warnings:</b> Reassuring green &rarr; yellow warning at 2 minutes &rarr; bright red at 30 seconds.</span>
-              </li>
-              <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Never goes to sleep:</b> Prevents stage laptops and tablets from dimming or locking mid-presentation.</span>
-              </li>
-              <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Zero software required:</b> Runs directly inside Chrome, Safari, Edge, or tablet browsers.</span>
-              </li>
-            </ul>
+            <div class="bento-stage-mockup">
+              <img src="assets/hero_stage_mockup.jpg" alt="Confidence monitor timer on a conference stage" loading="lazy">
+            </div>
           </div>
-          <div class="feature-visual">
-            <img src="assets/hero_stage_mockup.jpg" alt="Shotimer confidence monitor displaying amber countdown timer on a conference stage" style="width: 100%; height: auto; border-radius: var(--radius-lg); display: block; box-shadow: var(--shadow-xl); border: 1px solid var(--border-light);">
-          </div>
-        </div>
 
-        <!-- Feature 2: Silent Notes to Stage -->
-        <div class="feature-row reverse">
-          <div class="feature-content">
-            <div class="feature-badge">
+          <!-- Bento 2: Silent Notes to Stage (5 Columns) -->
+          <div class="bento-card bento-span-5">
+            <div class="bento-card-header">
               <span class="badge badge-emerald">Silent Stage Messages</span>
+              <h3 class="bento-card-title">Communicate without waving hands.</h3>
+              <p class="bento-card-desc">
+                Need the speaker to wrap up for lunch or switch mics? Send discreet text reminders directly to their monitor.
+              </p>
             </div>
-            <h3 class="feature-title">Communicate with your speaker without saying a word.</h3>
-            <p class="feature-text">
-              Need the speaker to wrap up for lunch, switch microphones, or take an audience question? Type a quick note from your phone and it appears right on their screen.
-            </p>
-            <ul class="feature-bullets">
-              <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>No awkward hand waving:</b> Send discreet reminders from the back of the room without disrupting their speech.</span>
-              </li>
-              <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Quick 1-tap presets:</b> Built-in buttons for "2 Mins Left", "Wrap Up", and "Audience Q&A".</span>
-              </li>
-              <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Gentle or prominent:</b> Choose between a subtle bottom banner or a noticeable strobe flash for urgent notices.</span>
-              </li>
-            </ul>
-          </div>
-          <div class="feature-visual" style="background-color: var(--bg-dark); color: #FFFFFF; padding: 2.5rem 2rem; border-radius: var(--radius-xl);">
-            <div style="font-size: 0.75rem; font-weight: 700; color: #A1A1AA; text-transform: uppercase; margin-bottom: 1rem; letter-spacing: 0.05em;">Message Sent from Your Phone:</div>
-            <div style="background-color: #18181B; border: 1px solid #3F3F46; border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.25rem;">
-              <div style="font-size: 0.8125rem; color: #71717A; margin-bottom: 0.35rem;">What the speaker sees on screen:</div>
-              <div style="font-size: 1.25rem; font-weight: 700; color: #F87171;">⚠️ 2 minutes left — please begin wrapping up</div>
-            </div>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <span class="badge badge-neutral" style="background-color: #27272A; color: #E4E4E7;">Preset: "2 mins left"</span>
-              <span class="badge badge-neutral" style="background-color: #27272A; color: #E4E4E7;">Preset: "Wrap up"</span>
-              <span class="badge badge-neutral" style="background-color: #27272A; color: #E4E4E7;">Preset: "Start Q&A"</span>
+            <div class="bento-cues-mockup">
+              <div class="bento-cue-pill">
+                <span>⚠️</span>
+                <span>"2 mins left — please wrap up"</span>
+              </div>
+              <div class="bento-cue-pill" style="background: var(--sky-soft); border-color: rgba(2, 132, 199, 0.3);">
+                <span>💬</span>
+                <span>"Take 1 more audience question"</span>
+              </div>
+              <div class="bento-cue-pill" style="background: var(--bg-surface-soft); border-color: var(--border-light);">
+                <span>🎙️</span>
+                <span>"Switch to handheld mic"</span>
+              </div>
             </div>
           </div>
+
+          <!-- Bento 3: Pocket Remote (5 Columns) -->
+          <div class="bento-card bento-span-5">
+            <div class="bento-card-header">
+              <span class="badge badge-sky">Wireless Remote Control</span>
+              <h3 class="bento-card-title">Control from anywhere in the venue.</h3>
+              <p class="bento-card-desc">
+                From the AV desk or wandering the floor. Every button tap updates the stage display instantly.
+              </p>
+            </div>
+            <div class="bento-controller-mockup">
+              <div class="bento-controller-digits">14:22</div>
+              <div class="bento-controller-row">
+                <span class="bento-ctrl-btn">-1m</span>
+                <span class="bento-ctrl-btn active">❚❚ Pause</span>
+                <span class="bento-ctrl-btn">+1m</span>
+                <span class="bento-ctrl-btn">+5m</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bento 4: Auto-Advance & Traffic Light Timing (7 Columns) -->
+          <div class="bento-card bento-span-7">
+            <div class="bento-card-header">
+              <span class="badge badge-emerald">Smart Auto-Advance</span>
+              <h3 class="bento-card-title">Automatic traffic-light warning system.</h3>
+              <p class="bento-card-desc">
+                Reassuring green when on track &rarr; yellow warning at 2 minutes &rarr; bright red at 30 seconds. Automatically advances to the next speaker when session 1 finishes.
+              </p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; background: var(--bg-surface); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-light);">
+              <div style="background: var(--emerald-soft); padding: 1rem; border-radius: var(--radius-sm); text-align: center;">
+                <div style="font-size: 0.75rem; font-weight: 800; color: var(--emerald-text);">ON TRACK</div>
+                <div class="font-mono" style="font-size: 1.5rem; font-weight: 800; color: var(--emerald-text);">14:22</div>
+              </div>
+              <div style="background: var(--amber-soft); padding: 1rem; border-radius: var(--radius-sm); text-align: center;">
+                <div style="font-size: 0.75rem; font-weight: 800; color: var(--amber-text);">2M WARNING</div>
+                <div class="font-mono" style="font-size: 1.5rem; font-weight: 800; color: var(--amber-text);">01:59</div>
+              </div>
+              <div style="background: #FEE2E2; padding: 1rem; border-radius: var(--radius-sm); text-align: center;">
+                <div style="font-size: 0.75rem; font-weight: 800; color: #991B1B;">WRAP UP</div>
+                <div class="font-mono" style="font-size: 1.5rem; font-weight: 800; color: #991B1B;">00:28</div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <!-- Feature 3: Remote Control Anywhere -->
-        <div class="feature-row">
-          <div class="feature-content">
-            <div class="feature-badge">
-              <span class="badge badge-amber">Wireless Remote Control</span>
-            </div>
-            <h3 class="feature-title">Control the countdown from anywhere in the room.</h3>
-            <p class="feature-text">
-              Sitting at the back table or walking around the venue? Open the controller on your phone or laptop. Every tap updates the stage screen instantly with zero delay.
-            </p>
-            <ul class="feature-bullets">
-              <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Instant 1-tap buttons:</b> Start, pause, reset, or add +1 min and +5 mins with one click.</span>
-              </li>
-              <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Auto-advance linking:</b> Automatically starts the next presenter's timer when the previous one finishes.</span>
-              </li>
-              <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Rock-solid accuracy:</b> Never freezes or loses time, even if your phone screen dims or you check an email.</span>
-              </li>
-            </ul>
-          </div>
-          <div class="feature-visual" style="background-color: #FAF8F5; border: 1px solid var(--border-light); padding: 2.25rem; border-radius: var(--radius-xl);">
-            <div style="font-size: 0.8125rem; font-weight: 700; color: #78716C; text-transform: uppercase; margin-bottom: 1rem; letter-spacing: 0.05em;">Mobile Operator Controls</div>
-            <div style="background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow-sm);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <span style="font-size: 0.85rem; font-weight: 600; color: #18181B;">Opening Keynote Speech</span>
-                <span style="background: rgba(16, 185, 129, 0.15); color: #059669; font-weight: 700; font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px;">● LIVE</span>
-              </div>
-              <div style="font-family: var(--font-mono); font-size: 2.75rem; font-weight: 800; color: #18181B; margin-bottom: 1rem; text-align: center; letter-spacing: -0.03em;">
-                14:22
-              </div>
-              <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.8rem; pointer-events: none;">-1m</button>
-                <button type="button" class="btn btn-sm btn-tally" style="font-size: 0.8rem; pointer-events: none;">❚❚ Pause</button>
-                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.8rem; pointer-events: none;">+1m</button>
-                <button type="button" class="btn btn-sm btn-secondary" style="font-size: 0.8rem; pointer-events: none;">+5m</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- Bento Illustration Disclaimer -->
+        <p class="illustration-disclaimer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>* Screen concepts and feature previews are shown for illustration purposes only. Final production UI may vary.</span>
+        </p>
 
       </div>
     </section>
 
     <!-- ========================================================================
-         WHO IT'S FOR: 4 PRACTICAL SCENARIOS
+         WHO USES SHOTIMER: 4 PRACTICAL SCENARIOS
          ======================================================================== -->
     <section id="who-its-for" class="use-cases-section">
       <div class="container">
         
-        <div class="section-header" style="margin-bottom: 2.5rem;">
+        <div class="section-header">
           <div class="section-label">Who Uses Shotimer</div>
           <h2 class="section-title">Perfect for any live presentation or meeting.</h2>
           <p class="section-description">
-            Simple enough for a 10-person team meeting, yet reliable enough for a 2,000-seat conference.
+            Simple enough for a 10-person team sprint, yet reliable enough for a 2,000-seat conference hall.
           </p>
         </div>
 
         <div class="use-cases-grid">
           
           <div class="use-case-card">
-            <div class="use-case-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+            <div class="use-case-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="8.5" cy="7" r="4"></circle>
+                <polyline points="17 11 19 13 23 9"></polyline>
+              </svg>
             </div>
             <h3 class="use-case-title">Conferences & Events</h3>
-            <p class="use-case-desc">Keep a packed schedule of keynote speakers on track without waving papers or walking onto the stage.</p>
+            <p class="use-case-desc">Keep packed multi-speaker keynotes strictly on schedule without waving papers or walking onto the stage.</p>
           </div>
 
           <div class="use-case-card">
-            <div class="use-case-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            <div class="use-case-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
             </div>
-            <h3 class="use-case-title">Team Meetings & Workshops</h3>
-            <p class="use-case-desc">Give every speaker a set time slot and finish your company agendas strictly on time.</p>
+            <h3 class="use-case-title">Team Meetings & Sprints</h3>
+            <p class="use-case-desc">Give every speaker a set time slot and finish company standups, demos, and reviews strictly on time.</p>
           </div>
 
           <div class="use-case-card">
-            <div class="use-case-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            <div class="use-case-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v20"></path>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
             </div>
             <h3 class="use-case-title">Churches & Worship</h3>
-            <p class="use-case-desc">Coordinate sermon timing, announcements, and music transitions from the sound booth with ease.</p>
+            <p class="use-case-desc">Coordinate sermon timing, announcements, and music transitions from the audio booth with ease.</p>
           </div>
 
           <div class="use-case-card">
-            <div class="use-case-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>
+            <div class="use-case-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                <polyline points="17 2 12 7 7 2"></polyline>
+              </svg>
             </div>
             <h3 class="use-case-title">Livestreams & Video</h3>
-            <p class="use-case-desc">Add clean countdown timer overlays directly into OBS Studio, vMix, Zoom, or studio video feeds.</p>
+            <p class="use-case-desc">Add transparent countdown timer overlays directly into OBS Studio, vMix, Zoom, or studio video switchers.</p>
           </div>
 
         </div>
@@ -467,7 +553,7 @@
     </section>
 
     <!-- ========================================================================
-         PRICING PREVIEW: SIMPLE & TRANSPARENT
+         PRICING PREVIEW: UNIFIED COMPARISON CARD
          ======================================================================== -->
     <section id="pricing-preview" class="pricing-section">
       <div class="container">
@@ -476,82 +562,78 @@
           <div class="section-label">Honest Pricing</div>
           <h2 class="section-title">Generous Free Plan. Affordable Pro Upgrade.</h2>
           <p class="section-description">
-            Shotimer is built with a commitment to a 100% free tier so schools, churches, and community meetups always have a great timer.
+            Shotimer is built with a commitment to a 100% free tier so schools, churches, and community meetups always have a reliable timer.
           </p>
         </div>
 
-        <div class="pricing-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); max-width: 900px; margin: 0 auto;">
+        <div class="pricing-unified-card">
           
-          <!-- Free Plan -->
-          <div class="pricing-card">
-            <div class="badge badge-emerald" style="display: inline-flex; margin-bottom: 0.75rem;">100% Free Forever</div>
-            <div class="pricing-plan-name">Free Starter</div>
-            <div class="pricing-plan-tagline">Everything you need for everyday presentations and meetings.</div>
+          <!-- Free Column -->
+          <div class="pricing-column">
+            <div class="pricing-plan-header">
+              <span class="badge badge-emerald">100% Free Forever</span>
+              <div class="pricing-plan-name">Free Starter</div>
+              <div class="pricing-plan-tagline">Everything you need for everyday presentations and meetings.</div>
+            </div>
             <div class="pricing-price-wrap">
               <span class="pricing-amount">$0</span>
               <span class="pricing-period">forever free</span>
             </div>
             <ul class="pricing-features-list">
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Up to 3 rooms & 3 timers per event</b></span>
+                <svg class="pricing-check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><strong>Up to 3 rooms & 3 timers per event</strong></span>
               </li>
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <svg class="pricing-check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>Unlimited speaker screens and mobile devices</span>
               </li>
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Countdown, Count-up, and Real-time Clock modes</span>
+                <svg class="pricing-check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Countdown, Count-up, and Wall Clock modes</span>
               </li>
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <svg class="pricing-check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>Automatic color warnings (Green &rarr; Yellow &rarr; Red)</span>
               </li>
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <svg class="pricing-check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>QR code wireless phone pairing</span>
-              </li>
-              <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Soft sound chimes & beeps</span>
               </li>
             </ul>
             <a href="#waitlist-section" class="btn btn-secondary" style="width: 100%;">Get Early Access</a>
           </div>
 
-          <!-- Pro Plan -->
-          <div class="pricing-card featured">
-            <div class="pricing-featured-badge">For Power Users & Venues</div>
-            <div class="pricing-plan-name">Pro Plan</div>
-            <div class="pricing-plan-tagline">Unlimited power for multi-track conferences and busy venues.</div>
+          <!-- Pro Column -->
+          <div class="pricing-column featured">
+            <div class="pricing-plan-header">
+              <span class="badge badge-amber">For Power Users & Venues</span>
+              <div class="pricing-plan-name">Pro Plan</div>
+              <div class="pricing-plan-tagline">Unlimited power for multi-track conferences and busy venues.</div>
+            </div>
             <div class="pricing-price-wrap">
               <span class="pricing-amount">TBA</span>
-              <span class="pricing-period">Launch pricing to be announced</span>
+              <span class="pricing-period">Launch pricing announced soon</span>
             </div>
             <ul class="pricing-features-list">
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span><b>Unlimited rooms, stages, and timers</b></span>
+                <svg class="pricing-check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><strong>Unlimited rooms, stages, and timers</strong></span>
               </li>
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <svg class="pricing-check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>Import and export schedules via Excel / CSV</span>
               </li>
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <svg class="pricing-check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>Custom client or sponsor logos on the screen</span>
               </li>
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Pitch Black theme for stage environments</span>
+                <svg class="pricing-check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Pitch Black theme for backstage confidence monitors</span>
               </li>
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Saved account history synced across all devices</span>
-              </li>
-              <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <svg class="pricing-check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>Priority email support from founders</span>
               </li>
             </ul>
@@ -564,7 +646,7 @@
     </section>
 
     <!-- ========================================================================
-         FAQ ACCORDION: 4 CLEAR, HUMAN QUESTIONS
+         FAQ ACCORDION: 4 CLEAR QUESTIONS
          ======================================================================== -->
     <section id="faq" class="faq-section">
       <div class="container">
@@ -572,14 +654,17 @@
         <div class="section-header">
           <div class="section-label">Questions & Answers</div>
           <h2 class="section-title">Frequently asked questions.</h2>
+          <p class="section-description">Everything you need to know about Shotimer.</p>
         </div>
 
         <div class="faq-list">
           
           <div class="faq-item open">
-            <button class="faq-question">
+            <button class="faq-question" type="button" aria-expanded="true">
               <span>Do my presenters or speakers need to download an app?</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
             </button>
             <div class="faq-answer">
               No. Speakers and stage talent never have to install an app or create an account. You simply send them a link or let them scan a QR code with their camera. It opens instantly in Safari, Chrome, Edge, or tablet browsers with zero setup.
@@ -587,9 +672,11 @@
           </div>
 
           <div class="faq-item">
-            <button class="faq-question">
+            <button class="faq-question" type="button" aria-expanded="false">
               <span>Can I really control the timer from my smartphone?</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
             </button>
             <div class="faq-answer">
               Yes. You can open the controller on your phone by scanning a QR code or bookmarking the link. Any button you press (Start, Pause, +1 Min) updates the speaker's screen in real time over the internet.
@@ -597,9 +684,11 @@
           </div>
 
           <div class="faq-item">
-            <button class="faq-question">
+            <button class="faq-question" type="button" aria-expanded="false">
               <span>Will there be a free plan when you launch?</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
             </button>
             <div class="faq-answer">
               Yes! Shotimer includes a generous 100% Free plan forever. It supports up to 3 rooms, 3 timers per event, all timing modes (countdown, count-up, wall clock), auto-advance linking, and unlimited connected viewer screens.
@@ -607,12 +696,14 @@
           </div>
 
           <div class="faq-item">
-            <button class="faq-question">
+            <button class="faq-question" type="button" aria-expanded="false">
               <span>When is Shotimer officially launching?</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
             </button>
             <div class="faq-answer">
-              Shotimer is currently in development and will launch in Late 2026 / Early 2027. Waitlist subscribers will receive early access before the public release.
+              Shotimer is currently in active development and will launch in Late 2026 / Early 2027. Waitlist subscribers will receive early access before the public release.
             </div>
           </div>
 
@@ -622,53 +713,68 @@
     </section>
 
     <!-- ========================================================================
-         BOTTOM HIGH-CONVERSION WAITLIST SECTION
+         BOTTOM CONVERSION SPOTLIGHT
          ======================================================================== -->
     <section class="bottom-cta-section">
       <div class="container">
-        <h2 class="bottom-cta-title">Be first in line when we launch.</h2>
-        <p class="bottom-cta-subtitle">
-          Join event organizers, conference speakers, and presenters getting early access.
-        </p>
+        <div class="bottom-cta-inner">
+          <h2 class="bottom-cta-title">Be first in line when we launch.</h2>
+          <p class="bottom-cta-subtitle">
+            Join event organizers, conference producers, and speakers getting early access.
+          </p>
 
-        <!-- Secondary Email Capture Box -->
-        <div class="waitlist-card dark" style="max-width: 580px; margin: 2rem auto 0;">
-          <div id="bottom-waitlist-form-container">
-            <form id="bottom-waitlist-form" class="waitlist-form">
-              <div class="waitlist-input-wrap">
-                <svg class="waitlist-input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          <!-- Secondary Spotlight Form -->
+          <div class="spotlight-waitlist-wrap">
+            <div id="bottom-waitlist-form-container">
+              <form id="bottom-waitlist-form" class="spotlight-capsule">
+                <svg class="spotlight-input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
                 <input 
                   type="email" 
                   id="bottom-waitlist-email" 
-                  class="waitlist-input" 
+                  class="spotlight-input" 
                   placeholder="Enter your email address..." 
+                  autocomplete="email"
                   required
                 />
+                <button type="submit" id="bottom-waitlist-submit-btn" class="spotlight-btn">
+                  <span>Notify Me</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </button>
+              </form>
+              <div class="spotlight-note">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-live)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span>Zero spam • Strictly 1 email upon official launch</span>
               </div>
-              <button type="submit" id="bottom-waitlist-submit-btn" class="waitlist-btn">
-                <span>Notify Me</span>
+            </div>
+
+            <!-- Secondary Confirmation State -->
+            <div id="bottom-waitlist-success" class="waitlist-success">
+              <div class="waitlist-success-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span>You're on the list!</span>
+              </div>
+              <p class="waitlist-success-desc">
+                We'll notify <strong id="bottom-waitlist-user-email" class="font-mono" style="color: var(--text-primary);">your email</strong> on launch day.
+              </p>
+              <button id="bottom-waitlist-reset-btn" type="button" class="waitlist-reset-btn">
+                + Register another email
               </button>
-            </form>
-            <div class="waitlist-footer-note" style="justify-content: center;">
-              <span>🔒 Zero spam • Strictly 1 email upon official launch</span>
             </div>
           </div>
 
-          <!-- Secondary Confirmation State -->
-          <div id="bottom-waitlist-success" class="waitlist-success">
-            <div class="waitlist-success-title">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-live)" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-              <span>You're on the list!</span>
-            </div>
-            <p class="waitlist-success-desc">
-              We'll notify <strong id="bottom-waitlist-user-email" style="color: #FAF8F5; font-family: var(--font-mono);">your email</strong> on launch day.
-            </p>
-            <button id="bottom-waitlist-reset-btn" type="button" class="waitlist-reset-btn">
-              + Register another email
-            </button>
-          </div>
         </div>
-
       </div>
     </section>
   </main>
@@ -680,12 +786,18 @@
     <div class="container">
       <div class="footer-grid">
         <div>
-          <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 800; font-size: 1.25rem; color: #FFFFFF; margin-bottom: 0.75rem;">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber-tally)" stroke-width="2.2"><circle cx="12" cy="13" r="8"></circle><line x1="12" y1="9" x2="12" y2="13"></line><path d="M5 3L2 6"></path><path d="M22 6L19 3"></path><line x1="10" y1="2" x2="14" y2="2"></line></svg>
-            <span>Shotimer</span>
+          <div style="display: flex; align-items: center; gap: 0.6rem; font-weight: 800; font-size: 1.25rem; color: var(--text-primary);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber-primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="13" r="8"></circle>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <path d="M5 3L2 6"></path>
+              <path d="M22 6L19 3"></path>
+              <line x1="10" y1="2" x2="14" y2="2"></line>
+            </svg>
+            <span>Sho<span style="color: var(--amber-primary);">timer</span></span>
           </div>
-          <p style="color: #71717A; line-height: 1.6; max-width: 320px; margin-bottom: 0;">
-            Remote-controlled countdown timer and confidence monitor for presentations, conferences, and meetings.
+          <p class="footer-desc">
+            The remote-controlled countdown timer and confidence monitor for presentations, conferences, and meetings.
           </p>
         </div>
 
@@ -709,7 +821,8 @@
       </div>
 
       <div class="footer-bottom">
-        <div>&copy; 2026 Shotimer Technologies. All rights reserved.</div>
+        <div>&copy; 2026 Shotimer Technologies. All rights reserved. • <span style="color: var(--text-muted); font-size: 0.8rem;">* All app graphics and screen mockups shown are for illustration purposes only.</span></div>
+        <div>Designed for live stages, conferences & events worldwide.</div>
       </div>
     </div>
   </footer>

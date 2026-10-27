@@ -28,5 +28,10 @@
     "email": "security_test@shotimer.io",
     "timestamp": "2026-10-25T22:41:39.674Z",
     "ip": "127.0.0.1"
+  },
+  {
+    "email": "test@example.com",
+    "timestamp": "2026-10-27T18:44:35.046Z",
+    "ip": "127.0.0.1"
   }
 ]
