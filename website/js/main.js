@@ -114,22 +114,42 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Auth Tab Switch (Magic Link / Email vs License Key)
+  // Auth Tab Switch (Register vs Login vs License Key)
+  const registerForm = document.getElementById('auth-register-form');
+
+  function switchAuthTab(target) {
+    authTabs.forEach((t) => {
+      const match = t.getAttribute('data-target') === target;
+      t.classList.toggle('active', match);
+      t.style.fontWeight = match ? '700' : '600';
+      t.style.borderBottom = match ? '2px solid var(--amber-tally)' : 'none';
+      t.style.color = match ? 'var(--text-primary)' : 'var(--text-secondary)';
+    });
+    if (registerForm) registerForm.style.display = target === 'register' ? 'block' : 'none';
+    if (loginForm) loginForm.style.display = target === 'login' ? 'block' : 'none';
+    if (licenseForm) licenseForm.style.display = target === 'license' ? 'block' : 'none';
+  }
+
   authTabs.forEach((tab) => {
     tab.addEventListener('click', () => {
-      authTabs.forEach((t) => t.classList.remove('active'));
-      tab.classList.add('active');
-
-      const target = tab.getAttribute('data-target');
-      if (target === 'login') {
-        if (loginForm) loginForm.style.display = 'block';
-        if (licenseForm) licenseForm.style.display = 'none';
-      } else {
-        if (loginForm) loginForm.style.display = 'none';
-        if (licenseForm) licenseForm.style.display = 'block';
-      }
+      switchAuthTab(tab.getAttribute('data-target'));
     });
   });
+
+  const switchLinks = document.querySelectorAll('[data-switch-tab]');
+  switchLinks.forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchAuthTab(link.getAttribute('data-switch-tab'));
+    });
+  });
+
+  // Check URL query param ?tab=register / ?tab=login / ?tab=license
+  const urlParams = new URLSearchParams(window.location.search);
+  const requestedTab = urlParams.get('tab') || (urlParams.get('auth') === 'signup' ? 'register' : null);
+  if (requestedTab && ['register', 'login', 'license'].includes(requestedTab)) {
+    switchAuthTab(requestedTab);
+  }
 
   // Demo Pro Key Quick Activation
   if (licenseForm && licenseKeyInput && licenseFeedback) {
