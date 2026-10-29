@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -16,7 +15,6 @@ interface ScheduleDriftBadgeProps {
 }
 
 export default function ScheduleDriftBadge({ metrics, compact = false }: ScheduleDriftBadgeProps) {
-  const [showDetails, setShowDetails] = useState(false);
   const {
     driftStatus,
     driftSeconds,
@@ -43,34 +41,11 @@ export default function ScheduleDriftBadge({ metrics, compact = false }: Schedul
     labelText = `${formattedDrift} UNDER`;
   }
 
-  if (compact) {
-    return (
-      <div 
-        onClick={() => setShowDetails(!showDetails)}
-        className={`relative inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-mono font-bold cursor-pointer select-none transition-all hover:scale-[1.02] active:scale-95 ${statusBadgeStyle}`}
-        title="Production Schedule Status - Click for breakdown"
-      >
-        {icon}
-        <span>{labelText}</span>
-        <span className="text-[10px] text-neutral-400 font-sans border-l border-neutral-700/60 pl-1.5 ml-0.5">
-          ETA {formattedProjectedEnd}
-        </span>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative">
-      <div 
-        onClick={() => setShowDetails(!showDetails)}
-        role="button"
-        tabIndex={0}
-        aria-expanded={showDetails}
+    <details className="console-dropdown timing-breakdown">
+      <summary
         aria-label="Show timing breakdown"
-        onKeyDown={event => {
-          if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); setShowDetails(!showDetails); }
-        }}
-        className="flex items-center flex-wrap gap-2.5 bg-[#141414] hover:bg-[#181818] border border-neutral-800 hover:border-neutral-700 rounded-lg p-2.5 transition-all cursor-pointer select-none group"
+        className={`flex items-center flex-wrap gap-2.5 bg-[#141414] hover:bg-[#181818] border border-neutral-800 hover:border-neutral-700 rounded-lg p-2.5 transition-all cursor-pointer select-none group ${compact ? 'text-xs' : ''}`}
         title="Click to view detailed Show Timing Breakdown"
       >
         {/* Over/Under Pill */}
@@ -94,20 +69,20 @@ export default function ScheduleDriftBadge({ metrics, compact = false }: Schedul
 
         </div>
 
-        <ChevronDown className={`w-3.5 h-3.5 text-neutral-500 ml-auto transition-transform ${showDetails ? 'rotate-180 text-amber-400' : 'group-hover:text-neutral-300'}`} />
-      </div>
+        <ChevronDown className="w-3.5 h-3.5 text-neutral-500 ml-auto transition-transform group-open:rotate-180" />
+      </summary>
 
       {/* Dropdown / Details Popover */}
-      {showDetails && (
-        <div className="absolute right-0 top-full mt-2 w-80 max-w-full bg-[#1A1A1A] border border-neutral-700 rounded-xl shadow-2xl p-4 z-50 text-xs flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-100">
+        <div className="console-menu timing-menu text-xs flex flex-col gap-3">
           <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
             <div className="flex items-center gap-1.5 font-bold text-white text-xs uppercase tracking-wider">
               <Info className="w-3.5 h-3.5 text-emerald-400" />
               <span>Show Timing Math</span>
             </div>
             <button 
-              onClick={(e) => { e.stopPropagation(); setShowDetails(false); }}
-              className="text-neutral-400 hover:text-white"
+              aria-label="Close timing breakdown"
+              onClick={(e) => { const details = e.currentTarget.closest('details'); if (details) { details.open = false; details.querySelector('summary')?.focus(); } }}
+              className="text-neutral-400 hover:text-white timing-close"
             >
               ✕
             </button>
@@ -163,7 +138,6 @@ export default function ScheduleDriftBadge({ metrics, compact = false }: Schedul
             </p>
           </div>
         </div>
-      )}
-    </div>
+    </details>
   );
 }

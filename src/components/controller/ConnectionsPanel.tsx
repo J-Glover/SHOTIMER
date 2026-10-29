@@ -16,11 +16,11 @@ export default function ConnectionsPanel({ now }: { now: number }) {
         <ul className="flex flex-col gap-3">{current.map(peer => {
           const age = Math.max(0, Math.floor((now - peer.lastSeen) / 1000));
           return <li key={peer.id} className="flex justify-between gap-3 text-xs">
-            <div className="min-w-0"><span className="text-neutral-200">{names[peer.role]}</span><span className="font-mono text-neutral-500 ml-2">{peer.id.slice(0, 4)}</span><p className="text-neutral-500 mt-1">{peer.transport === 'local' ? 'This device' : 'Remote browser'}</p></div>
-            <span className={age > 15 ? 'text-amber-400' : 'text-emerald-400'}>{age > 15 ? `${age}s ago` : 'Connected'}</span>
+            <div className="min-w-0"><span className="text-neutral-200">{names[peer.role]}</span><span className="font-mono text-neutral-500 ml-2">{peer.id.slice(0, 4)}</span><p className="text-neutral-500 mt-1">Browser screen</p></div>
+            <span className={age > 15 || cloud !== 'connected' ? 'text-amber-400' : 'text-emerald-400'}>{cloud !== 'connected' ? 'Unconfirmed' : age > 15 ? `${age}s ago` : 'Presence seen'}</span>
           </li>;
         })}</ul>}
-      <p className="text-[11px] text-neutral-500 mt-4 flex items-start gap-1.5 leading-relaxed"><Wifi size={13} className="shrink-0 mt-0.5" />{cloud === 'connected' ? 'Cloud connected. Screens report presence separately.' : 'Remote presence unavailable. Local tabs can still connect.'}</p>
+      <p className="text-[11px] text-neutral-500 mt-4 flex items-start gap-1.5 leading-relaxed"><Wifi size={13} className="shrink-0 mt-0.5" />{cloud === 'connected' ? 'Live server connected. Presence reports do not confirm that a screen has rendered the latest cue.' : 'Live connection unavailable. Screen presence may be stale.'}</p>
     </div>
   </section>;
 }

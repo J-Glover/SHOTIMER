@@ -167,32 +167,14 @@ create table if not exists public.live_sessions (
 
 alter table public.live_sessions enable row level security;
 
--- Allow public read access so unauthenticated stage monitors/OBS overlays can boot instantly
+-- Retired anonymous snapshots. Live state now uses the protected Node relay.
+-- Keep historical rows private; clients must not fall back to this table.
 drop policy if exists "Anyone can read live sessions" on public.live_sessions;
-create policy "Anyone can read live sessions"
-  on public.live_sessions for select
-  using (true);
-
--- Allow inserting live telemetry with valid room_id length bounds
 drop policy if exists "Anyone can insert live telemetry" on public.live_sessions;
-create policy "Anyone can insert live telemetry"
-  on public.live_sessions for insert
-  with check (length(room_id) <= 128);
-
--- Allow updating live telemetry with valid room_id length bounds
 drop policy if exists "Anyone can broadcast live telemetry" on public.live_sessions;
 drop policy if exists "Anyone can update live telemetry" on public.live_sessions;
-create policy "Anyone can update live telemetry"
-  on public.live_sessions for update
-  using (length(room_id) <= 128)
-  with check (length(room_id) <= 128);
-
--- Only authenticated users or room owners can delete live sessions (prevents public table wipe)
 drop policy if exists "Only authenticated users can delete live sessions" on public.live_sessions;
-create policy "Only authenticated users can delete live sessions"
-  on public.live_sessions for delete
-  using (auth.uid() is not null);
-
+revoke all on table public.live_sessions from anon, authenticated;
 -- Index for lightning-fast room lookups
 create index if not exists idx_live_sessions_updated_at on public.live_sessions(updated_at);
 

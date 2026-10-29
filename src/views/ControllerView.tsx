@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Plus, EyeOff, Eye, Volume2, VolumeX, ExternalLink, Tv, Calendar, MessageSquare,
-  Music, QrCode, Settings, Link2, Layers, ChevronDown, LockKeyhole, UnlockKeyhole,
+  Music, QrCode, Settings, ArrowLeft, Layers, ChevronDown, LockKeyhole, UnlockKeyhole,
   Undo2, X, UserRound, MoreHorizontal, BookmarkPlus } from 'lucide-react';
-import { useTimerStore } from '../store/useTimerStore';
+import { useTimerStore, isSampleRundown } from '../store/useTimerStore';
 import { soundSynth } from '../audio/soundSynthesizer';
 import type { ChimeStyle, OutputRole, TimerItem } from '../types/timer';
 import ShareModal from '../components/common/ShareModal';
@@ -15,13 +15,19 @@ import TimerSettingsModal from '../components/controller/TimerSettingsModal';
 import CustomizeOutputModal from '../components/controller/CustomizeOutputModal';
 import RundownRow from '../components/controller/RundownRow';
 import MessagesPanel from '../components/controller/MessagesPanel';
-import ConnectionsPanel from '../components/controller/ConnectionsPanel';
+import ScreensButton from '../components/controller/ScreensButton';
+import SyncStatus from '../components/common/SyncStatus';
+import { canControlRoom } from '../services/liveSync';
+import { useDialogFocus } from '../hooks/useDialogFocus';
+import OperatorShortcutsDialog from '../components/controller/OperatorShortcutsDialog';
 import { calculateScheduleMetrics } from '../utils/scheduleMath';
 import { formatTimerDuration, parseTimerDuration } from '../utils/operatorControls';
 import { getOutputUrl } from '../utils/outputLinks';
+import { isSharedLink } from '../services/liveSync';
 import { isTimerPreset, useSavedPresets } from '../hooks/useSavedPresets';
 import type { TimerPreset } from '../hooks/useSavedPresets';
 import '../styles/controller.css';
+import '../styles/controllerWorkspace.css';
 import ResetDialog from '../components/common/ResetDialog';
 import type { ResetScope } from '../utils/roomReset';
 import { FullscreenButton } from '../components/common/FullscreenProvider';
@@ -49,19 +55,19 @@ const outputRoles = [
   { id: 'overlay', label: 'OBS overlay', description: 'Transparent broadcast output', icon: Layers },
 ] as const;
 
-export default function ControllerView() {
+export default function ControllerView({ onDashboard }: { onDashboard?: () => void }) {
   const roomKey = useTimerStore(state => `${state.roomId}:${state.rundownResetVersion || ''}`);
-  return <RoomController key={roomKey} />;
+  return <RoomController key={roomKey} onDashboard={onDashboard} />;
 }
 
-function RoomController() {
+function RoomController({ onDashboard }: { onDashboard?: () => void }) {
   const { immersive, openHelp } = useFullscreen();
   const state = useTimerStore();
   const { roomId, roomName, availableRooms, switchRoom, rundown, activeTimerId, status,
     timeRemaining, elapsedTime, targetDuration, overtimeSeconds, blackout, toggleBlackout,
     isAudioMuted, toggleMute, activeMessage, start, pause, reset, adjustTime, selectTimer,
     nextTimer, previousTimer, addTimer, duplicateTimer, updateTimer, deleteTimer, restoreTimer,
-    reorderRundown, isProUser, currentUser, cloudSyncStatus } = state;
+    reorderRundown, isProUser, currentUser } = state;
   const [editingTimerId, setEditingTimerId] = useState<string | null>(null);
   const [resetScope, setResetScope] = useState<ResetScope | null>(null);
   const [isAddingTimer, setIsAddingTimer] = useState(false);
@@ -80,7 +86,17 @@ function RoomController() {
   const [isCustomizeOutputOpen, setIsCustomizeOutputOpen] = useState(false);
   const [customizeRole, setCustomizeRole] = useState<OutputRole>('viewer');
   const [locked, setLocked] = useState(false);
-  const [messagesCollapsed, setMessagesCollapsed] = useState(false);
+  const canControl = canControlRoom(roomId);
+  const [messageDrawer, setMessageDrawer] = useState(false);
+  const [compact, setCompact] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 901px) and (max-width: 1599px)').matches);
+  const [shortcuts, setShortcuts] = useState(false);
+  const messageRef = useDialogFocus(compact && messageDrawer, () => setMessageDrawer(false));
+  const addRef = useDialogFocus(isAddingTimer, () => setIsAddingTimer(false));
+  useEffect(() => {
+    const query = window.matchMedia('(min-width: 901px) and (max-width: 1599px)');
+    const change = () => { setCompact(query.matches); if (!query.matches) setMessageDrawer(false); };
+    query.addEventListener('change', change); return () => query.removeEventListener('change', change);
+  }, []);
   const [density, setDensity] = useState<'auto' | 'compact' | 'comfortable'>('auto');
   const [rundownWidth, setRundownWidth] = useState(0);
   const rundownRef = useRef<HTMLElement>(null);
@@ -89,6 +105,7 @@ function RoomController() {
   const [deleted, setDeleted] = useState<UndoEntry | null>(null);
   const timerPresets = useSavedPresets('shotimer_timer_presets_v1', isTimerPreset);
   const activeTimer = rundown.find(timer => timer.id === activeTimerId) || rundown[0];
+  const sample = useMemo(() => isSampleRundown(roomId, rundown), [roomId, rundown]);
   const layout = density === 'auto' ? (rundownWidth >= 950 ? 'compact' : 'comfortable') : density;
 
   useEffect(() => {
@@ -120,13 +137,13 @@ function RoomController() {
 
   function showPaywall(feature: string) { setPaywallFeature(feature); setIsPaywallOpen(true); }
   function requestAdd() {
-    if (locked) return;
+    if (locked || !canControl) return;
     if (!isProUser && rundown.length >= 3) { showPaywall('Unlimited Timers (Free Plan is capped at 3 timers per room)'); return; }
     setIsAddingTimer(true);
   }
   function handleCreateTimer(event: React.FormEvent) {
     event.preventDefault();
-    if (locked) return;
+    if (locked || !canControl) return;
     const seconds = parseTimerDuration(durationDraft);
     if (!seconds) { setFormError('Enter a duration as MM:SS or HH:MM:SS, up to 24 hours.'); return; }
     if (!newDraft.title.trim()) { setFormError('Enter a segment title.'); return; }
@@ -137,7 +154,7 @@ function RoomController() {
   }
   const handleDelete = (id: string) => {
     const latest = useTimerStore.getState();
-    if (locked || latest.rundown.length <= 1 || (latest.activeTimerId === id && ['running', 'paused'].includes(latest.status))) return;
+    if (locked || !canControlRoom(latest.roomId) || latest.rundown.length <= 1 || (latest.activeTimerId === id && ['running', 'paused'].includes(latest.status))) return;
     const index = latest.rundown.findIndex(timer => timer.id === id);
     if (index < 0) return;
     const item = structuredClone(latest.rundown[index]);
@@ -151,7 +168,7 @@ function RoomController() {
       setNotice('You can save up to 20 timer presets. Remove one in Add timer to make space.'); return;
     }
     const timer: TimerPreset['timer'] = { title: item.title, speaker: item.speaker, notes: item.notes,
-      durationSeconds: item.durationSeconds, type: item.type, thresholds: { ...item.thresholds }, sounds: { ...item.sounds } };
+      durationSeconds: item.durationSeconds, type: item.type, finishBehavior: item.finishBehavior || 'overtime', thresholds: { ...item.thresholds }, sounds: { ...item.sounds } };
     if (timerPresets.save([...timerPresets.items.filter(preset => preset.name !== name), { name, timer }])) {
       setNotice(`Preset “${name}” saved in this browser.`);
     }
@@ -168,38 +185,39 @@ function RoomController() {
     if ((event.target as HTMLElement).closest('button:not(:disabled), a')) event.currentTarget.closest('details')?.removeAttribute('open');
   };
 
-  return <div className={`controller-console ${messagesCollapsed ? 'messages-collapsed' : ''} ${immersive ? 'is-immersive' : ''}`} data-controller-console>
-    <header className="console-header">
+  return <div className={`controller-console ${immersive ? 'is-immersive' : ''}`} data-controller-console>
+    <header className="console-header" inert={compact && messageDrawer}>
       <div className="console-room">
-        <span className="console-brand">SHOTIMER</span><span className="header-divider" />
+        {onDashboard && <button className="console-button rooms-back" onClick={onDashboard}><ArrowLeft size={15} />Rooms</button>}<span className="console-brand">SHOTIMER</span><span className="header-divider" />
         <label className="sr-only" htmlFor="room-picker">Stage room</label>
-        <select id="room-picker" value={roomId} onChange={event => switchRoom(event.target.value)} className="console-input room-picker" title="Switch stage room">
+        <select id="room-picker" disabled={isSharedLink()} value={roomId} onChange={event => switchRoom(event.target.value)} className="console-input room-picker" title={isSharedLink() ? 'This operator link is restricted to its room' : 'Switch stage room'}>
+          {!availableRooms.some(room => room.id === roomId) && <option value={roomId}>{roomName}</option>}
           {availableRooms.map(room => <option key={room.id} value={room.id}>{room.id === roomId ? roomName : room.name}</option>)}
         </select>
-        <span className={`connection-status ${cloudSyncStatus === 'connected' ? 'connected' : ''}`}
-          title={cloudSyncStatus === 'connected' ? 'Connected to cloud sync. See Connected screens for display presence.' : 'Local tabs can sync on this device. Remote displays require a cloud connection.'}>
-          <span />{cloudSyncStatus === 'connected' ? 'Cloud connected' : cloudSyncStatus === 'connecting' ? 'Connecting…' : cloudSyncStatus === 'offline' ? 'Cloud offline' : 'Local sync'}
-        </span>
+        <SyncStatus compact />
       </div>
       <div className="console-header-actions">
-        <FullscreenButton />
-        <button className={`console-button ${blackout ? 'danger-active' : ''}`} aria-pressed={blackout} onClick={toggleBlackout} title="Blank connected outputs (B)">
+        <ScreensButton now={clockTick} />
+        <button className="console-button message-drawer-trigger" aria-haspopup="dialog" aria-expanded={messageDrawer} onClick={() => setMessageDrawer(true)}><MessageSquare size={16} />Messages{activeMessage?.visible && <span className="live-label">On stage</span>}</button>
+        {activeMessage?.visible && <button className="console-button compact-clear-cue" disabled={!canControl} onClick={state.clearMessage}>Clear cue</button>}<FullscreenButton />
+        <button className={`console-button ${blackout ? 'danger-active' : ''}`} disabled={!canControl} aria-pressed={blackout} onClick={toggleBlackout} title="Blank connected outputs (B)">
           {blackout ? <EyeOff size={16} /> : <Eye size={16} />}<span>Blackout{blackout ? ' on' : ''}</span>
         </button>
         <details className="console-dropdown outputs-dropdown">
           <summary className="console-button"><Tv size={16} />Outputs<ChevronDown size={14} /></summary>
           <div className="console-menu outputs-menu" onClick={closeParentMenu}>
             <p className="menu-caption">Open in a new tab</p>
-            {outputRoles.map(({ id, label, description, icon: Icon }) => id === 'overlay' ? <button key={id} disabled className="disabled-output"><Icon size={17} />{label}<small>Coming soon</small></button> : <a key={id} href={getOutputUrl(roomId, id)} target="_blank" rel="noopener noreferrer">
+            {outputRoles.map(({ id, label, description, icon: Icon }) => id === 'overlay' || !getOutputUrl(roomId, id) ? <button key={id} disabled className="disabled-output"><Icon size={17} />{label}<small>{id === 'overlay' ? 'Coming soon' : 'Ask the manager for a link'}</small></button> : <a key={id} href={getOutputUrl(roomId, id)} target="_blank" rel="noopener noreferrer">
               <Icon size={17} /><span className="flex-1"><strong>{label}</strong><small>{description}</small></span><ExternalLink size={13} />
             </a>)}
             <hr /><button onClick={() => setIsShareOpen(true)}><QrCode size={16} />Share links & QR codes</button>
           </div>
         </details>
-        <button className="console-icon" disabled={locked} onClick={() => setIsSettingsOpen(true)} aria-label="Event settings" title={locked ? 'Unlock rundown editing to change event settings' : 'Event settings'}><Settings size={18} /></button>
+        <button className="console-icon" disabled={locked || !canControl} onClick={() => setIsSettingsOpen(true)} aria-label="Event settings" title={locked ? 'Unlock rundown editing to change event settings' : 'Event settings'}><Settings size={18} /></button>
         <details className="console-dropdown">
           <summary className="console-icon" aria-label="Account and audio options" title="Account and audio options"><MoreHorizontal size={19} /></summary>
           <div className="console-menu options-menu">
+            <a href="/">Shotimer home</a><button onClick={event => { closeParentMenu(event); setShortcuts(true); }}>Keyboard shortcuts</button>
             <button onClick={event => { closeParentMenu(event); openHelp(); }}><Tv size={16} />Phone fullscreen help</button>
             <hr />
             <p className="menu-caption">Audio on this console</p>
@@ -217,7 +235,7 @@ function RoomController() {
     </header>
 
     <main className="console-workspace">
-      <aside className="monitor-column" aria-label="Monitor and transport">
+      <aside className="monitor-column" aria-label="Monitor and transport" inert={compact && messageDrawer}>
         <LiveMonitorPreview activeTimer={activeTimer} timeRemaining={timeRemaining} elapsedTime={elapsedTime}
           targetDuration={targetDuration} overtimeSeconds={overtimeSeconds} status={status} blackout={blackout}
           activeMessage={activeMessage} start={start} pause={pause} reset={reset} adjustTime={adjustTime}
@@ -227,26 +245,60 @@ function RoomController() {
           onOpenCustomize={role => { setCustomizeRole(role); setIsCustomizeOutputOpen(true); }} />
       </aside>
 
-      <section ref={rundownRef} className="console-panel rundown-panel" aria-label="Event rundown" data-density={layout}>
+      <section ref={rundownRef} className="console-panel rundown-panel" aria-label="Event rundown" data-density={layout} inert={compact && messageDrawer}>
         <div className="rundown-heading">
           <div><h1>Event rundown <span className="text-neutral-500 font-normal ml-1">{rundown.length}</span></h1>
-            <p className="text-xs text-neutral-400 mt-1">{isProUser ? 'Pro plan' : `Free plan · ${rundown.length} of 3 timers`}</p></div>
+            <p className="text-xs text-neutral-400 mt-1">{isProUser ? 'Pro plan' : `Free plan · ${rundown.length} of 3 timers`}{sample ? ' · Sample rundown' : ''}</p></div>
           <div className="flex items-center flex-wrap gap-2">
             <button className={`console-button ${locked ? 'lock-active' : ''}`} aria-pressed={locked}
               onClick={() => { setLocked(value => !value); setIsAddingTimer(false); }} title="Lock rundown editing on this console. Playback controls remain available.">
               {locked ? <LockKeyhole size={15} /> : <UnlockKeyhole size={15} />}<span>{locked ? 'Locked' : 'Lock editing'}</span>
             </button>
-            <button className="console-button primary" disabled={locked} onClick={requestAdd}><Plus size={16} />Add timer</button>
-            <details className="console-dropdown"><summary className="console-icon" aria-label="Rundown actions"><MoreHorizontal size={18} /></summary><div className="console-menu" onClick={closeParentMenu}><button disabled={locked || !rundown.length} onClick={() => setResetScope('restart')}>Restart rundown…</button><button disabled={locked || !rundown.length} onClick={() => setResetScope('rundown')}>Clear rundown…</button></div></details>
+            <button className="console-button primary" disabled={locked || !canControl} onClick={requestAdd}><Plus size={16} />Add timer</button>
+            <details className="console-dropdown"><summary className="console-icon" aria-label="Rundown actions and density"><MoreHorizontal size={18} /></summary><div className="console-menu" onClick={closeParentMenu}>          <label className="flex items-center gap-2 text-xs text-neutral-400 shrink-0">Rows<select aria-label="Rundown row density" className="density-picker" value={density} onChange={event => setDensity(event.target.value as typeof density)}>
+            <option value="auto">Auto</option><option value="compact">Compact</option><option value="comfortable">Comfortable</option>
+          </select></label><hr /><button disabled={locked || !canControl || !rundown.length} onClick={() => setResetScope('restart')}>Restart rundown…</button><button disabled={locked || !canControl || !rundown.length} onClick={() => setResetScope('rundown')}>Clear rundown…</button></div></details>
           </div>
         </div>
-        <div className="rundown-toolbar">
-          <span className="text-xs text-neutral-500">{locked ? 'Editing locked on this console. Playback is available.' : 'Edit segments here. Open settings for timing, alerts and notes.'}</span>
-          <label className="flex items-center gap-2 text-xs text-neutral-400 shrink-0">Rows<select aria-label="Rundown row density" className="density-picker" value={density} onChange={event => setDensity(event.target.value as typeof density)}>
-            <option value="auto">Auto</option><option value="compact">Compact</option><option value="comfortable">Comfortable</option>
-          </select></label>
+
+
+        <div className="rundown-column-head" aria-hidden="true"><span /><span>Segment / speaker</span><span>Start</span><span>Duration</span><span>Status</span><span /></div>
+        <div className="rundown-list">
+          {!rundown.length && !isAddingTimer && <div className="rundown-empty"><h2>No timers in this room</h2><p>Add your first timer or import a JSON rundown from Event settings.</p><button className="console-button primary" disabled={locked || !canControl} onClick={requestAdd}><Plus size={16} />Add your first timer</button></div>}
+          {rundown.map((item, index) => <RundownRow key={`${roomId}-${item.id}`} item={item} index={index} count={rundown.length}
+            active={item.id === activeTimerId} status={status} schedule={scheduleMetrics.itemSchedules.get(item.id)} locked={locked || !canControl} playbackDisabled={!canControl}
+            onPlay={() => { if (!canControlRoom(roomId)) return; if (item.id === activeTimerId && status === 'running') pause(); else { if (item.id !== activeTimerId) selectTimer(item.id); start(); } }}
+            onEdit={() => { if (!locked && canControl) setEditingTimerId(item.id); }} onUpdate={updates => { if (!locked && canControl) updateTimer(item.id, updates); }}
+            onMove={destination => { if (!locked && canControl) reorderRundown(index, destination); }} onDelete={() => handleDelete(item.id)}
+            onDuplicate={() => { if (!locked && canControl && !duplicateTimer(item.id)) showPaywall('Unlimited Timers (Free Plan is capped at 3 timers per room)'); }}
+            onSavePreset={() => saveTimerPreset(item)} />)}
         </div>
-        {isAddingTimer && <form className="add-timer-form" onSubmit={handleCreateTimer}>
+        <footer className="rundown-summary">
+          <div><span>Total show</span><strong>{scheduleMetrics.formattedTotalPlanned}</strong></div>
+          <div><span>Remaining</span><strong>{scheduleMetrics.formattedRemaining}</strong></div>
+          <div><span>Segments</span><strong>{rundown.length}</strong></div>
+        </footer>
+        {timerPresets.storageError && <p role="alert" className="text-xs text-amber-300 p-4">{timerPresets.storageError}</p>}
+      </section>
+
+      {compact && messageDrawer && <div className="message-drawer-backdrop" aria-hidden="true" onClick={() => setMessageDrawer(false)} />}
+      <div ref={messageRef} className={`messages-column ${messageDrawer ? 'drawer-open' : ''}`} role={compact && messageDrawer ? 'dialog' : undefined} aria-modal={compact && messageDrawer ? true : undefined} aria-label="Presenter communication" tabIndex={compact && messageDrawer ? -1 : undefined} inert={compact && !messageDrawer}>
+        <header className="message-drawer-heading"><h2>Stage messages</h2><button className="console-icon" aria-label="Close messages" onClick={() => setMessageDrawer(false)}><X size={18} /></button></header>
+        <MessagesPanel key={roomId} />
+      </div>
+    </main>
+
+    {(deleted || notice) && <div className="console-notice" role="status">
+      <span>{notice || `“${deleted?.item.title}” deleted`}</span>
+      {deleted && <button disabled={locked || !canControl} onClick={() => {
+        if (Date.now() > deleted.expires) { setDeleted(null); return; }
+        if (restoreTimer(deleted.item, deleted.index, deleted.roomId)) { setDeleted(null); setNotice('Timer restored.'); }
+        else setNotice('Cannot restore: this room has reached its timer limit.');
+      }}><Undo2 size={15} />Undo</button>}
+      <button aria-label="Dismiss notification" onClick={() => { setNotice(''); setDeleted(null); }}><X size={16} /></button>
+    </div>}
+
+        {isAddingTimer && <div ref={addRef} className="screen-dialog-backdrop" role="dialog" aria-modal="true" aria-label="Add timer" tabIndex={-1}><form className="add-timer-form" onSubmit={handleCreateTimer}>
           <div className="flex items-center justify-between gap-3"><h2 className="text-sm font-semibold">New segment</h2><button type="button" className="console-icon" onClick={() => setIsAddingTimer(false)} aria-label="Cancel new timer"><X size={17} /></button></div>
           <label className="form-label">Start from a preset
             <select className="console-input" aria-label="Timer preset" value={selectedPreset} onChange={event => loadPreset(event.target.value)}>
@@ -269,52 +321,17 @@ function RoomController() {
           <label className="text-xs text-neutral-400 flex gap-2 items-center"><input type="checkbox" checked={newDraft.autoStartNext} onChange={event => setNewDraft({ ...newDraft, autoStartNext: event.target.checked })} />Automatically start the next timer at zero</label>
           {formError && <p role="alert" className="text-xs text-red-400">{formError}</p>}
           <div className="flex justify-end gap-2"><button type="button" className="console-button" onClick={() => setIsAddingTimer(false)}>Cancel</button><button className="console-button primary" type="submit">Create timer</button></div>
-        </form>}
-        <div className="rundown-column-head" aria-hidden="true"><span /><span>Segment / speaker</span><span>Start</span><span>Duration</span><span>Status</span><span /></div>
-        <div className="rundown-list">
-          {!rundown.length && !isAddingTimer && <div className="rundown-empty"><h2>No timers in this room</h2><p>Add your first timer or import a JSON rundown from Event settings.</p><button className="console-button primary" disabled={locked} onClick={requestAdd}><Plus size={16} />Add your first timer</button></div>}
-          {rundown.map((item, index) => <RundownRow key={`${roomId}-${item.id}`} item={item} index={index} count={rundown.length}
-            active={item.id === activeTimerId} status={status} schedule={scheduleMetrics.itemSchedules.get(item.id)} locked={locked}
-            onPlay={() => { if (item.id === activeTimerId && status === 'running') pause(); else { if (item.id !== activeTimerId) selectTimer(item.id); start(); } }}
-            onEdit={() => { if (!locked) setEditingTimerId(item.id); }} onUpdate={updates => { if (!locked) updateTimer(item.id, updates); }}
-            onMove={destination => { if (!locked) reorderRundown(index, destination); }} onDelete={() => handleDelete(item.id)}
-            onDuplicate={() => { if (!locked && !duplicateTimer(item.id)) showPaywall('Unlimited Timers (Free Plan is capped at 3 timers per room)'); }}
-            onSavePreset={() => saveTimerPreset(item)} />)}
-        </div>
-        <footer className="rundown-summary">
-          <div><span>Total show</span><strong>{scheduleMetrics.formattedTotalPlanned}</strong></div>
-          <div><span>Remaining</span><strong>{scheduleMetrics.formattedRemaining}</strong></div>
-          <div><span>Segments</span><strong>{rundown.length}</strong></div>
-        </footer>
-        {timerPresets.storageError && <p role="alert" className="text-xs text-amber-300 p-4">{timerPresets.storageError}</p>}
-      </section>
-
-      <aside className="messages-column" aria-label="Presenter communication">
-        <MessagesPanel key={roomId} collapsed={messagesCollapsed} onToggle={() => setMessagesCollapsed(value => !value)} />
-        <ConnectionsPanel now={clockTick} />
-        <div className="console-help"><Link2 size={14} /><p>Use Outputs to open a monitor or share this room with your crew.</p></div>
-      </aside>
-    </main>
-
-    {(deleted || notice) && <div className="console-notice" role="status">
-      <span>{notice || `“${deleted?.item.title}” deleted`}</span>
-      {deleted && <button disabled={locked} onClick={() => {
-        if (Date.now() > deleted.expires) { setDeleted(null); return; }
-        if (restoreTimer(deleted.item, deleted.index, deleted.roomId)) { setDeleted(null); setNotice('Timer restored.'); }
-        else setNotice('Cannot restore: this room has reached its timer limit.');
-      }}><Undo2 size={15} />Undo</button>}
-      <button aria-label="Dismiss notification" onClick={() => { setNotice(''); setDeleted(null); }}><X size={16} /></button>
-    </div>}
-
+        </form></div>}
+    {shortcuts && <OperatorShortcutsDialog onClose={() => setShortcuts(false)} />}
     <ShareModal isOpen={isShareOpen} onClose={() => setIsShareOpen(false)} roomName={roomName} />
     <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onOpenPaywall={showPaywall} onCustomize={() => { setIsSettingsOpen(false); setCustomizeRole('viewer'); setIsCustomizeOutputOpen(true); }} />
     <ProPaywallModal isOpen={isPaywallOpen} onClose={() => setIsPaywallOpen(false)} featureName={paywallFeature} />
     <AuthModal isOpen={isAuthOpen} initialMode={authIntent === 'reset' ? 'reset' : authIntent === 'signup' ? 'register' : 'login'} onClose={() => { setIsAuthOpen(false); if (authIntent) { const url = new URL(window.location.href); url.searchParams.delete('auth'); window.history.replaceState({}, '', url); } }} />
     <AccountSettingsModal isOpen={isAccountOpen} onClose={() => setIsAccountOpen(false)} onOpenPaywall={() => showPaywall('Shotimer Pro')} />
     <TimerSettingsModal isOpen={!!editingTimerId} timer={rundown.find(timer => timer.id === editingTimerId) || null}
-      onClose={() => setEditingTimerId(null)} onUpdate={(id, updates) => { if (!locked) updateTimer(id, updates); }}
-      onDuplicate={id => !locked && duplicateTimer(id)} onDelete={handleDelete}
-      canDelete={!locked && rundown.length > 1 && !(editingTimerId === activeTimerId && ['running', 'paused'].includes(status))} onOpenPaywall={showPaywall} />
+      onClose={() => setEditingTimerId(null)} onUpdate={(id, updates) => { if (!locked && canControl) updateTimer(id, updates); }}
+      onDuplicate={id => !locked && canControl && duplicateTimer(id)} onDelete={handleDelete}
+      canDelete={!locked && canControl && rundown.length > 1 && !(editingTimerId === activeTimerId && ['running', 'paused'].includes(status))} onOpenPaywall={showPaywall} />
     <CustomizeOutputModal key={`${roomId}-${customizeRole}-${isCustomizeOutputOpen}`} isOpen={isCustomizeOutputOpen} onClose={() => setIsCustomizeOutputOpen(false)} initialRole={customizeRole} onOpenPaywall={showPaywall} />
     {resetScope && <ResetDialog scope={resetScope} onClose={() => setResetScope(null)} onComplete={() => { setDeleted(null); setIsAddingTimer(false); setEditingTimerId(null); }} />}
   </div>;

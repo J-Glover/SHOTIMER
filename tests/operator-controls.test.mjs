@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 // Load the real store without a browser or cloud configuration. No live rooms are touched.
 const vite = await createServer({
   configFile: false,
-  server: { middlewareMode: true, hmr: false },
+  server: { middlewareMode: true, hmr: false, ws: false },
   define: { 'import.meta.env.VITE_SUPABASE_URL': JSON.stringify('disabled-for-tests') },
 });
 after(() => vite.close());
@@ -22,9 +22,99 @@ const { default: ResetDialog } = await vite.ssrLoadModule('/src/components/commo
 const { default: AgendaDisplay } = await vite.ssrLoadModule('/src/components/outputs/AgendaDisplay.tsx');
 const { normalizeMessageContent, contentRuns, formatMessageSelection, changeMessageCase, insertMessageText, MESSAGE_COLOURS, MESSAGE_SEVERITY_COLOURS, messageSelectionColour } = await vite.ssrLoadModule('/src/utils/messageFormatting.ts');
 const { isMessagePreset } = await vite.ssrLoadModule('/src/hooks/useSavedPresets.ts');
+const { roomOverview, initialWorkspace } = await vite.ssrLoadModule('/src/utils/roomOverview.ts');
+const { isSampleRundown } = await vite.ssrLoadModule('/src/store/useTimerStore.ts');
+const { default: RundownRow } = await vite.ssrLoadModule('/src/components/controller/RundownRow.tsx');
 const baseline = store.getState();
 const timers = structuredClone(baseline.rundown);
 function reset() { store.setState({ ...baseline, rundown: structuredClone(timers), roomId: 'test-room', status: 'stopped', isProUser: false }); }
+
+test('workspace routing preserves explicit output, shared-room and authentication links', () => {
+  assert.equal(initialWorkspace('', false), 'dashboard');
+  assert.equal(initialWorkspace('?view=dashboard', false), 'dashboard');
+  assert.equal(initialWorkspace('?room=room-2', false), 'controller');
+  assert.equal(initialWorkspace('?view=dashboard&room=room-2', false), 'dashboard');
+  assert.equal(initialWorkspace('?auth=reset', false), 'controller');
+  for (const view of ['controller', 'viewer', 'agenda', 'moderator', 'overlay']) {
+    assert.equal(initialWorkspace(`?view=${view}&room=room-2`, false), view);
+    assert.equal(initialWorkspace(`?view=${view}&room=room-2`, true), view);
+  }
+  assert.equal(initialWorkspace('?view=dashboard', true), 'controller');
+  assert.equal(initialWorkspace('?view=unknown', true), 'controller');
+});
+
+test('room summaries preserve empty rundowns and never infer another room playback', () => {
+  const active = { roomId: 'room-1', roomName: 'Live room', rundown: timers, status: 'running' };
+  const values = new Map([['shotimer_rundown_room-2', '[]'], ['shotimer_room_name_room-2', 'Empty room'], ['shotimer_room_opened_room-2', '12345']]);
+  const read = key => values.get(key) ?? null;
+  const before = structuredClone(active);
+  const empty = roomOverview({ id: 'room-2', name: 'Fallback' }, active, read);
+  assert.equal(empty.timerCount, 0); assert.equal(empty.name, 'Empty room');
+  assert.equal(empty.playback, null); assert.equal(empty.current, false); assert.equal(empty.lastOpened, 12345);
+  const current = roomOverview({ id: 'room-1', name: 'Old name' }, active, read);
+  assert.equal(current.timerCount, timers.length); assert.equal(current.playback, 'running'); assert.equal(current.name, 'Live room');
+  assert.equal(roomOverview({ id: 'room-3', name: 'Unknown' }, active, read).timerCount, null);
+  assert.deepEqual(active, before);
+  for (const readFailure of [() => '{bad json', () => { throw Error('Unavailable'); }]) {
+    const result = roomOverview({ id: 'room-2', name: 'Fallback' }, active, readFailure);
+    assert.equal(result.timerCount, null); assert.equal(result.playback, null);
+  }
+});
+
+test('only unchanged sample rundowns are labelled as samples', () => {
+  assert.equal(isSampleRundown('room-1', timers), true);
+  assert.equal(isSampleRundown('room-1', [{ ...timers[0], title: 'My show' }, ...timers.slice(1)]), false);
+  assert.equal(isSampleRundown('room-1', []), false);
+  assert.equal(isSampleRundown('room-1', [null]), false);
+});
+
+test('row playback stays available with editing locked, and disables separately when disconnected', () => {
+  const props = { item: timers[0], index: 0, count: 3, active: true, status: 'stopped', locked: true };
+  const locked = renderToStaticMarkup(createElement(RundownRow, props));
+  const disconnected = renderToStaticMarkup(createElement(RundownRow, { ...props, playbackDisabled: true }));
+  assert.ok(!locked.match(/<button[^>]*class="console-icon row-play [^"]*"[^>]*disabled/));
+  assert.match(disconnected, /<button[^>]*class="console-icon row-play [^"]*"[^>]*disabled/);
+  assert.match(locked, /aria-label="Segment 1 title"[^>]*disabled/);
+});
+
+test('hold finishes countdown and count-up exactly once, clamps readouts and can restart', () => {
+  for (const type of ['countdown', 'countup']) {
+    reset(); const item = { ...timers[0], type, durationSeconds: 5, finishBehavior: 'hold', autoStartNext: false };
+    store.setState({ rundown: [item], activeTimerId: item.id, status: 'running', targetDuration: 5, startedAt: Date.now() - 6500, elapsedTime: 4, timeRemaining: 1, isAudioMuted: true });
+    store.getState()._tick(); const result = store.getState();
+    assert.equal(result.status, 'finished'); assert.equal(result.elapsedTime, 5); assert.equal(result.timeRemaining, 0); assert.equal(result.overtimeSeconds, 0);
+    const display = timerReadout(item,result,Date.now()); assert.equal(display.text,type === 'countup' ? '00:05' : '00:00'); assert.equal(display.overtime,false);
+    store.getState()._tick(); assert.equal(store.getState().elapsedTime,5);
+    store.getState().start(); assert.equal(store.getState().status,'running'); assert.equal(store.getState().elapsedTime,0);
+  }
+});
+test('legacy timers continue overtime and linked next timers take priority over hold', () => {
+  reset(); const first={...timers[0],durationSeconds:5,autoStartNext:false};
+  store.setState({rundown:[first],activeTimerId:first.id,status:'running',targetDuration:5,startedAt:Date.now()-6500,elapsedTime:4,timeRemaining:1,isAudioMuted:true});
+  store.getState()._tick(); assert.equal(store.getState().status,'running'); assert.ok(store.getState().overtimeSeconds>1);
+  store.setState({rundown:[{...first,finishBehavior:'hold',autoStartNext:true},timers[1]],elapsedTime:4,timeRemaining:1});
+  store.getState()._tick(); assert.equal(store.getState().activeTimerId,timers[1].id); assert.equal(store.getState().status,'running');
+  store.setState({rundown:[{...first,finishBehavior:'hold',autoStartNext:true}],activeTimerId:first.id,status:'running',targetDuration:5,startedAt:Date.now()-6500,elapsedTime:4,timeRemaining:1});
+  store.getState()._tick(); assert.equal(store.getState().status,'finished');
+});
+test('hold survives rundown sanitization and never stops clock mode', async () => {
+  const {validateAndSanitizeRundown} = await vite.ssrLoadModule('/src/utils/exportImport.ts');
+  assert.equal(validateAndSanitizeRundown([{...timers[0],finishBehavior:'hold'}])[0].finishBehavior,'hold');
+  assert.equal(validateAndSanitizeRundown([{...timers[0],finishBehavior:'untrusted'}])[0].finishBehavior,'overtime');
+  reset(); const clock={...timers[0],type:'clock',finishBehavior:'hold',autoStartNext:true};
+  store.setState({rundown:[clock,timers[1]],activeTimerId:clock.id,status:'running',targetDuration:5,startedAt:Date.now()-10000}); store.getState()._tick(); assert.equal(store.getState().status,'running'); assert.equal(store.getState().activeTimerId,clock.id);
+});
+
+test('time nudges apply once and finished timers accept new durations without carrying elapsed time', () => {
+  reset(); const item={...timers[0],durationSeconds:60};
+  const startedAt=Date.now()-10000;
+  store.setState({rundown:[item],activeTimerId:item.id,status:'running',targetDuration:60,startedAt,elapsedTime:10,timeRemaining:50,isAudioMuted:true});
+  store.getState().adjustTime(60); assert.equal(store.getState().startedAt,startedAt);
+  store.getState()._tick(); assert.ok(Math.abs(store.getState().timeRemaining-110)<0.2);
+  store.setState({status:'finished',elapsedTime:120,timeRemaining:0});
+  store.getState().updateTimer(item.id,{durationSeconds:30});
+  assert.equal(store.getState().status,'stopped'); assert.equal(store.getState().targetDuration,30); assert.equal(store.getState().elapsedTime,0);
+});
 
 test('undo preserves later edits and running timer state', () => {
   reset();
@@ -300,6 +390,19 @@ test('empty rundown and disarmed starts survive leaving and reopening the room w
     const { id: _id, order: _order, ...item } = timers[0];
     assert.equal(store.getState().addTimer(item), true);
     assert.equal(store.getState().activeTimerId, store.getState().rundown[0].id); assert.equal(store.getState().timeRemaining, 600);
+  });
+});
+
+test('history navigation switches rooms without adding another browser history entry', () => {
+  reset();
+  withBrowserStorage(values => {
+    values.set('shotimer_rundown_room-2', '[]');
+    let entries = 0;
+    window.history.pushState = () => { entries += 1; };
+    store.getState().switchRoom('room-2', false);
+    assert.equal(store.getState().roomId, 'room-2'); assert.equal(entries, 0);
+    assert.deepEqual(store.getState().rundown, []);
+    store.getState().switchRoom('test-room'); assert.equal(entries, 1);
   });
 });
 

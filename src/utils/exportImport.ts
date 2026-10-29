@@ -75,6 +75,7 @@ export function sanitizeRundownItem(raw: any, orderIndex: number): TimerItem | n
     type,
     scheduledStartTime,
     autoStartNext: Boolean(raw.autoStartNext),
+    finishBehavior: raw.finishBehavior === 'hold' ? 'hold' : 'overtime',
     thresholds: {
       yellowTime,
       redTime,

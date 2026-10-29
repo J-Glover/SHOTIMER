@@ -1,3 +1,4 @@
+import SyncStatus from '../components/common/SyncStatus';
 import { useOutputSnapshot } from '../hooks/useOutputSnapshot';
 import { useWakeLock } from '../hooks/useWakeLock';
 import { FullscreenButton } from '../components/common/FullscreenProvider';
@@ -9,10 +10,11 @@ export default function ModeratorView({ onBackToController }: { onBackToControll
   const { state, now } = useOutputSnapshot();
   useWakeLock(true);
   return <main className="output-page">
+    <SyncStatus />
     <header className="output-page-heading"><div><p className="output-eyebrow">{state.roomName}</p><h1>Stage cues & messages</h1></div><div className="flex gap-2 flex-wrap">
       <FullscreenButton />{onBackToController && <button className="console-button" onClick={onBackToController}>Controller</button>}
     </div></header>
-    <div className="moderator-layout"><ModeratorSummary state={state} now={now} /><MessagesPanel key={state.roomId} /></div>
+    <div className="moderator-layout"><ModeratorSummary state={state} now={now} /><fieldset disabled={state.cloudSyncStatus !== 'connected'} className="contents"><MessagesPanel key={state.roomId} /></fieldset></div>
     <p className="output-note mt-5">Messages are sent to the stage only when you choose Show on stage. Audience question submissions are not available in this version.</p>
   </main>;
 }

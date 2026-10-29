@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 import { resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { serveAppManifest } from './appManifest.mjs'
+import { createLiveRelay } from './liveRelay.mjs'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
@@ -13,8 +14,8 @@ export default defineConfig({
     react(), tailwindcss(),
     {
       name: 'shotimer-room-manifest',
-      configureServer(server) { server.middlewares.use(serveAppManifest) },
-      configurePreviewServer(server) { server.middlewares.use(serveAppManifest) },
+      configureServer(server) { const relay = createLiveRelay(); server.middlewares.use(relay.middleware); server.middlewares.use(serveAppManifest); server.httpServer?.once('close', () => relay.close()) },
+      configurePreviewServer(server) { const relay = createLiveRelay(); server.middlewares.use(relay.middleware); server.middlewares.use(serveAppManifest); server.httpServer?.once('close', () => relay.close()) },
     },
   ],
   server: {

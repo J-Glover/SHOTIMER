@@ -1,4 +1,5 @@
 const views = new Map([
+  ['dashboard', 'Rooms'],
   ['controller', 'Editor'], ['viewer', 'Stage Monitor'], ['agenda', 'Agenda'], ['moderator', 'Moderator'], ['overlay', 'OBS Overlay'],
 ]);
 

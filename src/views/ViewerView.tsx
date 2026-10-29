@@ -4,6 +4,7 @@ import { useWakeLock } from '../hooks/useWakeLock';
 import { FullscreenButton } from '../components/common/FullscreenProvider';
 import { useFullscreen } from '../hooks/useFullscreen';
 import { useOutputSnapshot } from '../hooks/useOutputSnapshot';
+import SyncStatus from '../components/common/SyncStatus';
 import StageDisplay from '../components/outputs/StageDisplay';
 import { useTimerStore } from '../store/useTimerStore';
 
@@ -30,9 +31,10 @@ function ViewerSession({ roomId }: { roomId: string }) {
   useEffect(() => { scheduleHide(); return () => { if (hideTimer.current) clearTimeout(hideTimer.current); }; }, [scheduleHide]);
   return <div className={`fixed inset-0 h-dvh overflow-hidden ${showControls ? '' : 'cursor-none'}`} onPointerDown={reveal} onPointerMove={reveal} onKeyDown={reveal}>
     <StageDisplay state={state} now={now} clean={timerOnly} />
+    <SyncStatus stage />
     <div ref={toolbarRef} className={`viewer-toolbar ${showControls ? 'is-visible' : 'is-hidden'}`} aria-label="Display controls" aria-hidden={!showControls} inert={!showControls} onFocusCapture={reveal} onBlurCapture={scheduleHide}>
       <span className="viewer-toolbar-hint">Tap the screen for controls</span>
-      <span className="viewer-toolbar-hint">{state.cloudSyncStatus === 'connected' ? 'Cloud connected' : state.cloudSyncStatus === 'connecting' ? 'Connecting…' : 'Local sync'}{awake ? ' · Awake' : ''}</span>
+      <span className="viewer-toolbar-hint">{state.cloudSyncStatus === 'connected' ? 'Live updates confirmed' : state.cloudSyncStatus === 'connecting' ? 'Recovering…' : 'Connection lost'}{awake ? ' · Awake' : ''}</span>
       <button className="screen-control" aria-pressed={timerOnly} onClick={event => { setTimerOnly(value => !value); try { localStorage.setItem(`shotimer_timer_only_${roomId}`, String(!timerOnly)); } catch { /* This screen still updates. */ } if (event.detail > 0) event.currentTarget.blur(); }}>Timer only{timerOnly ? ' · On' : ''}</button>
       <button className="screen-control" onClick={openHelp} aria-label="Phone fullscreen help"><Smartphone size={16} /></button>
       <FullscreenButton viewer />

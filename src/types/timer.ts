@@ -31,6 +31,7 @@ export interface TimerItem {
   thresholds: AlertThresholds;
   sounds: SoundConfig;
   scheduledStartTime?: string; // Optional "HH:MM" 24h format
+  finishBehavior?: 'overtime' | 'hold'; // Legacy timers continue into overtime.
   autoStartNext: boolean;      // Chain to next timer automatically
 }
 

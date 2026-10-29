@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-const focusableSelector = 'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]';
+const focusableSelector = 'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [contenteditable="true"], summary, [tabindex="0"]';
 
 export function useDialogFocus(open: boolean, onClose: () => void) {
   const ref = useRef<HTMLDivElement>(null);
@@ -19,6 +19,8 @@ export function useDialogFocus(open: boolean, onClose: () => void) {
       const top = dialogs.sort((a, b) => Number(getComputedStyle(a).zIndex) - Number(getComputedStyle(b).zIndex)).at(-1);
       if (top !== dialog) return;
       if (event.key === 'Escape') {
+        const menu = dialog.querySelector<HTMLDetailsElement>('details[open]');
+        if (menu) { menu.open = false; menu.querySelector<HTMLElement>('summary')?.focus(); event.preventDefault(); event.stopImmediatePropagation(); return; }
         event.preventDefault(); event.stopImmediatePropagation(); closeRef.current(); return;
       }
       if (event.key !== 'Tab') return;

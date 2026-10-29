@@ -19,14 +19,13 @@ interface PresenceMessage {
 export const useConnectionsStore = create<{ peers: Peer[] }>(() => ({ peers: [] }));
 const roles = ['controller', 'viewer', 'agenda', 'moderator', 'overlay'];
 
-export function useRoomPresence(roomId: string, role: ActiveView) {
+export function useRoomPresence(roomId: string, role: ActiveView, enabled = true) {
   useEffect(() => {
+    if (!enabled) { useConnectionsStore.setState({ peers: [] }); return; }
     const id = globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-    let bus: BroadcastChannel | null = null;
-    try { bus = new BroadcastChannel('shotimer-presence'); } catch { /* Cloud still works. */ }
+    // All presence uses the authenticated relay.
     const send = (event: PresenceMessage['event']) => {
-      const payload = { id, roomId, role, event };
-      bus?.postMessage(payload);
+      const payload = { id, role, event };
       broadcastRoomPresence(roomId, payload);
     };
     const receive = (value: unknown, transport: Peer['transport']) => {
@@ -47,7 +46,6 @@ export function useRoomPresence(roomId: string, role: ActiveView) {
       if (message.event === 'hello') send('heartbeat');
     };
     useConnectionsStore.setState({ peers: [] });
-    if (bus) bus.onmessage = event => receive(event.data, 'local');
     const unsubscribe = subscribeToRoomPresence(roomId, value => receive(value, 'cloud'));
     send('hello');
     // The display may be a background tab. Use the same worker mechanism as timer ticks.
@@ -75,8 +73,7 @@ export function useRoomPresence(roomId: string, role: ActiveView) {
       window.removeEventListener('pageshow', onVisible);
       document.removeEventListener('visibilitychange', onVisible);
       unsubscribe();
-      bus?.close();
       useConnectionsStore.setState({ peers: [] });
     };
-  }, [roomId, role]);
+  }, [roomId, role, enabled]);
 }

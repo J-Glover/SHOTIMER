@@ -37,6 +37,7 @@ interface Props {
   status: TimerStatus;
   schedule?: ItemScheduleInfo;
   locked: boolean;
+  playbackDisabled?: boolean;
   onPlay: () => void;
   onEdit: () => void;
   onUpdate: (updates: Partial<TimerItem>) => void;
@@ -46,12 +47,12 @@ interface Props {
   onSavePreset: () => void;
 }
 
-export default function RundownRow({ item, index, count, active, status, schedule, locked, onPlay, onEdit, onUpdate, onMove, onDuplicate, onDelete, onSavePreset }: Props) {
+export default function RundownRow({ item, index, count, active, status, schedule, locked, playbackDisabled, onPlay, onEdit, onUpdate, onMove, onDuplicate, onDelete, onSavePreset }: Props) {
   const running = active && status === 'running';
   const stateLabel = active ? ({ stopped: 'Ready', running: 'Running', paused: 'Paused', finished: 'Finished' }[status]) : '';
   const mode = item.type === 'clock' ? 'Wall clock' : item.type === 'countup' ? 'Count up' : 'Countdown';
   return <article className={`rundown-row ${active ? 'is-selected' : ''}`} aria-label={`Segment ${index + 1}: ${item.title}`}>
-    <button className={`console-icon row-play ${running ? 'is-running' : ''}`} onClick={onPlay}
+    <button className={`console-icon row-play ${running ? 'is-running' : ''}`} disabled={playbackDisabled} onClick={onPlay}
       aria-label={running ? `Pause ${item.title}` : `Start ${item.title}`} title={running ? 'Pause timer' : 'Start timer'}>
       {running ? <Pause size={17} fill="currentColor" /> : <Play size={17} fill="currentColor" />}
     </button>

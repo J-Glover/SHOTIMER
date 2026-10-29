@@ -8,6 +8,9 @@ import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { serveAppManifest } from './appManifest.mjs';
+import { createLiveRelay } from './liveRelay.mjs';
+
+const liveRelay = createLiveRelay();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -129,6 +132,7 @@ setInterval(() => {
 }, 15 * 60 * 1000);
 
 const server = http.createServer((req, res) => {
+  if (liveRelay.middleware(req, res)) return;
   // Apply Broadcast Security Headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-XSS-Protection', '1; mode=block');

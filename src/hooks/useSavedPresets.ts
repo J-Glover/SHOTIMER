@@ -50,6 +50,7 @@ export function isTimerPreset(value: unknown): value is TimerPreset {
     typeof timer.title === 'string' && timer.title.length <= 200 && typeof timer.speaker === 'string' && timer.speaker.length <= 200 &&
     (timer.notes === undefined || (typeof timer.notes === 'string' && timer.notes.length <= 5000)) &&
     Number.isFinite(timer.durationSeconds) && timer.durationSeconds > 0 && timer.durationSeconds <= 86400 &&
+    (timer.finishBehavior === undefined || ['hold', 'overtime'].includes(timer.finishBehavior)) &&
     ['countdown', 'countup', 'clock'].includes(timer.type) && !!timer.thresholds && !!timer.sounds &&
     Number.isFinite(timer.thresholds.yellowTime) && timer.thresholds.yellowTime >= 0 && timer.thresholds.yellowTime <= 86400 &&
     Number.isFinite(timer.thresholds.redTime) && timer.thresholds.redTime >= 0 && timer.thresholds.redTime <= 86400 &&

@@ -1,6 +1,6 @@
 import { useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import type { Ref } from 'react';
-import { Bold, CaseUpper, CaseLower, Eraser, Undo2, Redo2 } from 'lucide-react';
+import { Bold, CaseUpper, CaseLower, Eraser, Undo2, Redo2, MoreHorizontal } from 'lucide-react';
 import { MESSAGE_TEXT_LIMIT, changeMessageCase, contentRuns, formatMessageSelection, insertMessageText, normalizeMessageContent, sliceMessageRuns, messageSelectionColour } from '../../utils/messageFormatting';
 import type { MessageContent, TextSelection } from '../../utils/messageFormatting';
 import type { FlashMessage } from '../../types/timer';
@@ -121,15 +121,17 @@ export default function MessageEditor({ initialValue, severity, onChange, ref }:
       <button type="button" title="Select the whole message" disabled={!content.text} onClick={selectAll}>Select all</button>
       <button type="button" title="Bold selected text (Ctrl+B)" aria-label="Bold selected text" aria-pressed={allBold} disabled={!hasSelection} onClick={() => format({ bold: !allBold })}><Bold size={15} /></button>
       <button type="button" title="Normal weight for selected text" aria-pressed={allNormal} disabled={!hasSelection} onClick={() => format({ bold: false })}>Normal</button>
-      <button type="button" title="UPPERCASE selected text" aria-label="Uppercase selected text" disabled={!hasSelection} onClick={() => changeCase('upper')}><CaseUpper size={18} /></button>
-      <button type="button" title="lowercase selected text" aria-label="Lowercase selected text" disabled={!hasSelection} onClick={() => changeCase('lower')}><CaseLower size={18} /></button>
-      <button type="button" title="Clear selected text formatting" aria-label="Clear selected text formatting" disabled={!hasSelection} onClick={() => format({ clear: true })}><Eraser size={15} /></button>
       <button type="button" title="Undo (Ctrl+Z)" aria-label="Undo message edit" disabled={!historyState.undo} onClick={() => undo()}><Undo2 size={15} /></button>
       <button type="button" title="Redo (Ctrl+Y)" aria-label="Redo message edit" disabled={!historyState.redo} onClick={() => undo(true)}><Redo2 size={15} /></button>
+      <details className="console-dropdown"><summary className="console-icon" aria-label="More text tools" title="More text tools"><MoreHorizontal size={15} /></summary><div className="console-menu" onClick={event => { if ((event.target as HTMLElement).closest('button')) event.currentTarget.closest('details')?.removeAttribute('open'); }}>
+        <button type="button" aria-label="Uppercase selected text" disabled={!hasSelection} onClick={() => changeCase('upper')}><CaseUpper size={18} />Uppercase</button>
+        <button type="button" aria-label="Lowercase selected text" disabled={!hasSelection} onClick={() => changeCase('lower')}><CaseLower size={18} />Lowercase</button>
+        <button type="button" aria-label="Clear selected text formatting" disabled={!hasSelection} onClick={() => format({ clear: true })}><Eraser size={15} />Clear formatting</button>
+      </div></details>
     </div>
     <MessageColourPalette value={colour} disabled={!hasSelection} severity={severity} onChange={value => format({ colour: value })} />
     </div>
-    <p id="message-format-help" className="message-format-help">{hasSelection ? 'Click a colour pot to format selected words.' : 'Select words, or choose Select all, then click a colour pot.'} Info, Warning and Danger recolour the whole draft, keeping bold.</p>
+    <p id="message-format-help" className="message-format-help">{hasSelection ? 'Colour pots format selected words.' : 'Select words or Select all to format.'}</p>
     {notice && <p role="status" className="message-format-help text-amber-300">{notice}</p>}
   </div>;
 }

@@ -24,14 +24,14 @@ import {
   deleteUserRoom,
   broadcastLiveRoomState,
   subscribeToLiveRoomState,
-  requestLiveRoomSync,
   type UserCloudProfile,
   type CloudSyncStatus,
 } from '../services/dbService';
-import { validateAndSanitizeRundown } from '../utils/exportImport';
+import { sanitizeText, validateAndSanitizeRundown } from '../utils/exportImport';
 import { normalizeOutputCustomization, guardLogoChanges } from '../utils/stagePresentation';
 import { roomResetPatch } from '../utils/roomReset';
 import type { ResetScope, ResetOptions } from '../utils/roomReset';
+import { canControlRoom, isSharedLink } from '../services/liveSync';
 import { normalizeMessageContent } from '../utils/messageFormatting';
 
 export const FREE_TIMER_LIMIT = 3;
@@ -39,14 +39,6 @@ export const FREE_ROOM_LIMIT = 3;
 
 // Unique client identifier for loop prevention
 const CLIENT_ID = Math.random().toString(36).substring(2, 9);
-const SYNC_CHANNEL_NAME = 'shotimer-sync-bus';
-
-// Safe BroadcastChannel initialization
-let syncChannel: BroadcastChannel | null = null;
-if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
-  syncChannel = new BroadcastChannel(SYNC_CHANNEL_NAME);
-}
-
 // Inline Web Worker instantiation
 let worker: Worker | null = null;
 const initWorker = (onTick: () => void) => {
@@ -225,6 +217,12 @@ const getInitialRooms = (): RoomInfo[] => {
   return rooms;
 };
 
+export function isSampleRundown(roomId: string, rundown: TimerItem[]) {
+  const sample = (DEFAULT_RUNDOWNS[roomId] || DEFAULT_RUNDOWNS['room-1']).rundown;
+  try { return JSON.stringify(validateAndSanitizeRundown(rundown)) === JSON.stringify(validateAndSanitizeRundown(sample)); }
+  catch { return false; }
+}
+
 const loadRoomData = (roomId: string) => {
   let name = DEFAULT_RUNDOWNS[roomId]?.name || 'Stage Room';
   let rundown = DEFAULT_RUNDOWNS[roomId]?.rundown || DEFAULT_RUNDOWNS['room-1'].rundown;
@@ -290,7 +288,7 @@ function saveResetSnapshot(state: RoomState, outputChanged: boolean) {
 export interface TimerStore extends RoomState {
   // Rooms
   availableRooms: RoomInfo[];
-  switchRoom: (roomId: string) => void;
+  switchRoom: (roomId: string, updateHistory?: boolean) => void;
 
   // User Accounts & Cloud
   currentUser: CloudUser | null;
@@ -447,7 +445,8 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       }
     },
 
-    switchRoom: (newRoomId: string) => {
+    switchRoom: (newRoomId: string, updateHistory = true) => {
+      if (isSharedLink()) return;
       const state = get();
       if (state.roomId === newRoomId) return;
 
@@ -463,9 +462,11 @@ export const useTimerStore = create<TimerStore>((set, get) => {
         localStorage.setItem('shotimer_active_room_id', newRoomId);
 
         // Update URL query param cleanly without full reload
-        const url = new URL(window.location.href);
-        url.searchParams.set('room', newRoomId);
-        window.history.pushState({}, '', url.toString());
+        if (updateHistory) {
+          const url = new URL(window.location.href);
+          url.searchParams.set('room', newRoomId);
+          window.history.pushState({}, '', url.toString());
+        }
       }
 
       // Load new room data
@@ -500,7 +501,8 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       if (!state.rundown.some(item => item.id === state.activeTimerId)) return;
 
       const now = Date.now();
-      let startedAt = now - state.elapsedTime * 1000;
+      const elapsedTime = state.status === 'finished' ? 0 : state.elapsedTime;
+      let startedAt = now - elapsedTime * 1000;
       if (state.status === 'paused' && state.pausedAt) {
         const pauseDuration = now - state.pausedAt;
         startedAt = (state.startedAt || now) + pauseDuration;
@@ -508,6 +510,8 @@ export const useTimerStore = create<TimerStore>((set, get) => {
 
       set({
         status: 'running',
+        elapsedTime,
+        timeRemaining: state.targetDuration - elapsedTime,
         startedAt,
         pausedAt: null,
         showStartedAt: state.showStartedAt ?? now - state.rundown.slice(0, Math.max(0, state.rundown.findIndex(item => item.id === state.activeTimerId))).reduce((sum, item) => sum + item.durationSeconds, 0) * 1000,
@@ -583,6 +587,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
     },
 
     _checkScheduledStart: (now = Date.now()) => {
+      if (typeof window !== 'undefined' && !canControlRoom(get().roomId)) return;
       const state = get();
       if (state.status !== 'stopped' || state.scheduledStartsArmed === false) return;
       if (typeof window !== 'undefined' && !['controller', null].includes(new URLSearchParams(window.location.search).get('view'))) return;
@@ -604,15 +609,9 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       const newRemaining = Math.max(-3600, state.timeRemaining + deltaSeconds);
       const newTarget = Math.max(1, state.targetDuration + deltaSeconds);
 
-      let newStartedAt = state.startedAt;
-      if (state.status === 'running' && state.startedAt) {
-        newStartedAt = state.startedAt - deltaSeconds * 1000;
-      }
-
       set({
         timeRemaining: newRemaining,
         targetDuration: newTarget,
-        startedAt: newStartedAt,
       });
 
       get()._broadcastState();
@@ -754,8 +753,9 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       const state = get();
       const updated = state.rundown.map((t) => (t.id === id ? { ...t, ...updates } : t));
       set({ rundown: updated });
-      if (state.activeTimerId === id && updates.durationSeconds !== undefined && state.status === 'stopped') {
+      if (state.activeTimerId === id && updates.durationSeconds !== undefined && ['stopped', 'finished'].includes(state.status)) {
         set({
+          status: 'stopped', elapsedTime: 0, overtimeSeconds: 0, startedAt: null, pausedAt: null,
           targetDuration: updates.durationSeconds,
           timeRemaining: updates.durationSeconds,
         });
@@ -991,80 +991,28 @@ export const useTimerStore = create<TimerStore>((set, get) => {
         return;
       }
 
-      // Count-up Mode: starts from 00:00 up to targetDuration
-      if (timerType === 'countup') {
-        const prevElapsed = state.elapsedTime;
-        const target = state.targetDuration;
-        const remaining = Math.max(0, target - elapsed);
-        const isOvertime = elapsed > target;
-        const overtime = isOvertime ? elapsed - target : 0;
-
-        // Sound triggers for countup
-        if (activeTimer && !state.isAudioMuted) {
-          const yellowT = activeTimer.thresholds.yellowTime;
-          const redT = activeTimer.thresholds.redTime;
-          const prevRemaining = Math.max(0, target - prevElapsed);
-
-          if (yellowT > 0 && prevRemaining > yellowT && remaining <= yellowT && activeTimer.sounds.soundOnYellow) {
-            soundSynth.play(activeTimer.sounds.chimeStyle, activeTimer.sounds.volume);
-          } else if (redT > 0 && prevRemaining > redT && remaining <= redT && activeTimer.sounds.soundOnRed) {
-            soundSynth.play('digital_beep', activeTimer.sounds.volume);
-          } else if (prevElapsed < target && elapsed >= target && activeTimer.sounds.soundOnFinish) {
-            soundSynth.play('gong', activeTimer.sounds.volume);
-          }
-        }
-
-        set({
-          elapsedTime: Math.max(0, elapsed),
-          timeRemaining: remaining,
-          overtimeSeconds: overtime,
-        });
-
-        // Auto-advance chaining when countup hits target duration
-        if (activeTimer?.autoStartNext && prevElapsed < target && elapsed >= target) {
-          const currentIndex = state.rundown.findIndex((t) => t.id === state.activeTimerId);
-          if (currentIndex < state.rundown.length - 1) {
-            const nextTimer = state.rundown[currentIndex + 1];
-            get().selectTimer(nextTimer.id);
-            get().start();
-          }
-        }
+      const previousRemaining = state.targetDuration - state.elapsedTime;
+      const remaining = state.targetDuration - elapsed;
+      const crossed = previousRemaining > 0 && remaining <= 0;
+      const authority = typeof window === 'undefined' || canControlRoom(state.roomId);
+      if (activeTimer && !state.isAudioMuted && authority) {
+        const { yellowTime, redTime } = activeTimer.thresholds;
+        if (crossed && activeTimer.sounds.soundOnFinish) soundSynth.play('gong', activeTimer.sounds.volume);
+        else if (redTime > 0 && previousRemaining > redTime && remaining <= redTime && activeTimer.sounds.soundOnRed) soundSynth.play('digital_beep', activeTimer.sounds.volume);
+        else if (yellowTime > 0 && previousRemaining > yellowTime && remaining <= yellowTime && activeTimer.sounds.soundOnYellow) soundSynth.play(activeTimer.sounds.chimeStyle, activeTimer.sounds.volume);
+      }
+      const index = state.rundown.findIndex(item => item.id === state.activeTimerId);
+      const next = activeTimer?.autoStartNext ? state.rundown[index + 1] : undefined;
+      if (crossed && next && authority) {
+        get().selectTimer(next.id); get().start(); return;
+      }
+      if (remaining <= 0 && activeTimer?.finishBehavior === 'hold') {
+        set({ status: 'finished', timeRemaining: 0, elapsedTime: state.targetDuration, overtimeSeconds: 0, pausedAt: state.startedAt + state.targetDuration * 1000 });
+        worker?.postMessage({ command: 'stop' });
+        if (authority) get()._broadcastState();
         return;
       }
-
-      // Default Countdown Mode: counts down to 0:00 then into overtime
-      const remaining = state.targetDuration - elapsed;
-      const prevRemaining = state.timeRemaining;
-
-      // Audio triggers on thresholds
-      if (activeTimer && !state.isAudioMuted) {
-        const yellowT = activeTimer.thresholds.yellowTime;
-        const redT = activeTimer.thresholds.redTime;
-
-        if (yellowT > 0 && prevRemaining > yellowT && remaining <= yellowT && activeTimer.sounds.soundOnYellow) {
-          soundSynth.play(activeTimer.sounds.chimeStyle, activeTimer.sounds.volume);
-        } else if (redT > 0 && prevRemaining > redT && remaining <= redT && activeTimer.sounds.soundOnRed) {
-          soundSynth.play('digital_beep', activeTimer.sounds.volume);
-        } else if (prevRemaining > 0 && remaining <= 0 && activeTimer.sounds.soundOnFinish) {
-          soundSynth.play('gong', activeTimer.sounds.volume);
-        }
-      }
-
-      set({
-        timeRemaining: remaining,
-        elapsedTime: Math.max(0, elapsed),
-        overtimeSeconds: remaining < 0 ? Math.abs(remaining) : 0,
-      });
-
-      // Auto-advance chaining when countdown crosses 00:00
-      if (activeTimer?.autoStartNext && prevRemaining > 0 && remaining <= 0) {
-        const currentIndex = state.rundown.findIndex((t) => t.id === state.activeTimerId);
-        if (currentIndex < state.rundown.length - 1) {
-          const nextTimer = state.rundown[currentIndex + 1];
-          get().selectTimer(nextTimer.id);
-          get().start();
-        }
-      }
+      set({ timeRemaining: timerType === 'countup' ? Math.max(0, remaining) : remaining, elapsedTime: Math.max(0, elapsed), overtimeSeconds: Math.max(0, -remaining) });
     },
 
     _broadcastState: () => {
@@ -1095,13 +1043,8 @@ export const useTimerStore = create<TimerStore>((set, get) => {
           ...roomControls(state),
         },
       };
-      try {
-        syncChannel?.postMessage(syncMsg);
-      } catch (err) {
-        console.warn('Sync broadcast error:', err);
-      }
 
-      // Broadcast live telemetry to Supabase Realtime for remote stage monitors across the internet
+      // Only the protected relay can accept show updates.
       broadcastLiveRoomState(state.roomId, syncMsg.payload);
     },
 
@@ -1110,6 +1053,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       if ((extState.resetRevision || 0) < (get().resetRevision || 0)) return;
 
       const sanitized: Partial<RoomState> = {};
+      if (typeof extState.roomName === 'string') sanitized.roomName = sanitizeText(extState.roomName, 100) || 'Stage Room';
       if (Number.isSafeInteger(extState.resetRevision) && (extState.resetRevision || 0) >= 0) sanitized.resetRevision = extState.resetRevision;
       if (extState.showStartedAt === null || (typeof extState.showStartedAt === 'number' && Number.isFinite(extState.showStartedAt))) sanitized.showStartedAt = extState.showStartedAt;
       if (typeof extState.scheduledStartsArmed === 'boolean') sanitized.scheduledStartsArmed = extState.scheduledStartsArmed;
@@ -1194,7 +1138,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       // Keep local Web Worker in sync with external state
       if (sanitized.status === 'running') {
         if (worker) worker.postMessage({ command: 'start', interval: 50 });
-      } else if (sanitized.status === 'paused' || sanitized.status === 'stopped') {
+      } else if (sanitized.status === 'paused' || sanitized.status === 'stopped' || sanitized.status === 'finished') {
         if (worker) worker.postMessage({ command: 'stop' });
       }
     },
@@ -1209,34 +1153,6 @@ initWorker(() => {
 // Scheduled starts are controller-only and remain disarmed after resets, including after reload.
 if (typeof window !== 'undefined') {
   setInterval(() => useTimerStore.getState()._checkScheduledStart(), 1000);
-}
-
-// Setup BroadcastChannel receiver for multi-window / multi-tab synchronization with room isolation
-if (syncChannel) {
-  syncChannel.onmessage = (event: MessageEvent<SyncMessage>) => {
-    const msg = event.data;
-    if (!msg || msg.senderId === CLIENT_ID) return; // Ignore own messages
-
-    // Room isolation: ignore messages intended for another room
-    const currentRoomId = useTimerStore.getState().roomId;
-    if (msg.roomId && msg.roomId !== currentRoomId) return;
-
-    if (msg.type === 'SYNC_FULL_STATE' && msg.payload) {
-      useTimerStore.getState()._applyExternalState(msg.payload);
-    } else if (msg.type === 'PING_SYNC') {
-      // Another tab just opened for this room, broadcast current state so it syncs immediately!
-      useTimerStore.getState()._broadcastState();
-    }
-  };
-
-  // Announce to other open tabs that this tab is ready to receive state for its active room
-  const activeRoomId = useTimerStore.getState().roomId;
-  syncChannel.postMessage({
-    type: 'PING_SYNC',
-    roomId: activeRoomId,
-    senderId: CLIENT_ID,
-    timestamp: Date.now(),
-  });
 }
 
 // Setup Supabase Auth State Listener & Profile Loader
@@ -1273,7 +1189,7 @@ if (typeof window !== 'undefined') {
     }
   });
 
-  // Setup Supabase Realtime Live Session Listener (subscribes to the active room)
+  // Subscribe to the authoritative live relay for the active room.
   let unsubLive: (() => void) | null = null;
   const attachLiveListener = (roomId: string) => {
     if (unsubLive) {
@@ -1285,63 +1201,27 @@ if (typeof window !== 'undefined') {
       (remoteState) => {
         const local = useTimerStore.getState();
         if (remoteState && remoteState.roomId === local.roomId) {
+          // The relay revision already rejected stale snapshots. It may be restoring
+          // a rejected optimistic reset from this console, including its reset revision.
+          useTimerStore.setState({ resetRevision: remoteState.resetRevision || 0 });
           local._applyExternalState(remoteState);
         }
       },
-      () => {
-        // Ping sync requested by a newly connected stage monitor or viewer!
-        // Only active Controller console should respond to prevent viewer overwrites
-        if (typeof window !== 'undefined') {
-          const params = new URLSearchParams(window.location.search);
-          const view = params.get('view');
-          const isController = !view || view === 'controller';
-          if (isController) {
-            useTimerStore.getState()._broadcastState();
-          }
-        }
-      },
+      undefined,
       (status) => {
         useTimerStore.setState({ cloudSyncStatus: status });
-      }
+      },
+      useTimerStore.getState()
     );
   };
 
   attachLiveListener(useTimerStore.getState().roomId);
 
-  // When room changes, re-attach cloud live listener
+  // When room changes, re-attach the protected listener.
   useTimerStore.subscribe((state, prev) => {
     if (state.roomId !== prev.roomId) {
       attachLiveListener(state.roomId);
     }
   });
 
-  // Visibility change listener: when mobile screen wakes up or tab becomes active, re-sync immediately
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      const currentRoomId = useTimerStore.getState().roomId;
-      const params = new URLSearchParams(window.location.search);
-      const view = params.get('view');
-      const isController = !view || view === 'controller';
-      if (!isController) {
-        // Viewer wakes up: ask controller for latest state
-        requestLiveRoomSync(currentRoomId);
-      } else {
-        // Controller wakes up: broadcast latest state
-        useTimerStore.getState()._broadcastState();
-      }
-    }
-  });
-
-  // Periodic Controller Heartbeat (every 4 seconds while timer is running)
-  setInterval(() => {
-    const state = useTimerStore.getState();
-    const params = new URLSearchParams(window.location.search);
-    const view = params.get('view');
-    const isController = !view || view === 'controller';
-
-    if (isController && state.status === 'running') {
-      state._broadcastState();
-    }
-  }, 4000);
 }
-
