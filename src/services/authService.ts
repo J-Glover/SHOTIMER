@@ -31,6 +31,30 @@ export function formatSupabaseUser(user: any): CloudUser | null {
 }
 
 /**
+ * Canonical redirect URL for auth confirmation emails, OAuth, and password resets.
+ * Defaults to https://shotimer.io so confirmation links opened on any device (phone, desktop)
+ * reach the live website rather than localhost, while preserving origin on live domains.
+ */
+export function getAuthRedirectUrl(path: string = '/app/?view=dashboard'): string {
+  if (typeof window !== 'undefined') {
+    const isLocal =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
+
+    if (!isLocal) {
+      return `${window.location.origin}${path}`;
+    }
+  }
+
+  const configured = import.meta.env.VITE_AUTH_REDIRECT_URL;
+  if (configured) {
+    return `${configured}${path}`;
+  }
+
+  return `https://shotimer.io${path}`;
+}
+
+/**
  * Register a new user with Email and Password
  */
 export async function registerWithEmail(
@@ -46,6 +70,8 @@ export async function registerWithEmail(
   }
 
   try {
+    const redirectUrl = getAuthRedirectUrl('/app/?view=dashboard');
+
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password: pass,
@@ -53,6 +79,7 @@ export async function registerWithEmail(
         data: {
           display_name: displayName || email.split('@')[0],
         },
+        emailRedirectTo: redirectUrl,
       },
     });
 
@@ -109,9 +136,7 @@ export async function loginWithGoogle(): Promise<AuthResponse> {
   }
 
   try {
-    const redirectUrl = typeof window !== 'undefined'
-      ? `${window.location.origin}/app/`
-      : undefined;
+    const redirectUrl = getAuthRedirectUrl('/app/?view=dashboard');
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -156,9 +181,7 @@ export async function sendPasswordReset(email: string): Promise<{ success: boole
   }
 
   try {
-    const redirectUrl = typeof window !== 'undefined'
-      ? `${window.location.origin}/app/?auth=reset`
-      : undefined;
+    const redirectUrl = getAuthRedirectUrl('/app/?auth=reset');
 
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: redirectUrl,
