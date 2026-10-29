@@ -9,6 +9,7 @@
     "start": "node server.js",
     "serve": "node server.js",
     "lint": "oxlint",
+    "test": "node --test tests/*.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

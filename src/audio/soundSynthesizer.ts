@@ -27,8 +27,10 @@ class SoundSynthesizer {
     this.volume = Math.max(0, Math.min(1, volume));
   }
 
-  public play(style: ChimeStyle = 'soft_bell') {
-    if (this.isMuted || this.volume <= 0) return;
+  public play(style: ChimeStyle = 'soft_bell', volumeOverride?: number) {
+    const previousVolume = this.volume;
+    if (volumeOverride !== undefined) this.setVolume(volumeOverride);
+    if (this.isMuted || this.volume <= 0) { this.volume = previousVolume; return; }
 
     try {
       const ctx = this.getContext();
@@ -48,6 +50,8 @@ class SoundSynthesizer {
       }
     } catch (err) {
       console.warn('Audio play prevented or unavailable:', err);
+    } finally {
+      this.volume = previousVolume;
     }
   }
 

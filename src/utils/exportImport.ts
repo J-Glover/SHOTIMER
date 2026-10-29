@@ -37,9 +37,9 @@ export function sanitizeRundownItem(raw: any, orderIndex: number): TimerItem | n
     ? raw.sounds.chimeStyle
     : 'soft_bell';
 
-  // Parse and clamp duration (10s minimum, 24h maximum)
+  // Match the editor's one-second minimum and 24-hour maximum.
   let duration = parseInt(String(raw.durationSeconds), 10);
-  if (isNaN(duration) || duration < 10) duration = 600;
+  if (isNaN(duration) || duration < 1) duration = 600;
   if (duration > 86400) duration = 86400;
 
   // Validate scheduled start time (HH:MM format)

@@ -3,12 +3,20 @@ import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
 import { fileURLToPath } from 'url'
+import { serveAppManifest } from './appManifest.mjs'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(), tailwindcss(),
+    {
+      name: 'shotimer-room-manifest',
+      configureServer(server) { server.middlewares.use(serveAppManifest) },
+      configurePreviewServer(server) { server.middlewares.use(serveAppManifest) },
+    },
+  ],
   server: {
     host: true,
     port: 5173,

@@ -28,6 +28,7 @@ COPY --from=builder /app/website_coming_soon ./website_coming_soon
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/app ./app
 COPY --from=builder /app/server.js ./server.js
+COPY --from=builder /app/appManifest.mjs ./appManifest.mjs
 COPY --from=builder /app/data ./data
 
 # Expose Broadcast Port

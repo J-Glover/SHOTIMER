@@ -4,13 +4,22 @@ import ControllerView from './views/ControllerView';
 import ViewerView from './views/ViewerView';
 import AgendaView from './views/AgendaView';
 import ModeratorView from './views/ModeratorView';
-import OverlayView from './views/OverlayView';
+import OverlayUnavailable from './views/OverlayUnavailable';
 import { useTimerStore } from './store/useTimerStore';
-import { Sliders, Tv, Calendar, MessageSquare, Layers, ArrowLeft, ExternalLink } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import StealthGate from './components/common/StealthGate';
+import { canUseOperatorShortcut } from './utils/operatorControls';
+import { useRoomPresence } from './hooks/useRoomPresence';
+import { FullscreenProvider } from './components/common/FullscreenProvider';
+import { useFullscreen } from './hooks/useFullscreen';
 
 
 export default function App() {
+  return <FullscreenProvider><AppContent /></FullscreenProvider>;
+}
+
+function AppContent() {
+  const { immersive } = useFullscreen();
   const { start, pause, reset, nextTimer, previousTimer, toggleBlackout, status, roomId } = useTimerStore();
 
   // Read view from URL query param if present (e.g., /?view=viewer)
@@ -26,6 +35,33 @@ export default function App() {
   };
 
   const [currentView, setCurrentView] = useState<ActiveView>(getInitialView);
+  useRoomPresence(roomId, currentView);
+
+  useEffect(() => {
+    const manifest = document.querySelector<HTMLLinkElement>('#room-manifest');
+    if (!manifest) return;
+    const params = new URLSearchParams({ room: roomId, view: currentView });
+    const current = new URLSearchParams(window.location.search);
+    const access = current.get('access') || current.get('key');
+    if (access) params.set('access', access);
+    manifest.href = `/shotimer.webmanifest?${params}`;
+  }, [roomId, currentView]);
+
+  useEffect(() => {
+    const closeMenus = (event: MouseEvent) => {
+      document.querySelectorAll<HTMLDetailsElement>('details.console-dropdown[open]').forEach(menu => {
+        if (event.target instanceof Node && !menu.contains(event.target)) menu.open = false;
+      });
+    };
+    const escapeMenu = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || document.querySelector('[role="dialog"]')) return;
+      const menu = document.querySelector<HTMLDetailsElement>('details.console-dropdown[open]');
+      if (menu) { menu.open = false; menu.querySelector<HTMLElement>('summary')?.focus(); }
+    };
+    document.addEventListener('click', closeMenus);
+    document.addEventListener('keydown', escapeMenu);
+    return () => { document.removeEventListener('click', closeMenus); document.removeEventListener('keydown', escapeMenu); };
+  }, []);
 
   // Update browser URL query without reloading
   const handleViewChange = (view: ActiveView) => {
@@ -40,9 +76,9 @@ export default function App() {
   // Keyboard Shortcuts for live operators
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger hotkeys if typing in input/textarea
-      const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+      const modalOpen = !!document.querySelector('[role="dialog"], details[open]');
+      if (!document.querySelector('[data-controller-console]') ||
+          !canUseOperatorShortcut(e, currentView, modalOpen)) return;
 
       if (e.code === 'Space') {
         e.preventDefault();
@@ -68,7 +104,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [status, start, pause, reset, nextTimer, previousTimer, toggleBlackout]);
+  }, [currentView, status, start, pause, reset, nextTimer, previousTimer, toggleBlackout]);
 
   // Keep view and room in sync with browser navigation (back/forward/URL changes)
   useEffect(() => {
@@ -94,10 +130,10 @@ export default function App() {
 
   return (
     <StealthGate>
-      <div className="min-h-screen bg-[#141414] text-neutral-200 flex flex-col font-sans">
+      <div className="shotimer-shell min-h-screen bg-[#141414] text-neutral-200 flex flex-col font-sans" data-immersive={immersive}>
         {/* Subtle Top View Switcher Dock (only visible on Controller or when not in fullscreen Viewer/Overlay) */}
         {currentView !== 'viewer' && currentView !== 'overlay' && (
-          <div className="bg-[#181818] border-b border-neutral-800 px-4 py-2 flex items-center justify-between text-xs">
+          <div className="app-navigation bg-[#181818] border-b border-neutral-800 px-4 py-2 flex items-center justify-between text-xs">
             <div className="flex items-center gap-1">
               <a
                 href="/"
@@ -107,41 +143,8 @@ export default function App() {
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span className="font-medium hidden sm:inline">Shotimer Home</span>
               </a>
-              {[
-                { id: 'controller', label: 'Controller', icon: Sliders },
-                { id: 'viewer', label: 'Stage Monitor', icon: Tv },
-                { id: 'agenda', label: 'Agenda', icon: Calendar },
-                { id: 'moderator', label: 'Moderator', icon: MessageSquare },
-                { id: 'overlay', label: 'OBS Overlay', icon: Layers },
-              ].map((tab) => {
-                const Icon = tab.icon;
-                const isActive = currentView === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => {
-                      if (tab.id === 'controller') {
-                        handleViewChange('controller');
-                      } else {
-                        const url = `/app/?view=${tab.id}&room=${encodeURIComponent(roomId)}`;
-                        window.open(url, '_blank', 'noopener,noreferrer');
-                      }
-                    }}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs transition-colors ${
-                      isActive
-                        ? 'bg-neutral-700 text-white font-semibold shadow-sm'
-                        : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800'
-                    }`}
-                    title={tab.id === 'controller' ? 'Active Controller' : `Launch ${tab.label} in new browser tab`}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                    <span>{tab.label}</span>
-                    {tab.id !== 'controller' && (
-                      <ExternalLink className="w-2.5 h-2.5 opacity-50 ml-0.5" />
-                    )}
-                  </button>
-                );
-              })}
+              <span className="text-xs text-neutral-400">{currentView === 'controller' ? 'Controller' : currentView === 'agenda' ? 'Agenda' : 'Moderator'}</span>
+              {currentView !== 'controller' && <button className="px-3 py-1 text-xs text-neutral-300 hover:text-white" onClick={() => handleViewChange('controller')}>Back to controller</button>}
             </div>
 
             <div className="text-[11px] text-neutral-500 hidden sm:block">
@@ -160,7 +163,7 @@ export default function App() {
           {currentView === 'moderator' && (
             <ModeratorView onBackToController={() => handleViewChange('controller')} />
           )}
-          {currentView === 'overlay' && <OverlayView />}
+          {currentView === 'overlay' && <OverlayUnavailable />}
         </div>
       </div>
     </StealthGate>

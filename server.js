@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
+import { serveAppManifest } from './appManifest.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -283,6 +284,8 @@ const server = http.createServer((req, res) => {
   if (isAppDomain) {
     res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
   }
+
+  if (serveAppManifest(req, res)) return;
 
   // Dynamic robots.txt
   if (reqPath === '/robots.txt') {

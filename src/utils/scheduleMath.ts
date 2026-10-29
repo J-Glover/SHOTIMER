@@ -16,7 +16,8 @@ export interface ScheduleMetrics {
   totalRemainingSeconds: number;
   totalElapsedSeconds: number;
   driftSeconds: number;          // Positive = OVER (late), Negative = UNDER (early)
-  driftStatus: 'over' | 'under' | 'on_time';
+  driftStatus: 'over' | 'under' | 'on_time' | 'not_started';
+  hasStarted: boolean;
   formattedDrift: string;        // e.g. "+03:15", "-01:30", "00:00"
   projectedEndTime: Date;
   plannedEndTime: Date | null;
@@ -36,6 +37,7 @@ export interface ScheduleCalculationParams {
   targetDuration: number;
   status: TimerStatus;
   startedAt: number | null;
+  showStartedAt?: number | null;
   referenceTime?: Date;
 }
 
@@ -91,6 +93,7 @@ export function calculateScheduleMetrics(params: ScheduleCalculationParams): Sch
     targetDuration,
     status,
     startedAt,
+    showStartedAt,
     referenceTime = new Date(),
   } = params;
 
@@ -98,13 +101,12 @@ export function calculateScheduleMetrics(params: ScheduleCalculationParams): Sch
   const totalPlannedSeconds = rundown.reduce((sum, item) => sum + (item.durationSeconds || 0), 0);
   const activeIndex = Math.max(0, rundown.findIndex((t) => t.id === activeTimerId));
   const activeTimer = rundown[activeIndex] || rundown[0];
+  const hasStarted = rundown.length > 0 && (showStartedAt != null || (showStartedAt === undefined && startedAt != null && status !== 'stopped'));
 
   // 1. Calculate time left in current active timer
   let activeRemainingSec = 0;
   if (activeTimer) {
-    if (activeTimer.type === 'clock') {
-      activeRemainingSec = 0;
-    } else if (activeTimer.type === 'countup') {
+    if (activeTimer.type === 'clock' || activeTimer.type === 'countup') {
       activeRemainingSec = Math.max(0, targetDuration - elapsedTime);
     } else {
       activeRemainingSec = Math.max(0, timeRemaining);
@@ -139,7 +141,8 @@ export function calculateScheduleMetrics(params: ScheduleCalculationParams): Sch
   if (firstWithSchedule) {
     hasScheduleAnchors = true;
     const firstIndex = rundown.indexOf(firstWithSchedule);
-    const scheduledDate = parseTimeToToday(firstWithSchedule.scheduledStartTime!, referenceTime);
+    const baseline = showStartedAt ?? startedAt;
+    const scheduledDate = parseTimeToToday(firstWithSchedule.scheduledStartTime!, baseline != null ? new Date(baseline) : referenceTime);
     
     // Extrapolate the show anchor start (index 0)
     let offsetToFirst = 0;
@@ -147,14 +150,21 @@ export function calculateScheduleMetrics(params: ScheduleCalculationParams): Sch
       offsetToFirst += rundown[i].durationSeconds || 0;
     }
     anchorStartTime = new Date(scheduledDate.getTime() - offsetToFirst * 1000);
-  } else if (startedAt && status !== 'stopped') {
-    // If no explicit scheduled start time, anchor to when the show began
+    // Time-only schedules can span midnight: choose the occurrence nearest this run's baseline.
+    if (hasStarted && baseline != null) {
+      const days = Math.round((baseline - anchorStartTime.getTime()) / 86400000);
+      anchorStartTime.setDate(anchorStartTime.getDate() + days);
+    }
+  } else if (showStartedAt != null) {
+    anchorStartTime = new Date(showStartedAt);
+  } else if (hasStarted && startedAt != null) {
     anchorStartTime = new Date(startedAt - completedSeconds * 1000);
   }
 
   // 5. Projected End Time (ETA)
   // Projected End = Now + totalRemainingSeconds
-  const projectedEndTime = new Date(nowMs + totalRemainingSeconds * 1000);
+  const projectedBaseMs = !hasStarted && anchorStartTime ? Math.max(nowMs, anchorStartTime.getTime() + completedSeconds * 1000) : nowMs;
+  const projectedEndTime = new Date(projectedBaseMs + totalRemainingSeconds * 1000);
 
   // 6. Planned End Time
   let plannedEndTime: Date | null = null;
@@ -165,7 +175,9 @@ export function calculateScheduleMetrics(params: ScheduleCalculationParams): Sch
   // 7. Over / Under Drift Calculation
   let driftSeconds = 0;
 
-  if (anchorStartTime && plannedEndTime) {
+  if (!hasStarted) {
+    driftSeconds = 0;
+  } else if (anchorStartTime && plannedEndTime) {
     // Exact delta between Projected End vs Planned End
     driftSeconds = Math.round((projectedEndTime.getTime() - plannedEndTime.getTime()) / 1000);
   } else {
@@ -180,10 +192,10 @@ export function calculateScheduleMetrics(params: ScheduleCalculationParams): Sch
   }
 
   // Drift status classification with 20s hysteresis
-  let driftStatus: 'over' | 'under' | 'on_time' = 'on_time';
-  if (driftSeconds >= 20) {
+  let driftStatus: ScheduleMetrics['driftStatus'] = hasStarted ? 'on_time' : 'not_started';
+  if (hasStarted && driftSeconds >= 20) {
     driftStatus = 'over';
-  } else if (driftSeconds <= -20) {
+  } else if (hasStarted && driftSeconds <= -20) {
     driftStatus = 'under';
   }
 
@@ -192,7 +204,7 @@ export function calculateScheduleMetrics(params: ScheduleCalculationParams): Sch
   const driftMins = Math.floor(absDrift / 60);
   const driftSecs = absDrift % 60;
   const driftSign = driftSeconds > 0 ? '+' : driftSeconds < 0 ? '-' : '';
-  const formattedDrift = `${driftSign}${driftMins.toString().padStart(2, '0')}:${driftSecs.toString().padStart(2, '0')}`;
+  const formattedDrift = absDrift >= 3600 ? `${driftSign}${formatDurationHuman(absDrift)}` : `${driftSign}${driftMins.toString().padStart(2, '0')}:${driftSecs.toString().padStart(2, '0')}`;
 
   // 8. Calculate item-by-item projected and planned start/end times
   const itemSchedules = new Map<string, ItemScheduleInfo>();
@@ -200,7 +212,7 @@ export function calculateScheduleMetrics(params: ScheduleCalculationParams): Sch
   // Running cursor for planned schedule
   let plannedCursorMs = anchorStartTime ? anchorStartTime.getTime() : nowMs;
   // Running cursor for projected schedule
-  let projectedCursorMs = nowMs - activeElapsed * 1000;
+  let projectedCursorMs = projectedBaseMs - activeElapsed * 1000;
 
   for (let i = 0; i < rundown.length; i++) {
     const item = rundown[i];
@@ -224,12 +236,12 @@ export function calculateScheduleMetrics(params: ScheduleCalculationParams): Sch
       itemProjectedStartMs = plannedCursorMs; // Historical
     } else if (i === activeIndex) {
       itemStatus = 'current';
-      itemProjectedStartMs = nowMs - activeElapsed * 1000;
+      itemProjectedStartMs = projectedBaseMs - activeElapsed * 1000;
     } else {
       itemStatus = 'future';
       // Future items start when previous one ends in the projected timeline
       if (i === activeIndex + 1) {
-        itemProjectedStartMs = nowMs + activeRemainingSec * 1000;
+        itemProjectedStartMs = projectedBaseMs + activeRemainingSec * 1000;
       } else {
         itemProjectedStartMs = projectedCursorMs;
       }
@@ -245,7 +257,7 @@ export function calculateScheduleMetrics(params: ScheduleCalculationParams): Sch
       : plannedCursorMs - durationMs;
 
     const rowDelaySec = Math.round((itemProjectedStartMs - plannedStartMs) / 1000);
-    const isDelayed = rowDelaySec >= 30;
+    const isDelayed = hasStarted && rowDelaySec >= 30;
 
     itemSchedules.set(item.id, {
       id: item.id,
@@ -268,11 +280,12 @@ export function calculateScheduleMetrics(params: ScheduleCalculationParams): Sch
     formattedDrift,
     projectedEndTime,
     plannedEndTime,
-    formattedProjectedEnd: formatClockTime(projectedEndTime),
+    formattedProjectedEnd: rundown.length ? formatClockTime(projectedEndTime) : '—',
     formattedPlannedEnd: plannedEndTime ? formatClockTime(plannedEndTime) : '--:--',
     formattedTotalPlanned: formatDurationHuman(totalPlannedSeconds),
     formattedRemaining: formatDurationHuman(totalRemainingSeconds),
     hasScheduleAnchors,
+    hasStarted,
     itemSchedules,
   };
 }

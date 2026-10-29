@@ -29,6 +29,10 @@ import {
   type CloudSyncStatus,
 } from '../services/dbService';
 import { validateAndSanitizeRundown } from '../utils/exportImport';
+import { normalizeOutputCustomization, guardLogoChanges } from '../utils/stagePresentation';
+import { roomResetPatch } from '../utils/roomReset';
+import type { ResetScope, ResetOptions } from '../utils/roomReset';
+import { normalizeMessageContent } from '../utils/messageFormatting';
 
 export const FREE_TIMER_LIMIT = 3;
 export const FREE_ROOM_LIMIT = 3;
@@ -229,7 +233,7 @@ const loadRoomData = (roomId: string) => {
       const savedName = localStorage.getItem(`shotimer_room_name_${roomId}`);
       if (savedName) name = savedName;
       const savedRundown = localStorage.getItem(`shotimer_rundown_${roomId}`);
-      if (savedRundown) rundown = JSON.parse(savedRundown);
+      if (savedRundown) { const parsed = JSON.parse(savedRundown); if (Array.isArray(parsed)) rundown = validateAndSanitizeRundown(parsed); }
     } catch {
       // fallback to default
     }
@@ -243,17 +247,45 @@ const getInitialOutputCustomization = (roomId: string): OutputCustomizationMap =
       const saved = localStorage.getItem(`shotimer_output_customization_${roomId}`);
       if (saved) {
         const parsed = JSON.parse(saved);
-        return {
-          ...DEFAULT_OUTPUT_CUSTOMIZATION,
-          ...parsed,
-        };
+        return normalizeOutputCustomization(parsed);
       }
     } catch {
       // fallback
     }
   }
-  return DEFAULT_OUTPUT_CUSTOMIZATION;
+  return normalizeOutputCustomization(DEFAULT_OUTPUT_CUSTOMIZATION);
 };
+
+function roomControls(state: Partial<RoomState>) {
+  return { scheduledStartsArmed: state.scheduledStartsArmed !== false, lastScheduledStartKey: state.lastScheduledStartKey || null, resetRevision: state.resetRevision || 0, rundownResetVersion: state.rundownResetVersion || '', messageDraftVersion: state.messageDraftVersion || '' };
+}
+function loadRoomControls(roomId: string) {
+  try {
+    const saved = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem(`shotimer_room_controls_${roomId}`) || '{}') : {};
+    return roomControls({ scheduledStartsArmed: saved.scheduledStartsArmed !== false, lastScheduledStartKey: typeof saved.lastScheduledStartKey === 'string' ? saved.lastScheduledStartKey : null, resetRevision: Number.isSafeInteger(saved.resetRevision) && saved.resetRevision >= 0 ? saved.resetRevision : 0, rundownResetVersion: typeof saved.rundownResetVersion === 'string' ? saved.rundownResetVersion : '', messageDraftVersion: typeof saved.messageDraftVersion === 'string' ? saved.messageDraftVersion : '' });
+  } catch { return roomControls({}); }
+}
+function saveRoomControls(state: RoomState) {
+  if (typeof window !== 'undefined') localStorage.setItem(`shotimer_room_controls_${state.roomId}`, JSON.stringify(roomControls(state)));
+}
+function saveResetSnapshot(state: RoomState, outputChanged: boolean) {
+  if (typeof window === 'undefined') return;
+  const writes = [
+    [`shotimer_rundown_${state.roomId}`, JSON.stringify(state.rundown)],
+    ...(outputChanged ? [[`shotimer_output_customization_${state.roomId}`, JSON.stringify(state.outputCustomization)]] : []),
+    [`shotimer_room_controls_${state.roomId}`, JSON.stringify(roomControls(state))],
+  ];
+  const previous = writes.map(([key]) => [key, localStorage.getItem(key)] as const);
+  let completed = 0;
+  try {
+    for (const [key, value] of writes) { localStorage.setItem(key, value); completed++; }
+  } catch (error) {
+    for (const [key, value] of previous.slice(0, completed).reverse()) {
+      try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); } catch { /* Report the storage failure below; live state is not replaced. */ }
+    }
+    throw error;
+  }
+}
 
 export interface TimerStore extends RoomState {
   // Rooms
@@ -272,12 +304,15 @@ export interface TimerStore extends RoomState {
   start: () => void;
   pause: () => void;
   reset: () => void;
+  resetRoomSection: (scope: ResetScope, options: ResetOptions) => void;
+  armScheduledStarts: () => void;
+  _checkScheduledStart: (now?: number) => void;
   adjustTime: (secondsDelta: number) => void;
   selectTimer: (id: string) => void;
   nextTimer: () => void;
   previousTimer: () => void;
   toggleBlackout: () => void;
-  setMessage: (text: string, severity?: 'info' | 'warning' | 'danger', isFlashing?: boolean) => void;
+  setMessage: (text: string, severity?: 'info' | 'warning' | 'danger', isFlashing?: boolean, displayMode?: FlashMessage['displayMode'], richText?: FlashMessage['richText']) => void;
   clearMessage: () => void;
   toggleMute: () => void;
   setChimeStyle: (style: ChimeStyle) => void;
@@ -285,17 +320,19 @@ export interface TimerStore extends RoomState {
   duplicateTimer: (id: string) => boolean;
   updateTimer: (id: string, updates: Partial<TimerItem>) => void;
   deleteTimer: (id: string) => void;
+  restoreTimer: (item: TimerItem, index: number, roomId: string) => boolean;
   reorderRundown: (startIndex: number, endIndex: number) => void;
   toggleAutoStartNext: (id: string) => void;
   setTimerType: (id: string, type: TimerType) => void;
   setScheduledStartTime: (id: string, timeStr?: string) => void;
   setRoomName: (name: string) => void;
-  setRundown: (items: TimerItem[]) => void;
+  setRundown: (items: TimerItem[]) => boolean;
   updateTheme: (updates: Partial<ThemeConfig>) => void;
 
   // Output Studio Customization
   outputCustomization: OutputCustomizationMap;
   updateOutputConfig: (role: OutputRole, updates: Partial<OutputViewConfig>) => void;
+  applyOutputConfigs: (updates: Partial<OutputCustomizationMap>) => void;
   updateOutputElement: (role: OutputRole, elementId: string, updates: Partial<OutputElementConfig>) => void;
   reorderOutputElements: (role: OutputRole, sourceIndex: number, destinationIndex: number) => void;
   addOutputElement: (role: OutputRole, element: OutputElementConfig) => void;
@@ -327,7 +364,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
     }
   }
 
-  const initialTimer = initialRundown[0] || DEFAULT_RUNDOWNS['room-1'].rundown[0];
+  const initialTimer = initialRundown[0];
 
   return {
     roomId: initialRoomId,
@@ -337,14 +374,16 @@ export const useTimerStore = create<TimerStore>((set, get) => {
     userProfile: null,
     isAuthLoading: true,
     cloudSyncStatus: 'connecting',
-    activeTimerId: initialTimer.id,
+    activeTimerId: initialTimer?.id || null,
     status: 'stopped',
-    targetDuration: initialTimer.durationSeconds,
-    timeRemaining: initialTimer.durationSeconds,
+    targetDuration: initialTimer?.durationSeconds || 0,
+    timeRemaining: initialTimer?.durationSeconds || 0,
     elapsedTime: 0,
     startedAt: null,
     pausedAt: null,
     overtimeSeconds: 0,
+    showStartedAt: null,
+    ...loadRoomControls(initialRoomId),
     blackout: false,
     activeMessage: null,
     isAudioMuted: false,
@@ -363,6 +402,8 @@ export const useTimerStore = create<TimerStore>((set, get) => {
     outputCustomization: getInitialOutputCustomization(initialRoomId),
 
     createCustomRoom: async (name: string) => {
+      if (!get().isProUser && get().availableRooms.length >= FREE_ROOM_LIMIT) throw new Error('The Free plan includes 3 rooms. Rename or use an existing room, or explore Pro.');
+      if (!get().currentUser) throw new Error('Sign in to create a custom room.');
       const newId = `room-${Date.now().toString(36)}`;
       const newRoom: RoomInfo = { id: newId, name };
       const currentRooms = get().availableRooms;
@@ -429,20 +470,24 @@ export const useTimerStore = create<TimerStore>((set, get) => {
 
       // Load new room data
       const { name, rundown } = loadRoomData(newRoomId);
-      const firstTimer = rundown[0] || DEFAULT_RUNDOWNS['room-1'].rundown[0];
+      const firstTimer = rundown[0];
 
       set({
         roomId: newRoomId,
         roomName: name,
         rundown,
-        activeTimerId: firstTimer.id,
+        activeTimerId: firstTimer?.id || null,
         status: 'stopped',
         startedAt: null,
         pausedAt: null,
-        targetDuration: firstTimer.durationSeconds,
-        timeRemaining: firstTimer.durationSeconds,
+        targetDuration: firstTimer?.durationSeconds || 0,
+        timeRemaining: firstTimer?.durationSeconds || 0,
         elapsedTime: 0,
         overtimeSeconds: 0,
+        showStartedAt: null,
+        activeMessage: null,
+        blackout: false,
+        ...loadRoomControls(newRoomId),
         outputCustomization: getInitialOutputCustomization(newRoomId),
       });
 
@@ -452,6 +497,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
     start: () => {
       const state = get();
       if (state.status === 'running') return;
+      if (!state.rundown.some(item => item.id === state.activeTimerId)) return;
 
       const now = Date.now();
       let startedAt = now - state.elapsedTime * 1000;
@@ -464,6 +510,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
         status: 'running',
         startedAt,
         pausedAt: null,
+        showStartedAt: state.showStartedAt ?? now - state.rundown.slice(0, Math.max(0, state.rundown.findIndex(item => item.id === state.activeTimerId))).reduce((sum, item) => sum + item.durationSeconds, 0) * 1000,
       });
 
       if (worker) {
@@ -492,7 +539,9 @@ export const useTimerStore = create<TimerStore>((set, get) => {
     reset: () => {
       const state = get();
       const activeTimer = state.rundown.find((t) => t.id === state.activeTimerId) || state.rundown[0];
-      const duration = activeTimer ? activeTimer.durationSeconds : 600;
+      const duration = activeTimer?.durationSeconds || 0;
+      const revision = Math.max(Date.now(), (state.resetRevision || 0) + 1);
+      saveRoomControls({ ...state, scheduledStartsArmed: false, resetRevision: revision });
 
       if (worker) {
         worker.postMessage({ command: 'stop' });
@@ -506,13 +555,52 @@ export const useTimerStore = create<TimerStore>((set, get) => {
         timeRemaining: duration,
         elapsedTime: 0,
         overtimeSeconds: 0,
+        scheduledStartsArmed: false,
+        resetRevision: revision,
       });
 
       get()._broadcastState();
     },
 
+    resetRoomSection: (scope, options) => {
+      const state = get();
+      const patch = roomResetPatch(state, scope, options, Date.now());
+      const next = { ...state, ...patch };
+      try {
+        saveResetSnapshot(next, !!patch.outputCustomization);
+      } catch { throw Error('This browser could not save the reset. Free up browser storage or download a backup and try again.'); }
+      if (['timing', 'restart', 'rundown', 'room'].includes(scope)) worker?.postMessage({ command: 'stop' });
+      set(patch);
+      get()._broadcastState();
+      if (state.currentUser && patch.rundown) void saveUserRoom(state.currentUser.uid, state.roomId, state.roomName, next.rundown, next.theme);
+    },
+
+    armScheduledStarts: () => {
+      const state = get();
+      saveRoomControls({ ...state, scheduledStartsArmed: true });
+      set({ scheduledStartsArmed: true });
+      get()._broadcastState();
+    },
+
+    _checkScheduledStart: (now = Date.now()) => {
+      const state = get();
+      if (state.status !== 'stopped' || state.scheduledStartsArmed === false) return;
+      if (typeof window !== 'undefined' && !['controller', null].includes(new URLSearchParams(window.location.search).get('view'))) return;
+      const date = new Date(now);
+      const hhmm = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+      const timer = state.rundown.find(item => item.id === state.activeTimerId);
+      if (!timer || timer.scheduledStartTime !== hhmm) return;
+      const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${timer.id}-${hhmm}`;
+      if (state.lastScheduledStartKey === key) return;
+      saveRoomControls({ ...state, lastScheduledStartKey: key });
+      set({ lastScheduledStartKey: key });
+      get().start();
+      if (!state.isAudioMuted) soundSynth.play(timer.sounds.chimeStyle, timer.sounds.volume);
+    },
+
     adjustTime: (deltaSeconds: number) => {
       const state = get();
+      if (!state.activeTimerId || !state.rundown.length) return;
       const newRemaining = Math.max(-3600, state.timeRemaining + deltaSeconds);
       const newTarget = Math.max(1, state.targetDuration + deltaSeconds);
 
@@ -576,18 +664,20 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       get()._broadcastState();
     },
 
-    setMessage: (text: string, severity: 'info' | 'warning' | 'danger' = 'info', isFlashing: boolean = false) => {
-      if (!text.trim()) {
+    setMessage: (text: string, severity: 'info' | 'warning' | 'danger' = 'info', isFlashing: boolean = false, displayMode: FlashMessage['displayMode'] = 'with-timer', richText?: FlashMessage['richText']) => {
+      const content = normalizeMessageContent(text, richText, true);
+      if (!content.text) {
         get().clearMessage();
         return;
       }
 
       const msg: FlashMessage = {
         id: Math.random().toString(36).substring(2, 9),
-        text: text.trim(),
+        ...content,
         severity,
         visible: true,
         isFlashing,
+        displayMode,
         createdAt: Date.now(),
       };
 
@@ -628,7 +718,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
         order: state.rundown.length,
       };
       const updated = [...state.rundown, newTimer];
-      set({ rundown: updated });
+      set({ rundown: updated, ...(!state.rundown.length ? { activeTimerId: newTimer.id, targetDuration: newTimer.durationSeconds, timeRemaining: newTimer.durationSeconds, elapsedTime: 0, overtimeSeconds: 0, showStartedAt: null, startedAt: null, pausedAt: null, status: 'stopped' as const } : {}) });
       if (typeof window !== 'undefined') {
         localStorage.setItem(`shotimer_rundown_${state.roomId}`, JSON.stringify(updated));
       }
@@ -690,6 +780,21 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       get()._broadcastState();
     },
 
+    restoreTimer: (item, index, roomId) => {
+      const state = get();
+      if (state.roomId !== roomId || state.rundown.some(timer => timer.id === item.id) ||
+          (!state.isProUser && state.rundown.length >= FREE_TIMER_LIMIT)) return false;
+      const updated = [...state.rundown];
+      updated.splice(Math.max(0, Math.min(index, updated.length)), 0, item);
+      const rundown = updated.map((timer, order) => ({ ...timer, order }));
+      set({ rundown, ...(!state.rundown.length ? { activeTimerId: item.id, targetDuration: item.durationSeconds, timeRemaining: item.durationSeconds, elapsedTime: 0, overtimeSeconds: 0, status: 'stopped' as const } : {}) });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`shotimer_rundown_${roomId}`, JSON.stringify(rundown));
+      }
+      get()._broadcastState();
+      return true;
+    },
+
     reorderRundown: (startIndex, endIndex) => {
       const state = get();
       const result = Array.from(state.rundown);
@@ -728,20 +833,31 @@ export const useTimerStore = create<TimerStore>((set, get) => {
     },
 
     setRundown: (items: TimerItem[]) => {
+      if (items.length > 200 || (!get().isProUser && items.length > FREE_TIMER_LIMIT)) return false;
       const roomId = get().roomId;
+      worker?.postMessage({ command: 'stop' });
+      const revision = Math.max(Date.now(), (get().resetRevision || 0) + 1);
       set({
         rundown: items,
         activeTimerId: items[0]?.id || null,
-        targetDuration: items[0]?.durationSeconds || 600,
-        timeRemaining: items[0]?.durationSeconds || 600,
+        targetDuration: items[0]?.durationSeconds || 0,
+        timeRemaining: items[0]?.durationSeconds || 0,
         status: 'stopped',
         elapsedTime: 0,
         overtimeSeconds: 0,
+        startedAt: null,
+        pausedAt: null,
+        showStartedAt: null,
+        scheduledStartsArmed: false,
+        resetRevision: revision,
+        rundownResetVersion: String(revision),
       });
       if (typeof window !== 'undefined') {
         localStorage.setItem(`shotimer_rundown_${roomId}`, JSON.stringify(items));
+        saveRoomControls(get());
       }
       get()._broadcastState();
+      return true;
     },
 
     updateTheme: (updates: Partial<ThemeConfig>) => {
@@ -751,16 +867,21 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       get()._broadcastState();
     },
 
+    applyOutputConfigs: (updates) => {
+      const current = get().outputCustomization || DEFAULT_OUTPUT_CUSTOMIZATION;
+      const updatedMap = normalizeOutputCustomization({ ...current, ...updates });
+      guardLogoChanges(current, updatedMap, get().isProUser);
+      if (typeof window !== 'undefined') localStorage.setItem(`shotimer_output_customization_${get().roomId}`, JSON.stringify(updatedMap));
+      set({ outputCustomization: updatedMap });
+      get()._broadcastState();
+    },
+
     updateOutputConfig: (role: OutputRole, updates: Partial<OutputViewConfig>) => {
       const current = get().outputCustomization || DEFAULT_OUTPUT_CUSTOMIZATION;
       const roleConfig = current[role] || DEFAULT_OUTPUT_CUSTOMIZATION[role];
       const updatedRole = { ...roleConfig, ...updates };
       const updatedMap: OutputCustomizationMap = { ...current, [role]: updatedRole };
-      set({ outputCustomization: updatedMap });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`shotimer_output_customization_${get().roomId}`, JSON.stringify(updatedMap));
-      }
-      get()._broadcastState();
+      get().applyOutputConfigs(updatedMap);
     },
 
     updateOutputElement: (role: OutputRole, elementId: string, updates: Partial<OutputElementConfig>) => {
@@ -773,11 +894,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
         ...current,
         [role]: { ...roleConfig, elements: updatedElements },
       };
-      set({ outputCustomization: updatedMap });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`shotimer_output_customization_${get().roomId}`, JSON.stringify(updatedMap));
-      }
-      get()._broadcastState();
+      get().applyOutputConfigs(updatedMap);
     },
 
     reorderOutputElements: (role: OutputRole, sourceIndex: number, destinationIndex: number) => {
@@ -794,11 +911,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
         ...current,
         [role]: { ...roleConfig, elements: reordered },
       };
-      set({ outputCustomization: updatedMap });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`shotimer_output_customization_${get().roomId}`, JSON.stringify(updatedMap));
-      }
-      get()._broadcastState();
+      get().applyOutputConfigs(updatedMap);
     },
 
     addOutputElement: (role: OutputRole, element: OutputElementConfig) => {
@@ -811,11 +924,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
           elements: [...roleConfig.elements, element],
         },
       };
-      set({ outputCustomization: updatedMap });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`shotimer_output_customization_${get().roomId}`, JSON.stringify(updatedMap));
-      }
-      get()._broadcastState();
+      get().applyOutputConfigs(updatedMap);
     },
 
     removeOutputElement: (role: OutputRole, elementId: string) => {
@@ -828,11 +937,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
           elements: roleConfig.elements.filter((el) => el.id !== elementId),
         },
       };
-      set({ outputCustomization: updatedMap });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`shotimer_output_customization_${get().roomId}`, JSON.stringify(updatedMap));
-      }
-      get()._broadcastState();
+      get().applyOutputConfigs(updatedMap);
     },
 
     resetOutputConfig: (role?: OutputRole) => {
@@ -846,11 +951,7 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       } else {
         updatedMap = JSON.parse(JSON.stringify(DEFAULT_OUTPUT_CUSTOMIZATION));
       }
-      set({ outputCustomization: updatedMap });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`shotimer_output_customization_${get().roomId}`, JSON.stringify(updatedMap));
-      }
-      get()._broadcastState();
+      get().applyOutputConfigs(updatedMap);
     },
 
     activatePro: (key: string) => {
@@ -904,12 +1005,12 @@ export const useTimerStore = create<TimerStore>((set, get) => {
           const redT = activeTimer.thresholds.redTime;
           const prevRemaining = Math.max(0, target - prevElapsed);
 
-          if (prevRemaining > yellowT && remaining <= yellowT && activeTimer.sounds.soundOnYellow) {
-            soundSynth.play(activeTimer.sounds.chimeStyle);
-          } else if (prevRemaining > redT && remaining <= redT && activeTimer.sounds.soundOnRed) {
-            soundSynth.play('digital_beep');
+          if (yellowT > 0 && prevRemaining > yellowT && remaining <= yellowT && activeTimer.sounds.soundOnYellow) {
+            soundSynth.play(activeTimer.sounds.chimeStyle, activeTimer.sounds.volume);
+          } else if (redT > 0 && prevRemaining > redT && remaining <= redT && activeTimer.sounds.soundOnRed) {
+            soundSynth.play('digital_beep', activeTimer.sounds.volume);
           } else if (prevElapsed < target && elapsed >= target && activeTimer.sounds.soundOnFinish) {
-            soundSynth.play('gong');
+            soundSynth.play('gong', activeTimer.sounds.volume);
           }
         }
 
@@ -940,12 +1041,12 @@ export const useTimerStore = create<TimerStore>((set, get) => {
         const yellowT = activeTimer.thresholds.yellowTime;
         const redT = activeTimer.thresholds.redTime;
 
-        if (prevRemaining > yellowT && remaining <= yellowT && activeTimer.sounds.soundOnYellow) {
-          soundSynth.play(activeTimer.sounds.chimeStyle);
-        } else if (prevRemaining > redT && remaining <= redT && activeTimer.sounds.soundOnRed) {
-          soundSynth.play('digital_beep');
+        if (yellowT > 0 && prevRemaining > yellowT && remaining <= yellowT && activeTimer.sounds.soundOnYellow) {
+          soundSynth.play(activeTimer.sounds.chimeStyle, activeTimer.sounds.volume);
+        } else if (redT > 0 && prevRemaining > redT && remaining <= redT && activeTimer.sounds.soundOnRed) {
+          soundSynth.play('digital_beep', activeTimer.sounds.volume);
         } else if (prevRemaining > 0 && remaining <= 0 && activeTimer.sounds.soundOnFinish) {
-          soundSynth.play('gong');
+          soundSynth.play('gong', activeTimer.sounds.volume);
         }
       }
 
@@ -967,7 +1068,6 @@ export const useTimerStore = create<TimerStore>((set, get) => {
     },
 
     _broadcastState: () => {
-      if (!syncChannel) return;
       const state = get();
       const syncMsg: SyncMessage = {
         type: 'SYNC_FULL_STATE',
@@ -991,10 +1091,12 @@ export const useTimerStore = create<TimerStore>((set, get) => {
           theme: state.theme,
           outputCustomization: state.outputCustomization,
           isAudioMuted: state.isAudioMuted,
+          showStartedAt: state.showStartedAt,
+          ...roomControls(state),
         },
       };
       try {
-        syncChannel.postMessage(syncMsg);
+        syncChannel?.postMessage(syncMsg);
       } catch (err) {
         console.warn('Sync broadcast error:', err);
       }
@@ -1005,9 +1107,15 @@ export const useTimerStore = create<TimerStore>((set, get) => {
 
     _applyExternalState: (extState) => {
       if (!extState || typeof extState !== 'object') return;
+      if ((extState.resetRevision || 0) < (get().resetRevision || 0)) return;
 
       const sanitized: Partial<RoomState> = {};
-      if (['running', 'paused', 'stopped'].includes(extState.status as string)) {
+      if (Number.isSafeInteger(extState.resetRevision) && (extState.resetRevision || 0) >= 0) sanitized.resetRevision = extState.resetRevision;
+      if (extState.showStartedAt === null || (typeof extState.showStartedAt === 'number' && Number.isFinite(extState.showStartedAt))) sanitized.showStartedAt = extState.showStartedAt;
+      if (typeof extState.scheduledStartsArmed === 'boolean') sanitized.scheduledStartsArmed = extState.scheduledStartsArmed;
+      if (extState.lastScheduledStartKey === null || typeof extState.lastScheduledStartKey === 'string') sanitized.lastScheduledStartKey = extState.lastScheduledStartKey?.slice(0, 180) || null;
+      for (const key of ['rundownResetVersion', 'messageDraftVersion'] as const) if (typeof extState[key] === 'string') sanitized[key] = extState[key].slice(0, 80);
+      if (['running', 'paused', 'stopped', 'finished'].includes(extState.status as string)) {
         sanitized.status = extState.status;
       }
       if (typeof extState.targetDuration === 'number' && Number.isFinite(extState.targetDuration)) {
@@ -1042,12 +1150,13 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       } else if (extState.activeMessage && typeof extState.activeMessage === 'object') {
         sanitized.activeMessage = {
           id: String(extState.activeMessage.id || ''),
-          text: String(extState.activeMessage.text || '').slice(0, 500),
+          ...normalizeMessageContent(String(extState.activeMessage.text || ''), extState.activeMessage.richText),
           severity: ['info', 'warning', 'danger'].includes(extState.activeMessage.severity)
             ? extState.activeMessage.severity
             : 'info',
           visible: Boolean(extState.activeMessage.visible),
           isFlashing: Boolean(extState.activeMessage.isFlashing),
+          displayMode: extState.activeMessage.displayMode === 'message-only' ? 'message-only' : 'with-timer',
           createdAt: typeof extState.activeMessage.createdAt === 'number'
             ? extState.activeMessage.createdAt
             : Date.now(),
@@ -1056,17 +1165,31 @@ export const useTimerStore = create<TimerStore>((set, get) => {
       if (Array.isArray(extState.rundown)) {
         sanitized.rundown = validateAndSanitizeRundown(extState.rundown);
       }
+      if (extState.showStartedAt === undefined && typeof sanitized.startedAt === 'number' && (sanitized.status === 'running' || sanitized.status === 'paused')) {
+        const items = sanitized.rundown || get().rundown;
+        const active = sanitized.activeTimerId ?? get().activeTimerId;
+        sanitized.showStartedAt = sanitized.startedAt - items.slice(0, Math.max(0, items.findIndex(item => item.id === active))).reduce((sum, item) => sum + item.durationSeconds, 0) * 1000;
+      }
       if (extState.theme && typeof extState.theme === 'object') {
         sanitized.theme = extState.theme;
       }
       if (extState.outputCustomization && typeof extState.outputCustomization === 'object') {
-        sanitized.outputCustomization = extState.outputCustomization;
+        sanitized.outputCustomization = normalizeOutputCustomization(extState.outputCustomization);
+        if (typeof window !== 'undefined') {
+          try { localStorage.setItem(`shotimer_output_customization_${get().roomId}`, JSON.stringify(sanitized.outputCustomization)); } catch { /* Keep the live display working even if browser storage is full. */ }
+        }
       }
 
       set((current) => ({
         ...current,
         ...sanitized,
       }));
+      if (typeof window !== 'undefined') {
+        try {
+          if (sanitized.rundown) localStorage.setItem(`shotimer_rundown_${get().roomId}`, JSON.stringify(sanitized.rundown));
+          saveRoomControls(get());
+        } catch { /* Live resets still apply when device storage is unavailable. */ }
+      }
 
       // Keep local Web Worker in sync with external state
       if (sanitized.status === 'running') {
@@ -1083,27 +1206,9 @@ initWorker(() => {
   useTimerStore.getState()._tick();
 });
 
-// Setup Scheduled Start wall-clock interval (checks every 1000ms)
+// Scheduled starts are controller-only and remain disarmed after resets, including after reload.
 if (typeof window !== 'undefined') {
-  setInterval(() => {
-    const state = useTimerStore.getState();
-    // Only trigger if timer is stopped
-    if (state.status !== 'stopped') return;
-
-    const d = new Date();
-    const currentHHMM = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-
-    // Find if active timer has scheduled start matching current time
-    const activeTimer = state.rundown.find((t) => t.id === state.activeTimerId);
-    if (activeTimer && activeTimer.scheduledStartTime === currentHHMM) {
-      const triggerKey = `${activeTimer.id}-${currentHHMM}`;
-      if ((window as any)._lastScheduledKey !== triggerKey) {
-        (window as any)._lastScheduledKey = triggerKey;
-        state.start();
-        soundSynth.play(activeTimer.sounds.chimeStyle || 'soft_bell');
-      }
-    }
-  }, 1000);
+  setInterval(() => useTimerStore.getState()._checkScheduledStart(), 1000);
 }
 
 // Setup BroadcastChannel receiver for multi-window / multi-tab synchronization with room isolation

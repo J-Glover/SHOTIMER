@@ -6,25 +6,32 @@ import { useEffect, useRef, useState } from 'react';
  */
 export function useWakeLock(enabled: boolean = true) {
   const [isLocked, setIsLocked] = useState(false);
-  const wakeLockRef = useRef<any>(null);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
   useEffect(() => {
     if (!enabled || typeof window === 'undefined' || !('wakeLock' in navigator)) {
       return;
     }
 
+    let cancelled = false;
+    let pending = false;
     const requestWakeLock = async () => {
+      if (cancelled || pending || wakeLockRef.current || document.visibilityState !== 'visible') return;
+      pending = true;
       try {
-        wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+        const lock = await navigator.wakeLock.request('screen');
+        if (cancelled || document.visibilityState !== 'visible') { await lock.release(); return; }
+        wakeLockRef.current = lock;
         setIsLocked(true);
 
-        wakeLockRef.current.addEventListener('release', () => {
-          setIsLocked(false);
+        lock.addEventListener('release', () => {
+          if (wakeLockRef.current === lock) wakeLockRef.current = null;
+          if (!cancelled) setIsLocked(false);
         });
-      } catch (err: any) {
+      } catch (err) {
         // Can fail if battery is ultra low or tab is not active
-        console.warn('Wake Lock request denied or unavailable:', err.message);
-      }
+        console.warn('Wake Lock request denied or unavailable:', err instanceof Error ? err.message : err);
+      } finally { pending = false; }
     };
 
     requestWakeLock();
@@ -39,6 +46,7 @@ export function useWakeLock(enabled: boolean = true) {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      cancelled = true;
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (wakeLockRef.current) {
         wakeLockRef.current.release().catch(() => {});
@@ -47,5 +55,5 @@ export function useWakeLock(enabled: boolean = true) {
     };
   }, [enabled]);
 
-  return isLocked;
+  return enabled && isLocked;
 }

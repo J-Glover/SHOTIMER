@@ -10,6 +10,7 @@ export interface CloudUser {
 export interface AuthResponse {
   user: CloudUser | null;
   error?: string;
+  requiresEmailConfirmation?: boolean;
 }
 
 /**
@@ -60,7 +61,7 @@ export async function registerWithEmail(
     }
 
     const formatted = formatSupabaseUser(data.user);
-    return { user: formatted };
+    return { user: formatted, requiresEmailConfirmation: !data.session };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Registration failed';
     return { user: null, error: formatAuthError(message) };
@@ -174,6 +175,16 @@ export async function sendPasswordReset(email: string): Promise<{ success: boole
   }
 }
 
+export async function updatePassword(password: string): Promise<{ error?: string }> {
+  if (!isSupabaseConfigured || !supabase) return { error: 'Account services are unavailable. Please try again later.' };
+  try {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) return { error: 'This reset link has expired. Request a new password reset email.' };
+    const { error } = await supabase.auth.updateUser({ password });
+    return error ? { error: formatAuthError(error.message) } : {};
+  } catch { return { error: 'Your password could not be updated. Check your connection and try again.' }; }
+}
+
 /**
  * Listen to real-time auth state changes
  */
@@ -202,7 +213,7 @@ export function subscribeToAuthState(callback: (user: CloudUser | null) => void)
  */
 function formatAuthError(msg: string): string {
   if (msg.includes('Unsupported provider') || msg.includes('provider is not enabled')) {
-    return 'Google provider is not enabled in your Supabase project yet. Please enable Google under Authentication > Providers in your Supabase dashboard, or sign in using Email & Password below.';
+    return 'Google sign-in is not available yet. Please use email and password.';
   }
   if (msg.includes('User already registered') || msg.includes('already in use')) {
     return 'This email is already registered. Please sign in instead.';
@@ -211,7 +222,7 @@ function formatAuthError(msg: string): string {
     return 'Invalid email or password.';
   }
   if (msg.includes('Email not confirmed')) {
-    return 'Please confirm your email address or turn off "Confirm email" in Supabase Auth Settings to allow instant sign-in.';
+    return 'Confirm your email address using the link in your inbox, then sign in.';
   }
   if (msg.includes('Password should be at least')) {
     return 'Password must be at least 6 characters.';

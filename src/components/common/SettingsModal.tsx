@@ -1,290 +1,59 @@
 import { useState, useRef } from 'react';
-import { X, Upload, FileText, FileSpreadsheet, Palette, Sparkles, Sliders } from 'lucide-react';
-import { useTimerStore } from '../../store/useTimerStore';
-
+import { X } from 'lucide-react';
+import { useDialogFocus } from '../../hooks/useDialogFocus';
+import { useTimerStore, FREE_TIMER_LIMIT } from '../../store/useTimerStore';
 import { exportRundownJSON, exportRundownCSV, parseCSVToRundown, validateAndSanitizeRundown } from '../../utils/exportImport';
+import type { TimerItem } from '../../types/timer';
+import ResetDialog from './ResetDialog';
 
-interface SettingsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onOpenPaywall: (featureName: string) => void;
-}
-
-export default function SettingsModal({ isOpen, onClose, onOpenPaywall }: SettingsModalProps) {
-  const {
-    roomName,
-    setRoomName,
-    rundown,
-    setRundown,
-    theme,
-    updateTheme,
-    isProUser,
-  } = useTimerStore();
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [importStatus, setImportStatus] = useState<string>('');
-
-  if (!isOpen) return null;
-
-  const handleExportJSON = () => {
-    exportRundownJSON(roomName, rundown);
-  };
-
-  const handleExportCSV = () => {
-    if (!isProUser) {
-      onOpenPaywall('CSV / Excel Spreadsheet Export');
-      return;
-    }
-    exportRundownCSV(roomName, rundown);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!isProUser && file.name.endsWith('.csv')) {
-      onOpenPaywall('CSV / Excel Spreadsheet Import');
-      e.target.value = '';
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result as string;
-      try {
-        if (file.name.endsWith('.json')) {
-          const parsed = JSON.parse(content);
-          const rawItems = parsed && Array.isArray(parsed.rundown)
-            ? parsed.rundown
-            : (Array.isArray(parsed) ? parsed : null);
-
-          if (rawItems) {
-            const sanitized = validateAndSanitizeRundown(rawItems);
-            if (sanitized.length > 0) {
-              setRundown(sanitized);
-              setImportStatus(`Successfully validated and imported ${sanitized.length} timers from JSON!`);
-            } else {
-              setImportStatus('JSON file contained no valid timer segments.');
-            }
-          } else {
-            setImportStatus('Invalid JSON rundown format.');
-          }
-        } else {
-          // Parse CSV
-          const timers = parseCSVToRundown(content);
-          if (timers.length > 0) {
-            const newRundown = validateAndSanitizeRundown(
-              timers.map((t, idx) => ({
-                ...t,
-                id: `timer-${Date.now()}-${idx}`,
-                order: idx,
-              }))
-            );
-            setRundown(newRundown);
-            setImportStatus(`Successfully validated and imported ${newRundown.length} segments from CSV!`);
-          } else {
-            setImportStatus('Could not parse timers from this CSV file.');
-          }
-        }
-      } catch (err) {
-        console.error('Import error:', err);
-        setImportStatus('Error reading file. Check file formatting.');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm select-none">
-      <div className="bg-[#1C1C1C] border border-neutral-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-6 text-neutral-200 max-h-[90vh] overflow-y-auto">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
-          <div className="flex items-center gap-2">
-            <Sliders className="w-5 h-5 text-emerald-400" />
-            <h3 className="text-lg font-bold text-white">Event Settings & Themes</h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Room Title Setting */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-            Room Name
-          </label>
-          <input
-            type="text"
-            value={roomName}
-            onChange={(e) => setRoomName(e.target.value)}
-            className="bg-[#141414] border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500 outline-none"
-          />
-        </div>
-
-        {/* Rundown Export & Import Section */}
-        <div className="flex flex-col gap-3 pt-3 border-t border-neutral-800">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-              Rundown Import / Export
-            </span>
-            {!isProUser && (
-              <span className="text-[10px] font-bold text-amber-400 uppercase bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                CSV is Pro
-              </span>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={handleExportJSON}
-              className="p-2.5 rounded-lg bg-[#141414] hover:bg-neutral-800 border border-neutral-700 text-xs text-neutral-300 font-medium flex items-center justify-center gap-2 transition-colors"
-            >
-              <FileText className="w-4 h-4 text-emerald-400" />
-              <span>Export JSON (Free)</span>
-            </button>
-
-            <button
-              onClick={handleExportCSV}
-              className="p-2.5 rounded-lg bg-[#141414] hover:bg-neutral-800 border border-neutral-700 text-xs text-neutral-300 font-medium flex items-center justify-center gap-2 transition-colors relative"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-amber-400" />
-              <span>Export CSV {!isProUser && <span className="text-amber-400 text-[10px] font-bold ml-1">PRO</span>}</span>
-            </button>
-          </div>
-
-          <div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept=".json,.csv"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full py-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-xs text-neutral-200 font-medium flex items-center justify-center gap-2 transition-colors"
-            >
-              <Upload className="w-4 h-4 text-neutral-400" />
-              <span>Import Schedule (JSON or CSV)</span>
-            </button>
-          </div>
-
-          {importStatus && (
-            <p className="text-xs text-emerald-400 bg-emerald-500/10 p-2 rounded border border-emerald-500/20">
-              {importStatus}
-            </p>
-          )}
-        </div>
-
-        {/* Display & Stage Theme Customization (Pro Gated) */}
-        <div className="flex flex-col gap-3 pt-3 border-t border-neutral-800">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
-              <Palette className="w-3.5 h-3.5 text-amber-400" />
-              <span>Stage Display Theme</span>
-            </span>
-            {!isProUser && (
-              <span className="text-[10px] font-bold text-amber-400 uppercase bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                PRO Gated
-              </span>
-            )}
-          </div>
-
-          {/* OLED Black vs Stage Slate */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-[#141414] border border-neutral-800 text-xs">
-            <div>
-              <div className="font-semibold text-white">True OLED Pitch Black Mode</div>
-              <p className="text-neutral-500 text-[11px]">Eliminates confidence display backlight bleed (#000000)</p>
-            </div>
-            <button
-              onClick={() => {
-                if (!isProUser) {
-                  onOpenPaywall('OLED Pitch Black Display Theme');
-                  return;
-                }
-                updateTheme({ oledBlack: !theme.oledBlack });
-              }}
-              className={`w-11 h-6 rounded-full transition-colors relative p-0.5 ${
-                theme.oledBlack ? 'bg-emerald-600' : 'bg-neutral-700'
-              }`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                  theme.oledBlack ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
-
-          {/* Toggle Progress Bar */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-[#141414] border border-neutral-800 text-xs">
-            <div>
-              <div className="font-semibold text-white">Show Linear Progress Bar</div>
-              <p className="text-neutral-500 text-[11px]">Dynamic Green-to-Red bar on stage monitor</p>
-            </div>
-            <button
-              onClick={() => updateTheme({ showProgressBar: !theme.showProgressBar })}
-              className={`w-11 h-6 rounded-full transition-colors relative p-0.5 ${
-                theme.showProgressBar ? 'bg-emerald-600' : 'bg-neutral-700'
-              }`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                  theme.showProgressBar ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
-
-          {/* Toggle Up Next Preview */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-[#141414] border border-neutral-800 text-xs">
-            <div>
-              <div className="font-semibold text-white">Show "Up Next" Segment Preview</div>
-              <p className="text-neutral-500 text-[11px]">Displays next speaker & topic at monitor bottom</p>
-            </div>
-            <button
-              onClick={() => updateTheme({ showUpNext: !theme.showUpNext })}
-              className={`w-11 h-6 rounded-full transition-colors relative p-0.5 ${
-                theme.showUpNext ? 'bg-emerald-600' : 'bg-neutral-700'
-              }`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                  theme.showUpNext ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-
-        {/* Pro Plan Banner in Settings */}
-        <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-transparent border border-amber-500/30 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <span className="text-xs font-bold text-white">
-                {isProUser ? 'Shotimer Pro License Active' : 'Upgrade to Shotimer Pro'}
-              </span>
-            </div>
-            <p className="text-[11px] text-neutral-400 mt-0.5">
-              {isProUser ? 'All professional broadcast features unlocked.' : 'Unlock CSV import/export, custom OLED themes, and Stream Deck API.'}
-            </p>
-          </div>
-
-          <button
-            onClick={() => onOpenPaywall('Shotimer Pro Full Access')}
-            className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-bold transition-colors shadow-sm"
-          >
-            {isProUser ? 'Manage License' : 'Upgrade (TBA)'}
-          </button>
-        </div>
-
-      </div>
-    </div>
-  );
+interface Props { isOpen: boolean; onClose: () => void; onOpenPaywall: (feature: string) => void; onCustomize?: () => void }
+export default function SettingsModal(props: Props) { return props.isOpen ? <SettingsSession {...props} /> : null; }
+function SettingsSession({ onClose, onOpenPaywall, onCustomize }: Props) {
+  const state = useTimerStore();
+  const [name, setName] = useState(state.roomName);
+  const [status, setStatus] = useState('');
+  const [error, setError] = useState('');
+  const [resetOpen, setResetOpen] = useState(false);
+  const [pending, setPending] = useState<{ room: string; items: TimerItem[]; filename: string } | null>(null);
+  const file = useRef<HTMLInputElement>(null);
+  const ref = useDialogFocus(true, onClose);
+  async function readFile(selected?: File) {
+    setError(''); setStatus(''); setPending(null);
+    if (!selected) return;
+    const csv = selected.name.toLowerCase().endsWith('.csv');
+    if (!csv && !selected.name.toLowerCase().endsWith('.json')) { setError('Choose a JSON backup or CSV schedule.'); return; }
+    if (csv && !state.isProUser) { onOpenPaywall('CSV schedule import'); return; }
+    if (selected.size > 2 * 1024 * 1024) { setError('Choose a file smaller than 2 MB.'); return; }
+    const room = state.roomId;
+    try {
+      const text = await selected.text();
+      const parsed = csv ? parseCSVToRundown(text) : JSON.parse(text);
+      const raw = Array.isArray(parsed) ? parsed : parsed?.rundown;
+      if (!Array.isArray(raw) || raw.length > 200) throw Error('The file must contain a rundown with up to 200 valid timer entries.');
+      const items = validateAndSanitizeRundown(raw);
+      if (raw.length && !items.length) throw Error('No valid timers were found in this file.');
+      const latest = useTimerStore.getState();
+      if (latest.roomId !== room) throw Error('The room changed while reading the file. Select it again in the intended room.');
+      if (!latest.isProUser && items.length > FREE_TIMER_LIMIT) throw Error(`The Free plan allows ${FREE_TIMER_LIMIT} timers per room. This file contains ${items.length}.`);
+      setPending({ room, items, filename: selected.name });
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'The file could not be read. Check its format.'); }
+  }
+  function replace() {
+    if (!pending) return;
+    const latest = useTimerStore.getState();
+    if (latest.roomId !== pending.room || latest.status !== 'stopped') { setError('Reset the current timer before replacing this room’s rundown.'); return; }
+    if (!latest.setRundown(pending.items)) { setError('The rundown exceeds this plan’s timer limit.'); return; }
+    setPending(null); setError(''); setStatus('Rundown imported. The previous rundown has been replaced.');
+  }
+  return <div ref={ref} role="dialog" aria-modal="true" aria-label="Event settings" tabIndex={-1} className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"><section className="app-dialog-panel console-panel w-full max-w-lg p-5 flex flex-col gap-5">
+    <header className="flex justify-between items-start gap-3"><div><h2 className="text-base font-semibold">Event settings</h2><p className="output-note mt-1">Changes below apply to this room.</p></div><button className="console-icon" onClick={onClose} aria-label="Close event settings"><X size={18} /></button></header>
+    <form className="flex flex-col gap-3" onSubmit={event => { event.preventDefault(); if (!name.trim()) return; state.setRoomName(name.trim()); setStatus('Room name saved.'); setError(''); }}><label className="form-label">Room name<input className="console-input" value={name} maxLength={100} onChange={event => setName(event.target.value)} required /></label><button className="console-button self-start" type="submit" disabled={!name.trim() || name.trim() === state.roomName}>Save room name</button></form>
+    <section className="border-t border-neutral-800 pt-4"><h3 className="console-label mb-2">Stage monitor basics</h3>{([{ key: 'progressBar', text: 'Progress bar' }, { key: 'timeOfDay', text: 'Time of day' }, { key: 'upNext', text: 'Up next' }] as const).map(setting => <label className="customize-check" key={setting.key}>{setting.text}<input type="checkbox" checked={state.outputCustomization.viewer.elements.find(element => element.type === setting.key)?.visible ?? true} onChange={event => { const config = state.outputCustomization.viewer; const element = config.elements.find(element => element.type === setting.key); state.applyOutputConfigs({ viewer: { ...config, elements: element ? config.elements.map(value => value.id === element.id ? { ...value, visible: event.target.checked } : value) : [...config.elements, { id: `basic-${setting.key}`, type: setting.key, label: setting.text, visible: event.target.checked, order: config.elements.length }] } }); }} /></label>)}<p className="output-note mt-2">Saved when changed. These switches also update the output customizer. The separate Timer only switch hides these details on a receiving device.</p>{onCustomize && <button className="console-button mt-3" onClick={onCustomize}>Customize display content</button>}</section>
+    <section className="border-t border-neutral-800 pt-4 flex flex-col gap-3"><h3 className="console-label">Rundown backup & import</h3><div className="flex flex-wrap gap-2"><button className="console-button" onClick={() => exportRundownJSON(state.roomName, state.rundown)}>Download JSON backup</button><button className="console-button" onClick={() => state.isProUser ? exportRundownCSV(state.roomName, state.rundown) : onOpenPaywall('CSV schedule export')}>Export CSV{!state.isProUser ? ' · Pro' : ''}</button></div><input ref={file} className="hidden" type="file" accept=".json,.csv" onChange={event => { void readFile(event.target.files?.[0]); event.target.value = ''; }} /><button className="console-button" onClick={() => file.current?.click()}>Choose JSON or CSV to import</button><p className="output-note">JSON backup and restore are free. CSV import/export is reserved for Pro. Importing replaces this room’s current rundown.</p>
+      {pending && <div className="import-review"><strong className="text-sm break-words">Review {pending.filename}</strong><p className="output-note">{pending.items.length} timers will replace {state.rundown.length} current timers.</p><ul className="text-xs text-neutral-300 space-y-1">{pending.items.slice(0, 8).map((item, index) => <li key={index}>{index + 1}. {item.title}</li>)}</ul>{state.status !== 'stopped' && <p className="text-xs text-amber-300">Reset the current timer before replacing the rundown.</p>}<div className="flex gap-2"><button className="console-button" onClick={() => setPending(null)}>Cancel import</button><button className="console-button primary" disabled={state.status !== 'stopped'} onClick={replace}>Replace rundown</button></div></div>}
+    </section>
+    <section className="border-t border-neutral-700 pt-4 flex flex-col gap-2"><h3 className="console-label">Room reset</h3><p className="output-note">Start again in this room. Review what will be cleared before applying.</p><button className="console-button self-start" onClick={() => setResetOpen(true)}>Reset this room…</button></section>
+    {error && <p role="alert" className="text-sm text-red-300">{error}</p>}<p role="status" className="output-note">{status}</p><button className="console-button self-end" onClick={onClose}>Done</button>
+    {resetOpen && <ResetDialog scope="room" onClose={() => setResetOpen(false)} />}
+  </section></div>;
 }

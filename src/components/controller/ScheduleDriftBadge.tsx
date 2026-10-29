@@ -31,7 +31,7 @@ export default function ScheduleDriftBadge({ metrics, compact = false }: Schedul
   // Visual styling based on drift status
   let statusBadgeStyle = 'bg-neutral-800 text-neutral-300 border-neutral-700/80';
   let icon = <Clock className="w-3.5 h-3.5 text-neutral-400" />;
-  let labelText = 'ON TIME';
+  let labelText = !metrics.totalPlannedSeconds ? 'NO TIMERS' : metrics.hasStarted ? 'ON TIME' : 'NOT STARTED';
 
   if (driftStatus === 'over') {
     statusBadgeStyle = 'bg-red-500/20 text-red-400 border-red-500/40 shadow-sm shadow-red-950/40';
@@ -63,11 +63,18 @@ export default function ScheduleDriftBadge({ metrics, compact = false }: Schedul
     <div className="relative">
       <div 
         onClick={() => setShowDetails(!showDetails)}
-        className="flex items-center gap-2.5 bg-[#141414] hover:bg-[#181818] border border-neutral-800 hover:border-neutral-700 rounded-lg p-2.5 transition-all cursor-pointer select-none group"
+        role="button"
+        tabIndex={0}
+        aria-expanded={showDetails}
+        aria-label="Show timing breakdown"
+        onKeyDown={event => {
+          if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); setShowDetails(!showDetails); }
+        }}
+        className="flex items-center flex-wrap gap-2.5 bg-[#141414] hover:bg-[#181818] border border-neutral-800 hover:border-neutral-700 rounded-lg p-2.5 transition-all cursor-pointer select-none group"
         title="Click to view detailed Show Timing Breakdown"
       >
         {/* Over/Under Pill */}
-        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-mono font-bold ${statusBadgeStyle}`}>
+        <div className={`flex items-center shrink-0 whitespace-nowrap gap-1.5 px-2.5 py-1 rounded-md border text-xs font-mono font-bold ${statusBadgeStyle}`}>
           {icon}
           <span>{labelText}</span>
         </div>
@@ -85,12 +92,6 @@ export default function ScheduleDriftBadge({ metrics, compact = false }: Schedul
             )}
           </div>
 
-          <div className="pl-3 hidden sm:flex items-center gap-1.5 text-neutral-400">
-            <span>Left:</span>
-            <span className="font-mono text-neutral-200 font-medium">{formattedRemaining}</span>
-            <span className="text-neutral-600">/</span>
-            <span className="font-mono text-neutral-400">{formattedTotalPlanned}</span>
-          </div>
         </div>
 
         <ChevronDown className={`w-3.5 h-3.5 text-neutral-500 ml-auto transition-transform ${showDetails ? 'rotate-180 text-amber-400' : 'group-hover:text-neutral-300'}`} />
@@ -98,7 +99,7 @@ export default function ScheduleDriftBadge({ metrics, compact = false }: Schedul
 
       {/* Dropdown / Details Popover */}
       {showDetails && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-[#1A1A1A] border border-neutral-700 rounded-xl shadow-2xl p-4 z-50 text-xs flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute right-0 top-full mt-2 w-80 max-w-full bg-[#1A1A1A] border border-neutral-700 rounded-xl shadow-2xl p-4 z-50 text-xs flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-100">
           <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
             <div className="flex items-center gap-1.5 font-bold text-white text-xs uppercase tracking-wider">
               <Info className="w-3.5 h-3.5 text-emerald-400" />
@@ -119,7 +120,7 @@ export default function ScheduleDriftBadge({ metrics, compact = false }: Schedul
               <span className={`font-mono font-bold ${
                 driftStatus === 'over' ? 'text-red-400' : driftStatus === 'under' ? 'text-emerald-400' : 'text-neutral-300'
               }`}>
-                {formattedDrift} ({driftStatus === 'over' ? 'Behind' : driftStatus === 'under' ? 'Ahead' : 'On Time'})
+                {driftStatus === 'not_started' ? 'Not started' : `${formattedDrift} (${driftStatus === 'over' ? 'Behind' : driftStatus === 'under' ? 'Ahead' : 'On time'})`}
               </span>
             </div>
 
@@ -150,12 +151,14 @@ export default function ScheduleDriftBadge({ metrics, compact = false }: Schedul
           <div className="bg-[#111111] border border-neutral-800 rounded-lg p-2.5 text-[11px] text-neutral-400 flex items-start gap-2">
             <HelpCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              {driftStatus === 'over' ? (
-                <>Speakers have run <strong>{Math.ceil(Math.abs(driftSeconds) / 60)}m</strong> over schedule. Trim upcoming segment times using the <code className="text-amber-300">-1m</code> buttons to bring the show back on time.</>
+              {driftStatus === 'not_started' ? (
+                <>Timing has not started. ETA is an estimate using the selected segment and remaining rundown. Planned start times are kept; Over/Under begins when you start a timer.</>
+              ) : driftStatus === 'over' ? (
+                <>The projected finish is <strong>{Math.ceil(Math.abs(driftSeconds) / 60)}m</strong> later than the planned finish. Review remaining durations or reset show timing for a fresh run.</>
               ) : driftStatus === 'under' ? (
-                <>You have banked <strong>{Math.ceil(Math.abs(driftSeconds) / 60)}m</strong> of spare time. The event will finish ahead of the original plan.</>
+                <>The projected finish is <strong>{Math.ceil(Math.abs(driftSeconds) / 60)}m</strong> earlier than the planned finish. This compares the schedule, rather than counting unused timer minutes.</>
               ) : (
-                <>The event is running exactly according to your planned durations and schedule.</>
+                <>The projected finish is within 20 seconds of the planned finish.</>
               )}
             </p>
           </div>

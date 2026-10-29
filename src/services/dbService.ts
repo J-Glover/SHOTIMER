@@ -238,6 +238,7 @@ interface ManagedRoomChannel {
   stateListeners: Set<(state: Partial<RoomState>) => void>;
   pingListeners: Set<() => void>;
   statusListeners: Set<(status: CloudSyncStatus) => void>;
+  presenceListeners: Set<(payload: unknown) => void>;
 }
 
 const managedChannels = new Map<string, ManagedRoomChannel>();
@@ -256,6 +257,7 @@ function getOrCreateManagedChannel(roomId: string): ManagedRoomChannel | null {
     stateListeners: new Set(),
     pingListeners: new Set(),
     statusListeners: new Set(),
+    presenceListeners: new Set(),
   };
 
   const notifyStatus = (st: CloudSyncStatus) => {
@@ -285,6 +287,10 @@ function getOrCreateManagedChannel(roomId: string): ManagedRoomChannel | null {
           try { fn(); } catch (e) { console.warn(e); }
         });
       }
+    });
+
+    ch.on('broadcast', { event: 'client_presence' }, (msg: { payload?: unknown }) => {
+      entry?.presenceListeners.forEach(listener => listener(msg.payload));
     });
 
     ch.subscribe((status: string) => {
@@ -440,11 +446,32 @@ export function subscribeToLiveRoomState(
     if (onStatusChange) entry.statusListeners.delete(onStatusChange);
 
     // If no more listeners for this room, clean up channel
-    if (entry.stateListeners.size === 0 && entry.pingListeners.size === 0) {
+    if (entry.stateListeners.size === 0 && entry.pingListeners.size === 0 && entry.presenceListeners.size === 0) {
       if (supabase && entry.channel) {
         supabase.removeChannel(entry.channel);
       }
       managedChannels.delete(roomId);
     }
   };
+}
+
+// Uses the existing room channel; presence never modifies show state or stores a database snapshot.
+export function subscribeToRoomPresence(roomId: string, listener: (payload: unknown) => void): () => void {
+  const entry = getOrCreateManagedChannel(roomId);
+  if (!entry) return () => {};
+  entry.presenceListeners.add(listener);
+  return () => {
+    entry.presenceListeners.delete(listener);
+    if (!entry.stateListeners.size && !entry.pingListeners.size && !entry.presenceListeners.size) {
+      if (supabase && entry.channel) void supabase.removeChannel(entry.channel);
+      managedChannels.delete(roomId);
+    }
+  };
+}
+
+export function broadcastRoomPresence(roomId: string, payload: unknown): void {
+  const entry = managedChannels.get(roomId);
+  if (entry?.status === 'connected') {
+    void entry.channel.send({ type: 'broadcast', event: 'client_presence', payload }).catch(() => {});
+  }
 }

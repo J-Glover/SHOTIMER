@@ -34,12 +34,17 @@ export interface TimerItem {
   autoStartNext: boolean;      // Chain to next timer automatically
 }
 
+export type MessageColour = 'white' | 'red' | 'green' | 'blue' | 'yellow';
+export interface MessageTextRun { text: string; bold?: boolean; colour?: MessageColour }
+
 export interface FlashMessage {
   id: string;
   text: string;
+  richText?: MessageTextRun[];
   severity: 'info' | 'warning' | 'danger';
   visible: boolean;
   isFlashing: boolean;
+  displayMode?: 'with-timer' | 'message-only';
   createdAt: number;
 }
 
@@ -77,6 +82,12 @@ export interface RoomState {
   startedAt: number | null;    // Monotonic timestamp when started (performance.now / Date.now)
   pausedAt: number | null;
   overtimeSeconds: number;     // Elapsed seconds beyond 0:00
+  showStartedAt?: number | null; // Room run baseline, independent of the selected timer
+  scheduledStartsArmed?: boolean;
+  lastScheduledStartKey?: string | null;
+  resetRevision?: number;
+  rundownResetVersion?: string;
+  messageDraftVersion?: string;
   
   // Visual & Stage Control
   blackout: boolean;           // Stage monitor blackout toggle
@@ -124,6 +135,7 @@ export interface OutputElementConfig {
 }
 
 export interface OutputViewConfig {
+  stageLayoutVersion?: number;
   aspectRatio: AspectRatio;
   backgroundColor: string;
   blackoutColor: string;
@@ -136,18 +148,19 @@ export type OutputCustomizationMap = Record<OutputRole, OutputViewConfig>;
 export const DEFAULT_VIEWER_ELEMENTS: OutputElementConfig[] = [
   { id: 'el-title', type: 'segmentTitle', label: 'Segment Title', visible: true, order: 0 },
   { id: 'el-speaker', type: 'speaker', label: 'Speaker Name', visible: true, order: 1 },
-  { id: 'el-notes', type: 'speakerNotes', label: 'Speaker Notes / Cues', visible: true, order: 2 },
-  { id: 'el-tally', type: 'onAirIndicator', label: 'On Air Indicator', visible: true, order: 3 },
+  { id: 'el-notes', type: 'speakerNotes', label: 'Speaker Notes / Cues', visible: false, order: 2 },
+  { id: 'el-tally', type: 'onAirIndicator', label: 'Playback Status', visible: false, order: 3 },
   { id: 'el-timer', type: 'timer', label: 'Timer Digits', visible: true, order: 4 },
   { id: 'el-progress', type: 'progressBar', label: 'Progress Bar', visible: true, order: 5 },
-  { id: 'el-clock', type: 'timeOfDay', label: 'Time of Day (Clock)', visible: true, order: 6 },
-  { id: 'el-next', type: 'upNext', label: 'Up Next Preview', visible: true, order: 7 },
+  { id: 'el-clock', type: 'timeOfDay', label: 'Time of Day (Clock)', visible: false, order: 6 },
+  { id: 'el-next', type: 'upNext', label: 'Up Next Preview', visible: false, order: 7 },
   { id: 'el-logo', type: 'logo', label: 'Image / Logo', visible: false, order: 8, customValue: '' },
   { id: 'el-text', type: 'customText', label: 'Custom Text', visible: false, order: 9, customValue: '' },
 ];
 
 export const DEFAULT_OUTPUT_CUSTOMIZATION: OutputCustomizationMap = {
   viewer: {
+    stageLayoutVersion: 1,
     aspectRatio: '16:9',
     backgroundColor: '#181818',
     blackoutColor: '#000000',
