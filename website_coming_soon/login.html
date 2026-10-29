@@ -59,7 +59,7 @@
       </div>
 
       <!-- Register Form -->
-      <form id="auth-register-form" onsubmit="event.preventDefault(); window.location.href='/app/?room=main-auditorium&view=controller&auth=signup';">
+      <form id="auth-register-form" onsubmit="event.preventDefault(); const em = encodeURIComponent(document.getElementById('auth-register-email')?.value || ''); const nm = encodeURIComponent(document.getElementById('auth-register-name')?.value || ''); window.location.href='/app/?room=main-auditorium&view=controller&auth=signup' + (em ? '&email=' + em : '') + (nm ? '&name=' + nm : '');">
         <h2 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 0.35rem;">Create a Free Account</h2>
         <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Save your stage rundowns, custom rooms, and cloud sync presets.</p>
 
@@ -76,17 +76,17 @@
 
         <div style="margin-bottom: 1rem;">
           <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.4rem;">Your Name / Organisation</label>
-          <input type="text" required placeholder="Production Lead" style="width: 100%; padding: 0.75rem 0.875rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-size: 0.9375rem; outline: none;">
+          <input type="text" id="auth-register-name" name="name" autocomplete="name" spellcheck="false" autocorrect="off" autocapitalize="words" data-lpignore="true" data-1p-ignore="true" required placeholder="Production Lead" style="width: 100%; padding: 0.75rem 0.875rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-size: 0.9375rem; outline: none;">
         </div>
 
         <div style="margin-bottom: 1rem;">
           <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.4rem;">Work Email</label>
-          <input type="email" required placeholder="director@production.com" style="width: 100%; padding: 0.75rem 0.875rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-size: 0.9375rem; outline: none;">
+          <input type="email" id="auth-register-email" name="email" autocomplete="email" spellcheck="false" autocorrect="off" autocapitalize="none" data-lpignore="true" data-1p-ignore="true" required placeholder="director@production.com" style="width: 100%; padding: 0.75rem 0.875rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-size: 0.9375rem; outline: none;">
         </div>
 
         <div style="margin-bottom: 1.25rem;">
           <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.4rem;">Password (min. 6 characters)</label>
-          <input type="password" required minlength="6" placeholder="••••••••" style="width: 100%; padding: 0.75rem 0.875rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-size: 0.9375rem; outline: none;">
+          <input type="password" id="auth-register-password" name="password" autocomplete="new-password" spellcheck="false" autocorrect="off" autocapitalize="none" data-lpignore="true" data-1p-ignore="true" required minlength="6" placeholder="••••••••" style="width: 100%; padding: 0.75rem 0.875rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-size: 0.9375rem; outline: none;">
         </div>
 
         <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem; padding: 0.75rem;">
@@ -99,7 +99,7 @@
       </form>
 
       <!-- Sign In Form -->
-      <form id="auth-login-form" style="display: none;" onsubmit="event.preventDefault(); window.location.href='/app/?room=main-auditorium&view=controller&auth=login';">
+      <form id="auth-login-form" style="display: none;" onsubmit="event.preventDefault(); const em = encodeURIComponent(document.getElementById('auth-login-email')?.value || ''); window.location.href='/app/?room=main-auditorium&view=controller&auth=login' + (em ? '&email=' + em : '');">
         <h2 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 0.35rem;">Sign In</h2>
         <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Access your saved rooms, rundowns, and cloud presets.</p>
 
@@ -116,7 +116,7 @@
 
         <div style="margin-bottom: 1.25rem;">
           <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.4rem;">Work Email</label>
-          <input type="email" required placeholder="director@production.com" style="width: 100%; padding: 0.75rem 0.875rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-size: 0.9375rem; outline: none;">
+          <input type="email" id="auth-login-email" name="email" autocomplete="email" spellcheck="false" autocorrect="off" autocapitalize="none" data-lpignore="true" data-1p-ignore="true" required placeholder="director@production.com" style="width: 100%; padding: 0.75rem 0.875rem; border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-size: 0.9375rem; outline: none;">
         </div>
 
         <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem; padding: 0.75rem;">

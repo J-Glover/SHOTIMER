@@ -14,6 +14,7 @@ export function useDialogFocus(open: boolean, onClose: () => void) {
       .filter(element => element.getClientRects().length > 0);
     if (!dialog.contains(document.activeElement)) (candidates()[0] || dialog).focus();
     const keydown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' && event.key !== 'Tab') return;
       // Only the frontmost dialog handles keys when a paywall opens above settings.
       const dialogs = Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"]'));
       const top = dialogs.sort((a, b) => Number(getComputedStyle(a).zIndex) - Number(getComputedStyle(b).zIndex)).at(-1);

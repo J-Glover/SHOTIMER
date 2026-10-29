@@ -82,6 +82,7 @@ function AppContent() {
   // Keyboard Shortcuts for live operators
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!['Space', 'KeyR', 'ArrowRight', 'ArrowLeft', 'KeyB'].includes(e.code)) return;
       if (!canControlRoom(roomId)) return;
       const modalOpen = !!document.querySelector('[role="dialog"], details[open]');
       if (!document.querySelector('[data-controller-console]') ||
