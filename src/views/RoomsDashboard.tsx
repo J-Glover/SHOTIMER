@@ -23,9 +23,10 @@ export default function RoomsDashboard({ onOpen }: { onOpen: (id: string) => voi
       const confirmed = summary.current && canControlRoom(room.id);
       return <article className="room-card" key={room.id}>
         <div className="room-card-top"><span className="room-symbol"><Clock3 size={24} /></span><span className={`room-playback ${confirmed ? 'confirmed' : ''}`}>{confirmed && summary.playback ? PLAYBACK_LABELS[summary.playback] : summary.current ? 'Playback unconfirmed' : 'Not open here'}</span></div>
-        <h2>{summary.name}</h2><p>{summary.timerCount === null ? 'Open to view the rundown' : `${summary.timerCount} ${summary.timerCount === 1 ? 'timer' : 'timers'}`}</p>
-        {summary.sample && <p className="room-last-opened">Sample rundown · edit it for your show</p>}
-        {summary.lastOpened && <p className="room-last-opened">Opened here {new Date(summary.lastOpened).toLocaleDateString()}</p>}
+        <div className="room-card-details"><h2>{summary.name}</h2><p>{summary.timerCount === null ? 'Open to view the rundown' : `${summary.timerCount} ${summary.timerCount === 1 ? 'timer' : 'timers'}`}</p>
+          {summary.sample && <p className="room-last-opened">Sample rundown · edit it for your show</p>}
+          {summary.lastOpened && <p className="room-last-opened">Opened here {new Date(summary.lastOpened).toLocaleDateString()}</p>}
+        </div>
         <button className="console-button primary" onClick={() => onOpen(room.id)}><Play size={15} />Open controller<ArrowUpRight size={15} /></button>
       </article>;
     })}</div>

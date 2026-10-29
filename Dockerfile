@@ -29,6 +29,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/app ./app
 COPY --from=builder /app/server.js ./server.js
 COPY --from=builder /app/appManifest.mjs ./appManifest.mjs
+COPY --from=builder /app/liveRelay.mjs ./liveRelay.mjs
 COPY --from=builder /app/data ./data
 
 # Expose Broadcast Port

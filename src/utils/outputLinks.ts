@@ -5,7 +5,7 @@ export function getOutputUrl(roomId: string, role: ActiveView, base = window.loc
   const hostname = window.location.hostname;
   const local = hostname === 'localhost' || hostname === '127.0.0.1' ||
     hostname.startsWith('192.168.') || hostname.startsWith('10.');
-  const url = new URL(hostname.startsWith('app.') ? '/' : '/app/', base);
+  const url = new URL('/', base);
   const credentials = storedCredentials(roomId);
   const token = role === 'controller' ? credentials?.operator : role === 'moderator' ? credentials?.moderator : credentials?.viewer;
   if (!credentials || !token) return '';

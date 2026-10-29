@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Lock, ShieldCheck, ArrowLeft, KeyRound, Sparkles } from 'lucide-react';
 
 const DEFAULT_PASSKEY = 'SHOTIMER-ALPHA-2026';
@@ -7,57 +7,43 @@ interface StealthGateProps {
   children: React.ReactNode;
 }
 
+function checkInitialAuthorization(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const hostname = window.location.hostname;
+  const isLocal =
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('10.');
+
+  if (isLocal) return true;
+
+  const expectedKey = (import.meta.env.VITE_STEALTH_PASSKEY || DEFAULT_PASSKEY).trim().toUpperCase();
+  const params = new URLSearchParams(window.location.search);
+  const queryKey = (params.get('access') || params.get('key') || '').trim().toUpperCase();
+
+  if (queryKey === expectedKey) {
+    try {
+      localStorage.setItem('shotimer_stealth_auth', 'granted');
+      localStorage.setItem('shotimer_stealth_timestamp', Date.now().toString());
+    } catch {}
+    return true;
+  }
+
+  try {
+    const stored = localStorage.getItem('shotimer_stealth_auth');
+    if (stored === 'granted') return true;
+  } catch {}
+
+  return false;
+}
+
 export default function StealthGate({ children }: StealthGateProps) {
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(checkInitialAuthorization);
   const [inputKey, setInputKey] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      setIsAuthorized(false);
-      return;
-    }
-
-    const hostname = window.location.hostname;
-    // Auto-bypass for local machine or LAN testing
-    const isLocal =
-      hostname === 'localhost' ||
-      hostname === '127.0.0.1' ||
-      hostname.startsWith('192.168.') ||
-      hostname.startsWith('10.');
-
-    if (isLocal) {
-      setIsAuthorized(true);
-      return;
-    }
-
-    const expectedKey = (import.meta.env.VITE_STEALTH_PASSKEY || DEFAULT_PASSKEY).trim().toUpperCase();
-
-    // Check URL query parameter (e.g. ?access=SHOTIMER-ALPHA-2026 or ?key=...)
-    const params = new URLSearchParams(window.location.search);
-    const queryKey = (params.get('access') || params.get('key') || '').trim().toUpperCase();
-
-    if (queryKey === expectedKey) {
-      try {
-        localStorage.setItem('shotimer_stealth_auth', 'granted');
-        localStorage.setItem('shotimer_stealth_timestamp', Date.now().toString());
-      } catch {}
-      setIsAuthorized(true);
-      return;
-    }
-
-    // Check stored authorization
-    try {
-      const stored = localStorage.getItem('shotimer_stealth_auth');
-      if (stored === 'granted') {
-        setIsAuthorized(true);
-        return;
-      }
-    } catch {}
-
-    setIsAuthorized(false);
-  }, []);
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();

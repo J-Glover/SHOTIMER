@@ -228,6 +228,13 @@ function RoomController({ onDashboard }: { onDashboard?: () => void }) {
             <hr /><div onClick={closeParentMenu}>
               <button onClick={() => currentUser ? setIsAccountOpen(true) : setIsAuthOpen(true)}><UserRound size={16} /><span className="truncate">{currentUser ? 'Account & rooms' : 'Sign in / Create account'}</span></button>
               <button onClick={() => showPaywall(isProUser ? 'Pro License Active' : 'Shotimer Pro')}><BookmarkPlus size={16} />{isProUser ? 'Pro licence active' : 'Explore Shotimer Pro'}</button>
+              <button onClick={() => {
+                try {
+                  localStorage.removeItem('shotimer_stealth_auth');
+                  localStorage.removeItem('shotimer_stealth_timestamp');
+                } catch {}
+                window.location.reload();
+              }} title="Re-engage private preview passkey gate"><LockKeyhole size={16} />Lock studio (Exit stealth)</button>
             </div>
           </div>
         </details>

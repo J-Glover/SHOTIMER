@@ -8,7 +8,9 @@
 - Timer Settings → Timing now offers `finishBehavior: overtime | hold`, defaulting legacy timers to overtime. Hold finishes countdown at 00:00 and count-up at the configured target. Auto-advance to an existing next timer takes priority; final segments obey their setting. Clock mode is unchanged. Settings persist through room storage, presets, JSON and sync. Held timers restart from zero elapsed.
 - Deploy the full Node server and durable storage; apply `migrations/20261029_retire_public_live_sessions.sql` and refresh old tabs during rollout. That migration has been prepared locally, not applied to production. Visual inspection is outstanding because the Windows Computer Use URL-policy check stopped browser automation. Isolated server/client and store regression tests cover these changes.
 
-> **Note for AI Assistant:** This file is automatically loaded at the start of any new Antigravity session in this workspace. Always read this file to understand the current state, technical decisions, and pending roadmap for Shotimer.
+> **Note for AI Assistants (OpenAI Codex, Google Antigravity, etc.):**  
+> 1. This file is automatically loaded at the start of any new Antigravity session in this workspace. Always read this file to understand the current state, technical decisions, and pending roadmap for Shotimer.  
+> 2. **MANDATORY STYLE GUIDE:** All AI assistants must strictly follow [STYLE_GUIDE.md](file:///c:/Users/aero1/Desktop/AI%20PROJECTS/SHOTIMER/STYLE_GUIDE.md). Never invent new arbitrary hex colors, never write ad-hoc inline utility classes when existing `.console-*` classes exist, and never break tabular monospace numerics on clocks and timers.
 
 ---
 

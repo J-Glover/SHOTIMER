@@ -14,8 +14,44 @@ export default defineConfig({
     react(), tailwindcss(),
     {
       name: 'shotimer-room-manifest',
-      configureServer(server) { const relay = createLiveRelay(); server.middlewares.use(relay.middleware); server.middlewares.use(serveAppManifest); server.httpServer?.once('close', () => relay.close()) },
-      configurePreviewServer(server) { const relay = createLiveRelay(); server.middlewares.use(relay.middleware); server.middlewares.use(serveAppManifest); server.httpServer?.once('close', () => relay.close()) },
+      configureServer(server) {
+        const relay = createLiveRelay();
+        server.middlewares.use(relay.middleware);
+        server.middlewares.use(serveAppManifest);
+        server.middlewares.use((req, _res, next) => {
+          if (!req.url) return next();
+          try {
+            const parsed = new URL(req.url, 'http://localhost');
+            const p = parsed.pathname;
+            if (p === '/dashboard' || p === '/dashboard/' || p.startsWith('/r/') || p.startsWith('/room/')) {
+              req.url = '/app/index.html' + parsed.search + parsed.hash;
+            } else if ((p === '/' || p === '/index.html') && (parsed.searchParams.has('room') || parsed.searchParams.has('view') || parsed.searchParams.has('auth'))) {
+              req.url = '/app/index.html' + parsed.search + parsed.hash;
+            }
+          } catch {}
+          next();
+        });
+        server.httpServer?.once('close', () => relay.close());
+      },
+      configurePreviewServer(server) {
+        const relay = createLiveRelay();
+        server.middlewares.use(relay.middleware);
+        server.middlewares.use(serveAppManifest);
+        server.middlewares.use((req, _res, next) => {
+          if (!req.url) return next();
+          try {
+            const parsed = new URL(req.url, 'http://localhost');
+            const p = parsed.pathname;
+            if (p === '/dashboard' || p === '/dashboard/' || p.startsWith('/r/') || p.startsWith('/room/')) {
+              req.url = '/app/index.html' + parsed.search + parsed.hash;
+            } else if ((p === '/' || p === '/index.html') && (parsed.searchParams.has('room') || parsed.searchParams.has('view') || parsed.searchParams.has('auth'))) {
+              req.url = '/app/index.html' + parsed.search + parsed.hash;
+            }
+          } catch {}
+          next();
+        });
+        server.httpServer?.once('close', () => relay.close());
+      },
     },
   ],
   server: {
