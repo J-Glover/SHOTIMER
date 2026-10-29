@@ -333,7 +333,7 @@ function RoomController({ onDashboard }: { onDashboard?: () => void }) {
     <ShareModal isOpen={isShareOpen} onClose={() => setIsShareOpen(false)} roomName={roomName} />
     <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onOpenPaywall={showPaywall} onCustomize={() => { setIsSettingsOpen(false); setCustomizeRole('viewer'); setIsCustomizeOutputOpen(true); }} />
     <ProPaywallModal isOpen={isPaywallOpen} onClose={() => setIsPaywallOpen(false)} featureName={paywallFeature} />
-    <AuthModal isOpen={isAuthOpen} initialMode={authIntent === 'reset' ? 'reset' : authIntent === 'signup' ? 'register' : 'login'} onClose={() => { setIsAuthOpen(false); if (authIntent) { const url = new URL(window.location.href); url.searchParams.delete('auth'); window.history.replaceState({}, '', url); } }} />
+    <AuthModal isOpen={isAuthOpen} initialMode={authIntent === 'reset' ? 'reset' : authIntent === 'signup' ? 'register' : 'login'} onClose={() => { setIsAuthOpen(false); if (authIntent) { const url = new URL(window.location.href); url.searchParams.delete('auth'); window.history.replaceState({}, '', url); } }} onSuccess={() => { setIsAuthOpen(false); if (authIntent) { const url = new URL(window.location.href); url.searchParams.delete('auth'); window.history.replaceState({}, '', url); } onDashboard?.(); }} />
     <AccountSettingsModal isOpen={isAccountOpen} onClose={() => setIsAccountOpen(false)} onOpenPaywall={() => showPaywall('Shotimer Pro')} />
     <TimerSettingsModal isOpen={!!editingTimerId} timer={rundown.find(timer => timer.id === editingTimerId) || null}
       onClose={() => setEditingTimerId(null)} onUpdate={(id, updates) => { if (!locked && canControl) updateTimer(id, updates); }}

@@ -55,7 +55,7 @@ function AuthSession({ onClose, onSuccess, initialMode = 'login' }: Props) {
         <button disabled={busy || !isSupabaseConfigured} className="console-button primary justify-center">{busy ? 'Please wait…' : mode === 'forgot' ? 'Send reset link' : mode === 'reset' ? 'Save new password' : titles[mode]}</button>
       </form>}
       {error && <p role="alert" className="text-sm text-red-300">{error}</p>}{status && <p role="status" className="text-sm text-emerald-300">{status}</p>}
-      {complete && <button className="console-button primary" onClick={onClose}>Done</button>}
+      {complete && <button className="console-button primary" onClick={() => { onClose(); onSuccess?.(); }}>Done</button>}
       <footer className="flex flex-wrap gap-3 border-t border-neutral-700 pt-3 text-xs">{mode !== 'login' && <button className="text-emerald-300" onClick={() => switchMode('login')}>Back to sign in</button>}{mode === 'login' && <><button className="text-emerald-300" onClick={() => switchMode('register')}>Create an account</button><button className="text-neutral-400" onClick={() => switchMode('forgot')}>Forgot password?</button></>}{mode === 'reset' && <button className="text-emerald-300" onClick={() => switchMode('forgot')}>Request a new reset link</button>}</footer>
     </section>
   </div>;

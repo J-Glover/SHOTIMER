@@ -12,7 +12,8 @@ import '../styles/dashboard.css';
 export default function RoomsDashboard({ onOpen }: { onOpen: (id: string) => void }) {
   const state = useTimerStore();
   const [account, setAccount] = useState(false);
-  const [auth, setAuth] = useState(false);
+  const authIntent = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('auth') : null;
+  const [auth, setAuth] = useState(() => ['login', 'signup', 'signin', 'register'].includes(authIntent || ''));
   const [pro, setPro] = useState(false);
   const read = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
   return <main className="rooms-dashboard">
@@ -32,7 +33,7 @@ export default function RoomsDashboard({ onOpen }: { onOpen: (id: string) => voi
     })}</div>
     <section className="rooms-guide"><div><strong>1. Open a room</strong><p>Use or rename any of your included rooms. Existing rundowns are kept.</p></div><div><strong>2. Prepare the show</strong><p>Review the segment names, durations and speaker cues.</p></div><div><strong>3. Connect your screens</strong><p>Use Outputs in the controller to share a protected stage-display link.</p></div></section>
     <p className="rooms-footnote">Opening this dashboard keeps the current timer running. Other rooms’ playback is not monitored here. Scheduled starts require the controller to be open.</p>
-    <AuthModal isOpen={auth} onClose={() => setAuth(false)} />
+    <AuthModal isOpen={auth} initialMode={authIntent === 'signup' || authIntent === 'register' ? 'register' : 'login'} onClose={() => { setAuth(false); if (authIntent) { const url = new URL(window.location.href); url.searchParams.delete('auth'); window.history.replaceState({}, '', url); } }} onSuccess={() => { setAuth(false); if (authIntent) { const url = new URL(window.location.href); url.searchParams.delete('auth'); window.history.replaceState({}, '', url); } }} />
     <AccountSettingsModal isOpen={account} onClose={() => setAccount(false)} onOpenPaywall={() => setPro(true)} />
     <ProPaywallModal isOpen={pro} onClose={() => setPro(false)} featureName="Shotimer Pro" />
   </main>;

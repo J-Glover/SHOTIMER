@@ -35,6 +35,9 @@ test('workspace routing preserves explicit output, shared-room and authenticatio
   assert.equal(initialWorkspace('?room=room-2', false), 'controller');
   assert.equal(initialWorkspace('?view=dashboard&room=room-2', false), 'dashboard');
   assert.equal(initialWorkspace('?auth=reset', false), 'controller');
+  assert.equal(initialWorkspace('?auth=signup', false), 'dashboard');
+  assert.equal(initialWorkspace('?auth=login', false), 'dashboard');
+  assert.equal(initialWorkspace('?view=dashboard&auth=signup', false), 'dashboard');
   for (const view of ['controller', 'viewer', 'agenda', 'moderator', 'overlay']) {
     assert.equal(initialWorkspace(`?view=${view}&room=room-2`, false), view);
     assert.equal(initialWorkspace(`?view=${view}&room=room-2`, true), view);

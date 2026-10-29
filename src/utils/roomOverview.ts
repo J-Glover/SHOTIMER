@@ -21,6 +21,7 @@ export function initialWorkspace(search: string, shared: boolean): 'dashboard' |
   const params = new URLSearchParams(search);
   const view = params.get('view');
   if (['controller', 'viewer', 'agenda', 'moderator', 'overlay'].includes(view || '')) return view as 'controller' | 'viewer' | 'agenda' | 'moderator' | 'overlay';
-  if (shared || params.has('auth') || (params.has('room') && view !== 'dashboard')) return 'controller';
+  if (view === 'dashboard' && !shared) return 'dashboard';
+  if (shared || params.get('auth') === 'reset' || (params.has('room') && view !== 'dashboard')) return 'controller';
   return 'dashboard';
 }
