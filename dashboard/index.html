@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting to Shotimer Controller...</title>
+  <meta http-equiv="refresh" content="0; url=/app/?room=main-auditorium&view=controller">
+  <script>
+    const search = window.location.search || '?room=main-auditorium&view=controller';
+    const hash = window.location.hash || '';
+    const target = '/app/' + (search.includes('view=') ? search : (search ? search + '&view=controller' : '?room=main-auditorium&view=controller')) + hash;
+    window.location.replace(target);
+  </script>
+</head>
+<body style="font-family: sans-serif; background: #07090E; color: #F1F5F9; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+  <p>Loading Shotimer Controller... <a href="/app/?room=main-auditorium&view=controller" style="color: #F59E0B;">Click here if not redirected</a>.</p>
+</body>
+</html>

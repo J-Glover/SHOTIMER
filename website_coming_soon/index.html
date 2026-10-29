@@ -123,7 +123,7 @@
 
       <!-- Action Button & Hamburger -->
       <div class="nav-actions">
-        <a href="/dashboard" class="btn btn-tally btn-sm">
+        <a href="/app/?room=main-auditorium&view=controller" class="btn btn-tally btn-sm">
           <span>Launch Console →</span>
         </a>
         <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false">
@@ -144,7 +144,7 @@
     <a href="#who-its-for" class="nav-link">Who It's For</a>
     <a href="#pricing-preview" class="nav-link">Pricing</a>
     <a href="#faq" class="nav-link">FAQ</a>
-    <a href="/dashboard" class="btn btn-tally" style="width: 100%; margin-top: 0.5rem; text-decoration: none;">Launch Console →</a>
+    <a href="/app/?room=main-auditorium&view=controller" class="btn btn-tally" style="width: 100%; margin-top: 0.5rem; text-decoration: none;">Launch Console →</a>
   </div>
 
   <main>
@@ -174,23 +174,20 @@
         <!-- Action Capsule (Direct Launch & Live Demo) -->
         <div class="hero-actions-capsule" style="display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-top: 1.5rem;">
           <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 1rem;">
-            <a href="/dashboard" class="spotlight-btn" style="text-decoration: none; padding: 0.85rem 1.75rem; font-size: 1rem; border-radius: 9999px; background: var(--amber-primary); color: #18181B; font-weight: 700; display: inline-flex; align-items: center; gap: 0.6rem; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35); transition: all 0.2s ease;">
+            <button type="button" disabled class="spotlight-btn is-disabled" style="border: 1px solid rgba(0, 0, 0, 0.08); padding: 0.85rem 1.75rem; font-size: 1rem; border-radius: 9999px; background: #E4E4E7; color: #71717A; font-weight: 700; display: inline-flex; align-items: center; gap: 0.6rem; cursor: not-allowed; opacity: 0.7; box-shadow: none;" aria-disabled="true" title="Public self-registration is closed. Production crew may use Launch Console with passkey.">
               <span>Try Free in Browser</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </a>
-            <a href="/?room=main-auditorium&view=viewer" class="btn-outline" style="text-decoration: none; padding: 0.85rem 1.5rem; font-size: 0.95rem; border-radius: 9999px; border: 1px solid var(--border-medium); background: #ffffff; color: var(--text-primary); font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease;">
+              <span style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; background: #D4D4D8; color: #52525B; padding: 0.15rem 0.5rem; border-radius: 9999px;">Closed Alpha</span>
+            </button>
+            <a href="/app/?room=main-auditorium&view=viewer" class="btn-outline" style="text-decoration: none; padding: 0.85rem 1.5rem; font-size: 0.95rem; border-radius: 9999px; border: 1px solid var(--border-medium); background: #ffffff; color: var(--text-primary); font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease;">
               <span>Live Stage Preview ↗</span>
             </a>
           </div>
           <div class="spotlight-note" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: var(--text-muted);">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-live)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
-            <span>No credit card or setup required • Instant browser access • Free tier included</span>
+            <span>Private alpha release • Passkey access required for AV production crew</span>
           </div>
         </div>
 
@@ -462,7 +459,7 @@
               <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: var(--emerald-live);">✓</span> Color warnings (Green &rarr; Yellow &rarr; Red)</li>
               <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: var(--emerald-live);">✓</span> QR code wireless phone pairing</li>
             </ul>
-            <a href="/dashboard" class="btn-outline" style="width: 100%; justify-content: center; text-decoration: none;">Launch Free Console</a>
+            <a href="/app/?room=main-auditorium&view=controller" class="btn-outline" style="width: 100%; justify-content: center; text-decoration: none;">Launch Controller Console →</a>
           </div>
 
           <!-- Pro Column -->
@@ -552,8 +549,8 @@
             Zero setup, zero apps to install. Run your first confidence monitor free in seconds.
           </p>
           <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
-            <a href="/dashboard" class="spotlight-btn" style="text-decoration: none; padding: 0.9rem 2rem; font-size: 1rem; border-radius: 9999px; background: var(--amber-primary); color: #18181B; font-weight: 700; display: inline-flex; align-items: center; gap: 0.6rem;">
-              <span>Launch Free Timer Now →</span>
+            <a href="/app/?room=main-auditorium&view=controller" class="spotlight-btn" style="text-decoration: none; padding: 0.9rem 2rem; font-size: 1rem; border-radius: 9999px; background: var(--amber-primary); color: #18181B; font-weight: 700; display: inline-flex; align-items: center; gap: 0.6rem;">
+              <span>Launch Controller Console →</span>
             </a>
           </div>
         </div>
@@ -597,8 +594,8 @@
         <div>
           <div class="footer-col-title">App Access</div>
           <ul class="footer-links">
-            <li><a href="/dashboard">Rooms Dashboard</a></li>
-            <li><a href="/?room=main-auditorium&view=viewer">Stage Confidence Monitor</a></li>
+            <li><a href="/app/?room=main-auditorium&view=controller">Controller Console</a></li>
+            <li><a href="/app/?room=main-auditorium&view=viewer">Stage Confidence Monitor</a></li>
             <li><a href="#faq">FAQ</a></li>
           </ul>
         </div>
