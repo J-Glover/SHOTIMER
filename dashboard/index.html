@@ -1,24 +1,15 @@
-<!doctype html>
-<html lang="en" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Shotimer" />
-    <link rel="apple-touch-icon" href="/shotimer-icon-180.png" />
-    <link id="room-manifest" rel="manifest" href="/shotimer.webmanifest" />
-    <meta name="theme-color" content="#07090E" />
-    <meta name="description" content="Shotimer rooms dashboard and live event controller." />
-    <title>Shotimer — Rooms Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  </head>
-  <body class="bg-[#07090E] text-slate-100 min-h-screen antialiased selection:bg-emerald-500/30 selection:text-emerald-300">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="0; url=/app/?view=dashboard">
+  <title>Opening Shotimer Rooms Dashboard…</title>
+  <script>
+    const target = '/app/?view=dashboard' + window.location.hash;
+    window.location.replace(target);
+  </script>
+</head>
+<body style="font-family: sans-serif; background: #07090E; color: #F1F5F9; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+  <p>Opening Shotimer Rooms Dashboard… <a href="/app/?view=dashboard" style="color: #F59E0B;">Continue</a></p>
+</body>
 </html>
