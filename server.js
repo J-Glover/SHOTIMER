@@ -286,7 +286,7 @@ const server = http.createServer((req, res) => {
   // If request hits the old app.shotimer.io subdomain, redirect to root shotimer.io
   if (isOldAppDomain) {
     const queryPart = req.url && req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
-    const cleanPath = reqPath === '/' || reqPath === '' || reqPath === '/app' || reqPath === '/app/' ? '/app/?view=dashboard' : reqPath;
+    const cleanPath = reqPath === '/' || reqPath === '' || reqPath === '/app' || reqPath === '/app/' ? '/dashboard' : reqPath;
     res.writeHead(302, { Location: `https://shotimer.io${cleanPath}${queryPart}` });
     res.end();
     return;
