@@ -82,7 +82,7 @@
   <script>
     (function() {
       const params = new URLSearchParams(window.location.search);
-      if (params.has('view') || params.has('room') || params.has('auth')) {
+      if ((params.has('view') && params.get('view') !== 'dashboard') || params.has('room')) {
         window.location.replace('/app/' + window.location.search + window.location.hash);
       }
     })();
@@ -123,7 +123,7 @@
 
       <!-- Action Button & Hamburger -->
       <div class="nav-actions">
-        <a href="/app/?view=dashboard" class="btn btn-tally btn-sm">
+        <a href="/?view=dashboard&amp;auth=login" class="btn btn-tally btn-sm">
           <span>Launch Console →</span>
         </a>
         <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false">
@@ -144,7 +144,7 @@
     <a href="#who-its-for" class="nav-link">Who It's For</a>
     <a href="#pricing-preview" class="nav-link">Pricing</a>
     <a href="#faq" class="nav-link">FAQ</a>
-    <a href="/app/?view=dashboard" class="btn btn-tally" style="width: 100%; margin-top: 0.5rem; text-decoration: none;">Launch Console →</a>
+    <a href="/?view=dashboard&amp;auth=login" class="btn btn-tally" style="width: 100%; margin-top: 0.5rem; text-decoration: none;">Launch Console →</a>
   </div>
 
   <main>
@@ -460,7 +460,7 @@
               <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: var(--emerald-live);">✓</span> Color warnings (Green &rarr; Yellow &rarr; Red)</li>
               <li style="display: flex; align-items: center; gap: 0.5rem;"><span style="color: var(--emerald-live);">✓</span> QR code wireless phone pairing</li>
             </ul>
-            <a href="/app/?view=dashboard" class="btn-outline" style="width: 100%; justify-content: center; text-decoration: none;">Launch Controller Console →</a>
+            <a href="/?view=dashboard&amp;auth=login" class="btn-outline" style="width: 100%; justify-content: center; text-decoration: none;">Launch Controller Console →</a>
           </div>
 
           <!-- Pro Column -->
@@ -550,7 +550,7 @@
             Zero setup, zero apps to install. Run your first confidence monitor free in seconds.
           </p>
           <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
-            <a href="/app/?view=dashboard" class="spotlight-btn" style="text-decoration: none; padding: 0.9rem 2rem; font-size: 1rem; border-radius: 9999px; background: var(--amber-primary); color: #18181B; font-weight: 700; display: inline-flex; align-items: center; gap: 0.6rem;">
+            <a href="/?view=dashboard&amp;auth=login" class="spotlight-btn" style="text-decoration: none; padding: 0.9rem 2rem; font-size: 1rem; border-radius: 9999px; background: var(--amber-primary); color: #18181B; font-weight: 700; display: inline-flex; align-items:center; gap: 0.6rem;">
               <span>Launch Controller Console →</span>
             </a>
           </div>
@@ -595,7 +595,7 @@
         <div>
           <div class="footer-col-title">App Access</div>
           <ul class="footer-links">
-            <li><a href="/app/?view=dashboard">Controller Console</a></li>
+            <li><a href="/?view=dashboard&amp;auth=login">Controller Console</a></li>
             <li><span style="color: #6B7280; font-size: 0.9rem;">Stage Confidence Monitor (Closed)</span></li>
             <li><a href="#faq">FAQ</a></li>
           </ul>

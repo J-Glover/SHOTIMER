@@ -35,7 +35,7 @@ export function formatSupabaseUser(user: any): CloudUser | null {
  * Defaults to https://shotimer.io so confirmation links opened on any device (phone, desktop)
  * reach the live website rather than localhost, while preserving origin on live domains.
  */
-export function getAuthRedirectUrl(path: string = '/app/?view=dashboard'): string {
+export function getAuthRedirectUrl(path: string = '/?view=dashboard'): string {
   if (typeof window !== 'undefined') {
     const isLocal =
       window.location.hostname === 'localhost' ||
@@ -70,7 +70,7 @@ export async function registerWithEmail(
   }
 
   try {
-    const redirectUrl = getAuthRedirectUrl('/app/?view=dashboard');
+    const redirectUrl = getAuthRedirectUrl('/?view=dashboard');
 
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
@@ -136,7 +136,7 @@ export async function loginWithGoogle(): Promise<AuthResponse> {
   }
 
   try {
-    const redirectUrl = getAuthRedirectUrl('/app/?view=dashboard');
+    const redirectUrl = getAuthRedirectUrl('/?view=dashboard');
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -181,7 +181,7 @@ export async function sendPasswordReset(email: string): Promise<{ success: boole
   }
 
   try {
-    const redirectUrl = getAuthRedirectUrl('/app/?auth=reset');
+    const redirectUrl = getAuthRedirectUrl('/?view=dashboard&auth=reset');
 
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: redirectUrl,

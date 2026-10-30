@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowUpRight, LayoutDashboard, UserRound, Play, Clock3 } from 'lucide-react';
 import { useTimerStore, FREE_ROOM_LIMIT, isSampleRundown } from '../store/useTimerStore';
 import { roomOverview } from '../utils/roomOverview';
@@ -15,9 +15,23 @@ export default function RoomsDashboard({ onOpen }: { onOpen: (id: string) => voi
   const authIntent = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('auth') : null;
   const [auth, setAuth] = useState(() => ['login', 'signup', 'signin', 'register'].includes(authIntent || ''));
   const [pro, setPro] = useState(false);
+  const requiredAuth = ['login', 'signup', 'signin', 'register'].includes(authIntent || '') && !state.currentUser;
+  const accountName = state.userProfile?.displayName || state.currentUser?.displayName || state.currentUser?.email?.split('@')[0] || 'Operator';
+  const clearAuthIntent = () => {
+    if (!authIntent) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('auth');
+    window.history.replaceState({}, '', url);
+  };
+  useEffect(() => {
+    if (state.isAuthLoading || !state.currentUser || !authIntent) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('auth');
+    window.history.replaceState({}, '', url);
+  }, [state.isAuthLoading, state.currentUser, authIntent]);
   const read = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
   return <main className="rooms-dashboard">
-    <header className="rooms-header"><a className="console-brand" href="/">SHOTIMER</a><button className="console-button" onClick={() => state.currentUser ? setAccount(true) : setAuth(true)}><UserRound size={16} />{state.currentUser ? 'Account & rooms' : 'Sign in / Create account'}</button></header>
+    <header className="rooms-header"><a className="console-brand" href="/">SHOTIMER</a><button className={`rooms-account ${state.currentUser ? 'signed-in' : ''}`} onClick={() => state.currentUser ? setAccount(true) : setAuth(true)}><span className="rooms-account-avatar"><UserRound size={16} /></span><span className="rooms-account-copy">{state.currentUser ? <><strong>{accountName}</strong><small>{state.currentUser.email || 'Signed in'} · Account & rooms</small></> : <><strong>Sign in</strong><small>Open your account and rooms</small></>}</span></button></header>
     <section className="rooms-intro"><p className="output-eyebrow">Your workspace</p><h1>Your rooms</h1><p>Choose a room to prepare your rundown and run the show.</p><div className="rooms-plan"><LayoutDashboard size={15} />{state.isProUser ? `${state.availableRooms.length} rooms · Pro preview` : `${state.availableRooms.length} of ${FREE_ROOM_LIMIT} rooms · Free plan`}<button onClick={() => { if (state.currentUser) setAccount(true); else setAuth(true); }}>Manage rooms</button></div></section>
     <div className="room-cards">{state.availableRooms.map(room => {
       const summary = roomOverview(room, state, read, isSampleRundown);
@@ -33,7 +47,7 @@ export default function RoomsDashboard({ onOpen }: { onOpen: (id: string) => voi
     })}</div>
     <section className="rooms-guide"><div><strong>1. Open a room</strong><p>Use or rename any of your included rooms. Existing rundowns are kept.</p></div><div><strong>2. Prepare the show</strong><p>Review the segment names, durations and speaker cues.</p></div><div><strong>3. Connect your screens</strong><p>Use Outputs in the controller to share a protected stage-display link.</p></div></section>
     <p className="rooms-footnote">Opening this dashboard keeps the current timer running. Other rooms’ playback is not monitored here. Scheduled starts require the controller to be open.</p>
-    <AuthModal isOpen={auth} initialMode={authIntent === 'signup' || authIntent === 'register' ? 'register' : 'login'} onClose={() => { setAuth(false); if (authIntent) { const url = new URL(window.location.href); url.searchParams.delete('auth'); window.history.replaceState({}, '', url); } }} onSuccess={() => { setAuth(false); if (authIntent) { const url = new URL(window.location.href); url.searchParams.delete('auth'); window.history.replaceState({}, '', url); } }} />
+    <AuthModal isOpen={auth && !(authIntent && state.currentUser)} required={requiredAuth} initialMode={authIntent === 'signup' || authIntent === 'register' ? 'register' : 'login'} onClose={() => { setAuth(false); clearAuthIntent(); }} />
     <AccountSettingsModal isOpen={account} onClose={() => setAccount(false)} onOpenPaywall={() => setPro(true)} />
     <ProPaywallModal isOpen={pro} onClose={() => setPro(false)} featureName="Shotimer Pro" />
   </main>;
