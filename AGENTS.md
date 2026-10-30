@@ -59,7 +59,7 @@
     - **Public Coming Soon:** Requests to `shotimer.io` or `www.shotimer.io` resolve exclusively to the Coming Soon pre-launch site (`website_coming_soon`), collecting VIP waitlist emails with rate limiting and DoS defense.
     - **Live App Subdomain (`app.shotimer.io`):** Resolves directly to the full broadcast timer application.
     - **Anti-Crawler Blackout:** Dynamically emits `X-Robots-Tag: noindex, nofollow, noarchive` and `Disallow: /` on `app.shotimer.io` to ensure Google and web bots never index the hidden app.
-    - **Stealth Passkey Gate (`StealthGate.tsx`):** Unlocks via master production passkey (`SHOTIMER-ALPHA-2026`) or URL token (`?access=...`), persisting in localStorage for the operator's devices. Scanned mobile QR codes automatically carry the access token so mobile phones pair seamlessly without login prompts. Automatically bypassed in localhost and LAN environments.
+    - **Stealth Passkey Gate (`StealthGate.tsx`):** Unlocks via master production passkey (`JAMES2026`) or URL token (`?access=...`), persisting in localStorage for the operator's devices. Scanned mobile QR codes automatically carry the access token so mobile phones pair seamlessly without login prompts. Automatically bypassed in localhost and LAN environments.
 11. **Google Sheets Live Waitlist Integration (`website_coming_soon/js/waitlist.js`):**
     - Pre-launch email captures connect directly to the user's private Google Sheet via Google Apps Script Web App (`https://script.google.com/macros/s/AKfycbxW1-kCU44D6w40coDYwnVU4ASKuS1nVjYt7GL24rwi6z1EekCofHdTvq06BWvxFTnYDQ/exec`).
     - Zero database, RLS, or hosting dependencies; updates live in the operator's Google Drive in real-time, accompanied by local server JSON backup.

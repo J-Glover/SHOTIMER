@@ -443,7 +443,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`  Local Website Preview:    http://localhost:${PORT}/`);
   console.log(`  Local Studio Dashboard:   http://localhost:${PORT}/dashboard`);
   console.log(`  Venue Wi-Fi (Phones/LAN): http://${localIp}:${PORT}/dashboard`);
-  console.log(`  Stealth Studio Passkey:   SHOTIMER-ALPHA-2026`);
+  console.log(`  Stealth Studio Passkey:   ${process.env.VITE_STEALTH_PASSKEY || 'JAMES2026'}`);
   console.log(`======================================================\n`);
 });
 
