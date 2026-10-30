@@ -63,6 +63,7 @@ export default defineConfig({
       input: {
         index: resolve(__dirname, 'index.html'),
         app: resolve(__dirname, 'app/index.html'),
+        dashboard: resolve(__dirname, 'dashboard/index.html'),
         pricing: resolve(__dirname, 'pricing.html'),
         features: resolve(__dirname, 'features.html'),
         login: resolve(__dirname, 'login.html'),
