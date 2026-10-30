@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Lock, ShieldCheck, ArrowLeft, KeyRound, Sparkles } from 'lucide-react';
 
-const DEFAULT_PASSKEY = 'SHOTIMER-ALPHA-2026';
+const DEFAULT_PASSKEY = 'JAMES2026';
+const AUTH_STORAGE_VALUE = 'granted:2';
 
 interface StealthGateProps {
   children: React.ReactNode;
@@ -25,7 +26,7 @@ function checkInitialAuthorization(): boolean {
 
   if (queryKey === expectedKey) {
     try {
-      localStorage.setItem('shotimer_stealth_auth', 'granted');
+      localStorage.setItem('shotimer_stealth_auth', AUTH_STORAGE_VALUE);
       localStorage.setItem('shotimer_stealth_timestamp', Date.now().toString());
     } catch {}
     return true;
@@ -33,7 +34,7 @@ function checkInitialAuthorization(): boolean {
 
   try {
     const stored = localStorage.getItem('shotimer_stealth_auth');
-    if (stored === 'granted') return true;
+    if (stored === AUTH_STORAGE_VALUE) return true;
   } catch {}
 
   return false;
@@ -55,7 +56,7 @@ export default function StealthGate({ children }: StealthGateProps) {
 
     if (entered === expectedKey) {
       try {
-        localStorage.setItem('shotimer_stealth_auth', 'granted');
+        localStorage.setItem('shotimer_stealth_auth', AUTH_STORAGE_VALUE);
         localStorage.setItem('shotimer_stealth_timestamp', Date.now().toString());
       } catch {}
       setIsAuthorized(true);

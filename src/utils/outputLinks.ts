@@ -12,6 +12,6 @@ export function getOutputUrl(roomId: string, role: ActiveView, base = window.loc
   url.searchParams.set('room', credentials.id);
   url.hash = new URLSearchParams({ token }).toString();
   url.searchParams.set('view', role);
-  if (!local) url.searchParams.set('access', import.meta.env.VITE_STEALTH_PASSKEY || 'SHOTIMER-ALPHA-2026');
+  if (!local) url.searchParams.set('access', import.meta.env.VITE_STEALTH_PASSKEY || 'JAMES2026');
   return url.toString();
 }
