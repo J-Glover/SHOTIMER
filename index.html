@@ -78,15 +78,8 @@
   }
   </script>
 
-  <!-- Query Parameter Forwarder for Direct Room / Output Links -->
-  <script>
-    (function() {
-      const params = new URLSearchParams(window.location.search);
-      if ((params.has('view') && params.get('view') !== 'dashboard') || params.has('room')) {
-        window.location.replace('/app/' + window.location.search + window.location.hash);
-      }
-    })();
-  </script>
+  <!-- The built entry loads React for dashboard, shared links and auth returns. -->
+  <script type="module" src="/src/publicEntry.ts"></script>
 
   <!-- Modern Bento Light Stylesheet -->
   <link rel="stylesheet" href="css/website.css?v=2026.4">

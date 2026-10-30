@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { useDialogFocus } from '../../hooks/useDialogFocus';
 import { registerWithEmail, loginWithEmail, loginWithGoogle, sendPasswordReset, updatePassword } from '../../services/authService';
 import { isSupabaseConfigured } from '../../lib/supabase';
+import { oauthReturnError } from '../../utils/accountAccess';
 
 type Mode = 'login' | 'register' | 'forgot' | 'reset';
 interface Props { isOpen: boolean; onClose: () => void; onSuccess?: () => void; initialMode?: Mode; required?: boolean }
@@ -15,7 +16,7 @@ function AuthSession({ onClose, onSuccess, initialMode = 'login', required = fal
   const [name, setName] = useState(() => (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('name') || '' : ''));
   const [visible, setVisible] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(() => typeof window === 'undefined' ? '' : oauthReturnError(window.location.search, window.location.hash));
   const [status, setStatus] = useState('');
   const [complete, setComplete] = useState(false);
   const ref = useDialogFocus(true, required ? () => {} : onClose);
@@ -46,7 +47,7 @@ function AuthSession({ onClose, onSuccess, initialMode = 'login', required = fal
   return <div ref={ref} role="dialog" aria-modal="true" aria-label={titles[mode]} tabIndex={-1} className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
     <section className="console-panel app-dialog-panel w-full max-w-md p-6 flex flex-col gap-4">
       <header className="flex justify-between items-start gap-4"><div><p className="output-eyebrow mb-2">Shotimer account</p><h2 className="text-xl font-semibold">{titles[mode]}</h2>{required && <p className="output-note mt-2">Sign in to open your rooms dashboard.</p>}</div>{!required && <button className="console-icon" aria-label="Close account form" onClick={onClose}><X size={18} /></button>}</header>
-      {!isSupabaseConfigured && <p className="draft-warning">Account services are unavailable in this installation. You can continue using the timer as a guest.</p>}
+      {!isSupabaseConfigured && <p className="draft-warning">Account services are unavailable. Please try again later.</p>}
       {(mode === 'login' || mode === 'register') && !complete && <><button disabled={busy || !isSupabaseConfigured} className="console-button justify-center" onClick={async () => { setBusy(true); setError(''); try { const result = await loginWithGoogle(); if (result.error) setError(result.error); else setStatus('Opening Google sign-in…'); } catch { setError('Google sign-in could not be opened. Try email and password.'); } finally { setBusy(false); } }}>Continue with Google</button><p className="output-note text-center">or use email</p></>}
       {!complete && <form className="flex flex-col gap-4" onSubmit={submit}>
         {mode === 'register' && <label className="form-label" htmlFor="auth-name">Your name / organisation<input id="auth-name" name="name" className="console-input" autoComplete="name" spellCheck={false} autoCorrect="off" autoCapitalize="words" data-lpignore="true" data-1p-ignore="true" required maxLength={100} value={name} onChange={event => setName(event.target.value)} /></label>}

@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, supabaseUrl, supabaseAnonKey } from '../lib/supabase';
 
 export interface CloudUser {
   uid: string;
@@ -138,6 +138,18 @@ export async function loginWithGoogle(): Promise<AuthResponse> {
   try {
     const redirectUrl = getAuthRedirectUrl('/?view=dashboard');
 
+    // A disabled provider otherwise navigates away to a JSON error page. Check
+    // the public settings first so the user stays on the working email form.
+    const settings = await fetch(`${supabaseUrl}/auth/v1/settings`, {
+      headers: { apikey: supabaseAnonKey },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!settings.ok) return { user: null, error: 'Could not check Google sign-in. Please try again or use email and password.' };
+    const providers = await settings.json();
+    if (providers.external?.google !== true) {
+      return { user: null, error: 'Google sign-in is not enabled for Shotimer yet. Please sign in with your email and password.' };
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -220,7 +232,7 @@ export function subscribeToAuthState(callback: (user: CloudUser | null) => void)
   // Get initial session
   supabase.auth.getSession().then(({ data: { session } }) => {
     callback(formatSupabaseUser(session?.user ?? null));
-  });
+  }).catch(() => callback(null));
 
   const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
     callback(formatSupabaseUser(session?.user ?? null));

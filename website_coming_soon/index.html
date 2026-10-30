@@ -78,18 +78,12 @@
   }
   </script>
 
-  <!-- Query Parameter Forwarder for Direct Room / Output Links -->
-  <script>
-    (function() {
-      const params = new URLSearchParams(window.location.search);
-      if ((params.has('view') && params.get('view') !== 'dashboard') || params.has('room')) {
-        window.location.replace('/app/' + window.location.search + window.location.hash);
-      }
-    })();
-  </script>
+  <!-- The built entry loads React for dashboard, shared links and auth returns. -->
 
   <!-- Modern Bento Light Stylesheet -->
-  <link rel="stylesheet" href="css/website.css?v=2026.4">
+  <script type="module" crossorigin src="/assets/index-qt_Y08nA.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-P2Xu9kJm.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-CupEjVbR.css">
 </head>
 <body>
 
@@ -550,7 +544,7 @@
             Zero setup, zero apps to install. Run your first confidence monitor free in seconds.
           </p>
           <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
-            <a href="/?view=dashboard&amp;auth=login" class="spotlight-btn" style="text-decoration: none; padding: 0.9rem 2rem; font-size: 1rem; border-radius: 9999px; background: var(--amber-primary); color: #18181B; font-weight: 700; display: inline-flex; align-items:center; gap: 0.6rem;">
+            <a href="/?view=dashboard&amp;auth=login" class="spotlight-btn" style="text-decoration: none; padding: 0.9rem 2rem; font-size: 1rem; border-radius: 9999px; background: var(--amber-primary); color: #18181B; font-weight: 700; display: inline-flex; align-items: center; gap: 0.6rem;">
               <span>Launch Controller Console →</span>
             </a>
           </div>

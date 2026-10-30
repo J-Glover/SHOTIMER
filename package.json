@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "postbuild": "node scripts/prepare-deployment.mjs",
+    "verify:static": "node --experimental-vm-modules scripts/verify-static-entry.mjs",
     "start": "node server.js",
     "serve": "node server.js",
     "lint": "oxlint",

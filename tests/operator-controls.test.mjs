@@ -25,6 +25,7 @@ const { isMessagePreset } = await vite.ssrLoadModule('/src/hooks/useSavedPresets
 const { roomOverview, initialWorkspace } = await vite.ssrLoadModule('/src/utils/roomOverview.ts');
 const { isSampleRundown } = await vite.ssrLoadModule('/src/store/useTimerStore.ts');
 const { default: RundownRow } = await vite.ssrLoadModule('/src/components/controller/RundownRow.tsx');
+const { default: RoomsDashboard } = await vite.ssrLoadModule('/src/views/RoomsDashboard.tsx');
 const baseline = store.getState();
 const timers = structuredClone(baseline.rundown);
 function reset() { store.setState({ ...baseline, rundown: structuredClone(timers), roomId: 'test-room', status: 'stopped', isProUser: false }); }
@@ -61,6 +62,34 @@ test('room summaries preserve empty rundowns and never infer another room playba
   for (const readFailure of [() => '{bad json', () => { throw Error('Unavailable'); }]) {
     const result = roomOverview({ id: 'room-2', name: 'Fallback' }, active, readFailure);
     assert.equal(result.timerCount, null); assert.equal(result.playback, null);
+  }
+});
+
+test('dashboard shows session loading then sign-in, and shows account identity only after login', () => {
+  const previousWindow = globalThis.window;
+  const initialState = store.getInitialState();
+  const previousAuth = { isAuthLoading: initialState.isAuthLoading, currentUser: initialState.currentUser, userProfile: initialState.userProfile };
+  try {
+    // Server rendering reads Zustand's initial snapshot. Set this isolated
+    // snapshot to exercise each restored-session outcome without a browser.
+    globalThis.window = { location: { search: '?view=dashboard&auth=login', hash: '' } };
+    Object.assign(initialState, { isAuthLoading: true, currentUser: null, userProfile: null });
+    let markup = renderToStaticMarkup(createElement(RoomsDashboard, { onOpen() {} }));
+    assert.match(markup, /Checking your account/);
+    assert.doesNotMatch(markup, /class="room-card"/);
+    Object.assign(initialState, { isAuthLoading: false });
+    markup = renderToStaticMarkup(createElement(RoomsDashboard, { onOpen() {} }));
+    assert.match(markup, /aria-label="Sign in"/);
+    assert.doesNotMatch(markup, /class="room-card"/);
+    Object.assign(initialState, { currentUser: { uid: 'isolated-account', id: 'isolated-account', displayName: 'Aero123UK', email: 'operator@example.test' } });
+    markup = renderToStaticMarkup(createElement(RoomsDashboard, { onOpen() {} }));
+    assert.match(markup, /Aero123UK/);
+    assert.match(markup, /operator@example.test/);
+    assert.match(markup, /class="room-card"/);
+    assert.doesNotMatch(markup, /aria-label="Sign in"/);
+  } finally {
+    Object.assign(initialState, previousAuth);
+    if (previousWindow === undefined) delete globalThis.window; else globalThis.window = previousWindow;
   }
 });
 

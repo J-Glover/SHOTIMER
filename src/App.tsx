@@ -33,7 +33,9 @@ function AppContent() {
   useRoomPresence(roomId, currentView === 'dashboard' ? 'controller' : currentView, currentView !== 'dashboard');
   useEffect(() => {
     if (currentView === 'dashboard') {
-      const url = new URL(window.location.href); url.searchParams.set('view', 'dashboard');
+      const url = new URL(window.location.href);
+      url.pathname = '/';
+      url.searchParams.set('view', 'dashboard');
       window.history.replaceState({}, '', url);
     } else if (currentView === 'controller' && !isSharedLink()) {
       try { localStorage.setItem(`shotimer_room_opened_${roomId}`, String(Date.now())); } catch { /* Navigation still works without browser storage. */ }
