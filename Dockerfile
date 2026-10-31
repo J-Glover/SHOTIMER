@@ -1,5 +1,5 @@
 # Production Multi-Stage Dockerfile for Shotimer App Studio
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -18,10 +18,12 @@ RUN npm ci
 
 # Copy source and build assets
 COPY . .
-RUN npm run build
+# The checked-in static publishing directory is not the container's output.
+# Avoid npm's postbuild copier; the Node server serves the fresh dist build.
+RUN npm run build:container
 
 # Production Runner
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
