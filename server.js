@@ -132,6 +132,15 @@ setInterval(() => {
 }, 15 * 60 * 1000);
 
 const server = http.createServer((req, res) => {
+  if (req.method === 'GET' && req.url?.split('?')[0] === '/api/health') {
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+    });
+    res.end(JSON.stringify({ status: 'ok', service: 'shotimer-relay' }));
+    return;
+  }
   if (liveRelay.middleware(req, res)) return;
   // Apply Broadcast Security Headers
   res.setHeader('X-Content-Type-Options', 'nosniff');

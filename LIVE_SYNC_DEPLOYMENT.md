@@ -4,6 +4,12 @@ The existing Node server now enforces live room permissions. Supabase still hand
 
 ## Deploy
 
+The production reference configuration is `compose.production.yml` plus
+`deploy/nginx-shotimer.conf.example`. The public origin must reach the Node
+process for the entire site; uploading only `website_coming_soon` produces a
+working interface with a permanently disconnected live relay. After deployment,
+`GET /api/health` must return `{"status":"ok","service":"shotimer-relay"}`.
+
 1. Deploy the full checkout, including `server.js`, `liveRelay.mjs`, `appManifest.mjs` and the built `dist` directory. Build with `npm run build`; run with `npm start`. Vite (`npm run dev`) and preview mount the same relay for development.
 2. Mount persistent private disk storage at `SHOTIMER_LIVE_DATA_DIR`, or preserve the default `data/live-rooms` directory across restarts/deployments. Keep it outside public web roots. Never commit or expose it. Back it up privately; it contains show state and token hashes.
 3. Run **one relay process**. Multiple processes or replicas need a shared authoritative implementation; a shared directory alone does not provide synchronization. Use HTTPS publicly. Allow `/api/live/` GET/POST requests and forward Authorization headers. Disable proxy buffering/caching for event streams and allow long-lived responses. Heartbeats arrive every five seconds. Do not log Authorization headers or request bodies.

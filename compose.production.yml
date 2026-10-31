@@ -1,0 +1,21 @@
+services:
+  shotimer:
+    build:
+      context: .
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_AUTH_REDIRECT_URL: ${VITE_AUTH_REDIRECT_URL:-https://shotimer.io}
+        VITE_STEALTH_PASSKEY: ${VITE_STEALTH_PASSKEY}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      SHOTIMER_LIVE_DATA_DIR: /var/lib/shotimer/live-rooms
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - shotimer-live-rooms:/var/lib/shotimer/live-rooms
+
+volumes:
+  shotimer-live-rooms:
