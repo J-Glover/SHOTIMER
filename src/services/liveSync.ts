@@ -65,7 +65,11 @@ async function credentialsFor(roomId: string, initial: Partial<RoomState>): Prom
   }
   // Legacy view URLs cannot create or obtain access to somebody else's show.
   const view = new URLSearchParams(window.location.search).get('view');
-  if (view && view !== 'controller') throw new RequestError('Open a new protected link from the controller’s Outputs menu.', 403);
+  // The signed-in dashboard is a manager-origin surface. It keeps the active
+  // room connected and must be able to restore or provision that room before
+  // the operator opens its controller. Output views still require a protected
+  // capability link and may not mint management access from a legacy URL.
+  if (view && view !== 'controller' && view !== 'dashboard') throw new RequestError('Open a new protected link from the controller’s Outputs menu.', 403);
   const saved = storedCredentials(roomId);
   if (saved) return saved;
   if (!provisioning.has(roomId)) provisioning.set(roomId, request('/api/live/rooms', undefined, { state: liveSnapshot(initial) }).then(value => { const credentials = { id: value.id, manager: value.manager, operator: value.operator, moderator: value.moderator, viewer: value.viewer }; saveCredentials(roomId, credentials); return credentials; }).finally(() => provisioning.delete(roomId)));

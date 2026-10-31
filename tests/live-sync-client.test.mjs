@@ -33,7 +33,8 @@ async function until(check,label){const deadline=Date.now()+4000;while(!check())
 const initial={roomName:'Client isolated show',rundown:[],status:'stopped',resetRevision:0,activeMessage:null};
 
 test('real sync clients enforce link roles, confirm updates, recover and never replay disconnected actions',async()=>{
-  const manager=await client(); let managerState=initial;
+  // The signed-in room dashboard keeps the active manager session connected.
+  const manager=await client('?view=dashboard'); let managerState=initial;
   unsubscribe.push(manager.subscribeToLiveRoomState('local-room',value=>{managerState=value;},undefined,undefined,initial));
   await until(()=>manager.getLiveHealth('local-room').status==='connected','manager connected');
   assert.equal(manager.canControlRoom('local-room'),true); assert.equal(managerState.roomName,initial.roomName);

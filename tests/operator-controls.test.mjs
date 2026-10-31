@@ -22,7 +22,7 @@ const { default: ResetDialog } = await vite.ssrLoadModule('/src/components/commo
 const { default: AgendaDisplay } = await vite.ssrLoadModule('/src/components/outputs/AgendaDisplay.tsx');
 const { normalizeMessageContent, contentRuns, formatMessageSelection, changeMessageCase, insertMessageText, MESSAGE_COLOURS, MESSAGE_SEVERITY_COLOURS, messageSelectionColour } = await vite.ssrLoadModule('/src/utils/messageFormatting.ts');
 const { isMessagePreset } = await vite.ssrLoadModule('/src/hooks/useSavedPresets.ts');
-const { roomOverview, initialWorkspace } = await vite.ssrLoadModule('/src/utils/roomOverview.ts');
+const { roomOverview, initialWorkspace, canNavigateToWorkspace } = await vite.ssrLoadModule('/src/utils/roomOverview.ts');
 const { isSampleRundown } = await vite.ssrLoadModule('/src/store/useTimerStore.ts');
 const { default: RundownRow } = await vite.ssrLoadModule('/src/components/controller/RundownRow.tsx');
 const { default: RoomsDashboard } = await vite.ssrLoadModule('/src/views/RoomsDashboard.tsx');
@@ -45,6 +45,15 @@ test('workspace routing preserves explicit output, shared-room and authenticatio
   }
   assert.equal(initialWorkspace('?view=dashboard', true), 'controller');
   assert.equal(initialWorkspace('?view=unknown', true), 'controller');
+});
+
+test('local dashboard can enter a controller while shared links remain capability-bound', () => {
+  assert.equal(canNavigateToWorkspace('controller', false, false), true);
+  assert.equal(canNavigateToWorkspace('controller', false, true), true);
+  assert.equal(canNavigateToWorkspace('dashboard', false, false), true);
+  assert.equal(canNavigateToWorkspace('controller', true, false), false);
+  assert.equal(canNavigateToWorkspace('controller', true, true), true);
+  assert.equal(canNavigateToWorkspace('dashboard', true, true), false);
 });
 
 test('room summaries preserve empty rundowns and never infer another room playback', () => {

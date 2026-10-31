@@ -25,3 +25,11 @@ export function initialWorkspace(search: string, shared: boolean): 'dashboard' |
   if (shared || params.get('auth') === 'reset' || (params.has('room') && view !== 'dashboard')) return 'controller';
   return 'dashboard';
 }
+
+export function canNavigateToWorkspace(view: 'dashboard' | 'controller' | 'viewer' | 'agenda' | 'moderator' | 'overlay', shared: boolean, permitted: boolean) {
+  if (view === 'dashboard') return !shared;
+  // A local account owns its manager session and may enter while the relay is
+  // still confirming it. Shared links must have their capability confirmed
+  // before they can navigate, so a read-only link cannot upgrade its view.
+  return !shared || permitted;
+}

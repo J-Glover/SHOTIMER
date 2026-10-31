@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { initialWorkspace } from './utils/roomOverview';
+import { canNavigateToWorkspace, initialWorkspace } from './utils/roomOverview';
 import RoomsDashboard from './views/RoomsDashboard';
 import { useConsoleMenus } from './hooks/useConsoleMenus';
 import type { ActiveView } from './types/timer';
@@ -72,7 +72,7 @@ function AppContent() {
 
   // Update browser URL query without reloading
   const handleViewChange = (view: Workspace) => {
-    if (view === 'dashboard' ? isSharedLink() : !allowedView(roomId, view)) return;
+    if (!canNavigateToWorkspace(view, isSharedLink(), view !== 'dashboard' && allowedView(roomId, view))) return;
     setCurrentView(view);
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
